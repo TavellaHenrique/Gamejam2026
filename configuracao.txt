@@ -1,9 +1,16 @@
-Para instalar o pygames:
+CONFIGURAÇÕES:
 
 -->Python na versão mais recente: 3.14.8
 para conferir pelo terminal: python --version
 
--->Instalar:
+No terminal execute:
+python3 -m venv venv
+
+Depois:
+source venv/bin/activate -->Isso te fará entrar no venv
+
+Agora, já pode instalar o pygame:
+
 pip install pygame-ce
 
 Para clonar a branch:
@@ -47,3 +54,4 @@ Para commitar:
   
   -->Envie para o repositório remoto com: git push
 
+lembre-se de atualizar o trello.
