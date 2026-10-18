@@ -4,10 +4,10 @@ CONFIGURAÇÕES:
 para conferir pelo terminal: python --version
 
 No terminal execute:
-python3 -m venv venv
+python3 -m venv .venv
 
 Depois:
-source venv/bin/activate -->Isso te fará entrar no venv
+source .venv/bin/activate -->Isso te fará entrar no venv
 
 Agora, já pode instalar o pygame:
 
