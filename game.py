@@ -40,19 +40,24 @@ class Game:
 
         match (self.state):
             case self.START_MENU:
+                # Delega para a função que coordena os elementos da tela inicial
                 self.draw_start_screen(screen)
 
             case self.PLAYING:
+                # Coordena os elementos de uma cena (por enquanto, há apenas uma)
                 self.draw_playing_scene(screen)
 
+                # Guarda a posição do jogador antes do movimento
                 player_previous_pos = self.player.rect.topleft
 
+                # Atualiza os elementos (inclui movimento e animações)
                 self.all_characters.update(delta_time)
                 self.all_characters.draw(screen)
 
-                # Para debug
+                # [Debug] Exibe as áreas de colisão dos elementos
                 self.draw_collision_areas(screen)
 
+                # Lida com colisões e suas consequências
                 self.handle_collision(screen, player_previous_pos)
 
             case self.DIALOG:
