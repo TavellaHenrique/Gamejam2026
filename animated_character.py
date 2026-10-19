@@ -3,7 +3,7 @@ import pygame
 
 # Subclasse da classe de sprites do pygame
 # Serve como base para as classes de personagem que possuem animação (ou sprites estáticos)
-class CharacterBase(pygame.sprite.Sprite):
+class AnimatedCharacter(pygame.sprite.Sprite):
 
     def __init__(self):
         # Construtor da superclasse

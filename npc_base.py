@@ -1,10 +1,11 @@
 
 import pygame
 
-from character_base import CharacterBase
+from animated_character import AnimatedCharacter
+from character_collision import CharacterCollision
 
-class NonPlayableCharacter(CharacterBase):
-    def __init__(self, x, y):
+class NonPlayableCharacter(AnimatedCharacter, CharacterCollision):
+    def __init__(self, pos_x, pos_y, collision_area_width, collision_area_height):
         super().__init__()
     
         self.facing_direction = "down"
@@ -13,7 +14,9 @@ class NonPlayableCharacter(CharacterBase):
     
         self.current_animation = "idle"
     
-        self.set_image(x, y)
+        self.set_image(pos_x, pos_y)
+
+        self.set_collision_area(collision_area_width, collision_area_height)
 
     def get_animations(self):
         self.animations = {

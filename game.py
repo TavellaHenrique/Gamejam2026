@@ -23,13 +23,16 @@ class Game:
         self.state = self.START_MENU
 
         # Cria uma instância de Player, que representa o jogador
-        self.player = Player(100, 100)
-
-        self.npc = NonPlayableCharacter(200, 200)
+        self.player = Player(500, 100, 64, 80)
+        self.npc = NonPlayableCharacter(48, 100, 64, 80)
 
         # Adiciona a instância do jogado a um grupo usando o agrupamento nativo do pygame
-        self.all_sprites = pygame.sprite.Group(self.player)
-        self.all_sprites.add(self.npc)
+        self.all_characters = pygame.sprite.Group()
+        self.all_characters.add(self.player)
+        self.all_characters.add(self.npc)
+
+        self.npcs = pygame.sprite.Group()
+        self.npcs.add(self.npc)
 
     # Função genérica que gera na tela um texto horizontalmente centralizado
     def draw_centralized_text(
@@ -48,15 +51,41 @@ class Game:
     def draw(self, screen: pygame.Surface, delta_time):
 
         if self.state == self.START_MENU:
-            self.drawStartScreen(screen)
+            self.draw_start_screen(screen)
 
         elif self.state == self.PLAYING:
-            self.drawPlayingScene(screen)
-            self.all_sprites.update(delta_time)
-            self.all_sprites.draw(screen)
+            self.draw_playing_scene(screen)
+
+            player_previous_pos = self.player.rect.topleft
+
+            self.all_characters.update(delta_time)
+            self.all_characters.draw(screen)
+
+            # Para debug
+            self.draw_collision_areas(screen)
+
+            if self.player.collision_area.colliderect(self.npc.collision_area):
+                self.player.rect.topleft = player_previous_pos
+                self.player.update_collision_area()
+
+                self.draw_centralized_text(
+                    screen,
+                    "Aperte E para interagir",
+                    self.default_font,
+                    FONT_COLOR_DEFAULT_TEXT,
+                    500
+                )
+
+    def draw_collision_areas(self, screen):
+        npc: NonPlayableCharacter = None
+
+        self.player.show_collision_area(screen, pygame.color.THECOLORS.get("green"))
+
+        for npc in self.npcs.sprites():
+            npc.show_collision_area(screen, pygame.color.THECOLORS.get("red"))
 
     # Função que coordena os elementos do menu inicial
-    def drawStartScreen(self, screen: pygame.Surface):
+    def draw_start_screen(self, screen: pygame.Surface):
         screen.fill(BG_COLOR_START_MENU)
 
         self.draw_centralized_text(
@@ -76,7 +105,7 @@ class Game:
         )
 
     # Função que coordena os elementos de uma cena
-    def drawPlayingScene(self, screen: pygame.Surface):
+    def draw_playing_scene(self, screen: pygame.Surface):
         screen.fill((200, 100, 100))
 
         self.draw_centralized_text(

@@ -1,12 +1,13 @@
 import pygame
 
-from character_base import CharacterBase
+from animated_character import AnimatedCharacter
+from character_collision import CharacterCollision
 
-class Player(CharacterBase):
+class Player(AnimatedCharacter, CharacterCollision):
     IDLE = "idle"
     WALKING = "walking"
 
-    def __init__(self, x, y):
+    def __init__(self, pos_x, pos_y, collision_area_width, collision_area_height):
         super().__init__()
 
         self.state = self.IDLE
@@ -17,7 +18,9 @@ class Player(CharacterBase):
 
         self.current_animation = "idle"
 
-        self.set_image(x, y)
+        self.set_image(pos_x, pos_y)
+
+        self.set_collision_area(collision_area_width, collision_area_height)
 
     def get_animations(self):
         self.animations = {
@@ -62,7 +65,7 @@ class Player(CharacterBase):
                     scale = 4
                 )
         }
-
+    
     def update(self, delta_time):
         keys = pygame.key.get_pressed()
 
@@ -90,6 +93,7 @@ class Player(CharacterBase):
         else:
             self.state = self.IDLE
 
+        self.update_collision_area()
         self.update_animation()
         super().update(delta_time)
 
