@@ -70,7 +70,9 @@ def manageEvents(game: Game):
                 case Game.PLAYING:
                     if event.key == pygame.K_RETURN:
                         game.state = Game.START_MENU
-                    break
+                case Game.DIALOG:
+                    if event.key == pygame.K_RETURN:
+                        game.state = Game.PLAYING
                 case _:
                     pass
 

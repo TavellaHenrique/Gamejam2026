@@ -14,6 +14,7 @@ class Game:
     # -- Estados do jogo e texto correspondente --
     START_MENU = "start_menu"
     PLAYING = "playing"
+    DIALOG = "dialog"
 
     def __init__(self):
         # Define a fonte padrão 
@@ -34,46 +35,33 @@ class Game:
         self.npcs = pygame.sprite.Group()
         self.npcs.add(self.npc)
 
-    # Função genérica que gera na tela um texto horizontalmente centralizado
-    def draw_centralized_text(
-        self,
-        screen: pygame.Surface,
-        text: str,
-        font: pygame.Font,
-        color: pygame.Color,
-        y: int,
-    ):
-        surface = font.render(text, True, color)
-        rect = surface.get_rect(center=(screen.get_width() // 2, y))
-        screen.blit(surface, rect)
-
     # Coordena as chamadas dos elementos visuais da tela
     def draw(self, screen: pygame.Surface, delta_time):
 
-        if self.state == self.START_MENU:
-            self.draw_start_screen(screen)
+        match (self.state):
+            case self.START_MENU:
+                self.draw_start_screen(screen)
 
-        elif self.state == self.PLAYING:
-            self.draw_playing_scene(screen)
+            case self.PLAYING:
+                self.draw_playing_scene(screen)
 
-            player_previous_pos = self.player.rect.topleft
+                player_previous_pos = self.player.rect.topleft
 
-            self.all_characters.update(delta_time)
-            self.all_characters.draw(screen)
+                self.all_characters.update(delta_time)
+                self.all_characters.draw(screen)
 
-            # Para debug
-            self.draw_collision_areas(screen)
+                # Para debug
+                self.draw_collision_areas(screen)
 
-            if self.player.collision_area.colliderect(self.npc.collision_area):
-                self.player.rect.topleft = player_previous_pos
-                self.player.update_collision_area()
+                self.handle_collision(screen, player_previous_pos)
 
+            case self.DIALOG:
                 self.draw_centralized_text(
                     screen,
-                    "Aperte E para interagir",
+                    "Pressione ENTER para encerrar o diálogo",
                     self.default_font,
                     FONT_COLOR_DEFAULT_TEXT,
-                    500
+                    screen.get_height()//2
                 )
 
     def draw_collision_areas(self, screen):
@@ -83,6 +71,31 @@ class Game:
 
         for npc in self.npcs.sprites():
             npc.show_collision_area(screen, pygame.color.THECOLORS.get("red"))
+            npc.show_interaction_area(screen, pygame.color.THECOLORS.get("yellow"))
+
+    def handle_collision(self, screen, player_previous_pos):
+        # Verificação de colisões entre jogador e npcs
+        npc: NonPlayableCharacter = None
+        for npc in self.npcs.sprites():
+            # Colisão entre áreas sólidas
+            if self.player.collision_area.colliderect(npc.collision_area):
+                self.player.rect.topleft = player_previous_pos
+                self.player.update_collision_area()
+        
+            # Colisão do jogador com uma área de interação
+            if self.player.collision_area.colliderect(npc.interaction_area):
+                self.draw_text(
+                    screen,
+                    "Aperte E para interagir",
+                    self.default_font,
+                    FONT_COLOR_DEFAULT_TEXT,
+                    npc.rect.centerx,
+                    npc.collision_area.top - 20
+                )
+        
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_e]:
+                    self.state = Game.DIALOG
 
     # Função que coordena os elementos do menu inicial
     def draw_start_screen(self, screen: pygame.Surface):
@@ -115,3 +128,30 @@ class Game:
             FONT_COLOR_DEFAULT_TEXT,
             100
         )
+
+    # Função genérica que gera na tela um texto horizontalmente centralizado
+    def draw_centralized_text(
+        self,
+        screen: pygame.Surface,
+        text: str,
+        font: pygame.Font,
+        color: pygame.Color,
+        y: int,
+    ):
+        surface = font.render(text, True, color)
+        rect = surface.get_rect(center=(screen.get_width() // 2, y))
+        screen.blit(surface, rect)
+
+    # Função genérica que gera na tela um texto
+    def draw_text(
+        self,
+        screen: pygame.Surface,
+        text: str,
+        font: pygame.Font,
+        color: pygame.Color,
+        x: int,
+        y: int,
+    ):
+        surface = font.render(text, True, color)
+        rect = surface.get_rect(center=(x, y))
+        screen.blit(surface, rect)

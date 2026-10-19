@@ -4,6 +4,7 @@ import pygame
 class CharacterCollision:
     def __init__(self):
         self.collision_area: pygame.Rect = None
+        self.rect: pygame.Rect = None
 
     def set_collision_area(self, collision_area_width, collision_area_height):
         self.collision_area = pygame.Rect(
