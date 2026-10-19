@@ -2,18 +2,31 @@
 import pygame
 
 # Subclasse da classe de sprites do pygame
+# Serve como base para as classes de personagem que possuem animação (ou sprites estáticos)
 class CharacterBase(pygame.sprite.Sprite):
 
     def __init__(self):
+        # Construtor da superclasse
         super().__init__()
 
+        # -- Definições da animação --
+        # Conjunto de animações (ou sprites estáticos) do personagem
         self.animations = {}
 
-        self.current_animation = ""
+        # Animação atual e inicial do personagem (deve corresponder a uma animação do conjunto acima)
+        self.current_animation = "" # deve ser definida em subclasses
+
+        # Quadro (frame) atual e inicial da animação
         self.frame_index = 0
-        self.frame_delay = 120 # ms
+
+        # Tempo até trocar de quadro, em milissegundos (ms)
+        self.frame_delay = 120
+
+        # Variável de controle do tempo de exibição de cada quadro
         self.animation_timer = 0
 
+        # -- Física e movimento --
+        # Velocidade do personagem (por enquanto, estática)
         self.speed = 10
 
     def get_sprites_from_sheet(self, path, frame_width, frame_height, frame_count, scale) -> list:
@@ -43,3 +56,5 @@ class CharacterBase(pygame.sprite.Sprite):
 
     def get_animations(self):
         raise Exception("Essa função deve ser sobrescrita nas subclasses...")
+        # Essa função deve adicionar uma imagem ou lista de imagens ao dicionário self.animations nas subclasses
+        # Não pode ser feito aqui porque essa class é abstrata e não tem nenhuma imagem para acessar de fato
