@@ -24,6 +24,8 @@ def main():
     # Define o título da janela
     pygame.display.set_caption("Fatec: Presas Abertas (Teste)")
 
+    clock = pygame.time.Clock()
+
     # -- Inicialização do jogo --
     # Instancia a classe com a lógica do jogo
     game = Game()
@@ -33,6 +35,8 @@ def main():
 
     # Inicio do loop principal
     while running:
+        delta_time = clock.tick()
+
         # Define a taxa de atualização de imagens
         pygame.time.delay(60)
 
@@ -40,7 +44,7 @@ def main():
         running = manageEvents(game)
 
         # Define e configura os elementos que serão desenhados na tela
-        game.draw(screen)
+        game.draw(screen, delta_time)
 
         # Atualiza graficamente os elementos
         pygame.display.flip()
