@@ -28,6 +28,7 @@ class Game:
         self.npcs.add(
             NPC(
                 npc_id="Professor01",
+                display_name="James",
                 position=(400, 300),
                 sprite_path="assets/sprites/npcs/Idle_Down.png",
                 dialogue_id="professor01_intro"

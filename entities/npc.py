@@ -8,6 +8,7 @@ class NPC(pygame.sprite.Sprite):
     def __init__(
         self,
         npc_id,
+        display_name,
         position,
         sprite_path,
         dialogue_id,
@@ -20,6 +21,7 @@ class NPC(pygame.sprite.Sprite):
         super().__init__()
 
         self.npc_id = npc_id
+        self.display_name = display_name
         self.dialogue_id = dialogue_id
         self.position = pygame.Vector2(position)
         self.interaction_radius = interaction_radius

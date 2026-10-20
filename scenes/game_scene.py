@@ -16,7 +16,6 @@ class GameScene(Scene):
 
         self.dialogue_box = DialogueBox()
         self.active_speaker = ""
-
     
     def handle_event(self, event):
         if event.type != pygame.KEYDOWN:
@@ -58,7 +57,7 @@ class GameScene(Scene):
             ),
         )
 
-        self.active_speaker = npc.npc_id
+        self.active_speaker = npc.display_name
         self.dialogue_manager.start(npc.dialogue_id)
 
         self.dialogue_box.show_text(
