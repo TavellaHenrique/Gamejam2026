@@ -1,11 +1,15 @@
+"""Valores padrão de tela, desempenho e cores usados pelo jogo."""
 
-# -- Dimensões da tela --
+# |-- Dimensões da tela --|
 SCREEN_WIDTH = 1000 # Largura (x)
 SCREEN_HEIGHT = 600 # Altura (y)
 
-# -- Cores --
-# Background
-BG_COLOR_START_MENU = (120, 50, 120)
+# |-- Propriedades do Framerate --|
+FPS = 60 # Frames per Second - Usada para limitar o número máximo de quadros exibidos por segundo
 
-# Texto
-FONT_COLOR_DEFAULT_TEXT = (20, 20, 20)
+# |-- Cores --|
+# Background
+BG_COLOR_DEFAULT = (74, 7, 7)
+
+# Textos
+FONT_COLOR_DEFAULT = (0, 0, 0)

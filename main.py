@@ -1,83 +1,57 @@
-# -- Importações --
-# Biblioteca para desenvolvimento de jogos
+"""Inicializa o Pygame e executa o loop principal do jogo."""
+
 import pygame
 
-# Lógica do jogo
-from game import Game
-
-# Configurações do projeto
 from config import (
     SCREEN_WIDTH,
-    SCREEN_HEIGHT
+    SCREEN_HEIGHT,
+    FPS
 )
 
-# -- Função principal --
+from game import Game
+
 def main():
-    # Inicia os módulos importados pelo Pygame que demandam inicialização obrigatória
+    """Inicializa recursos, processa eventos e atualiza os quadros do jogo."""
+    # Inicia os módulos importados dentro do pygame que requerem inicialização obrigatória
     pygame.init()
 
-    # -- Configuração da janela gráfica (display) --
-    # Inicia uma janela gráfica com as dimensões (x, y)
-    # Essa variável recebe uma Surface (superfície) onde podemos desenhar elementos
+    # Define as propriedades da janela
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
     # Define o título da janela
-    pygame.display.set_caption("Fatec: Presas Abertas (Teste)")
+    pygame.display.set_caption("Fatec Presas Abertas")
 
+    # Classe de temporizador que ajuda a controlar o taxa de quadros
     clock = pygame.time.Clock()
 
-    # -- Inicialização do jogo --
-    # Instancia a classe com a lógica do jogo
+    # Instância da classe que coordena o jogo
     game = Game()
 
-    # Flag usada para determinar se o jogo deve continuar executando
+    # Flag que define se o jogo deve continuar executando
     running = True
 
-    # Inicio do loop principal
+    # Loop principal
     while running:
-        delta_time = clock.tick(60) / 1000.0
+        # Faz os quadros avançarem (até o máximo passado como argumento) e armazena o tempo passado entre cada um
+        delta_time = clock.tick(FPS) / 1000.0
 
-        # Gerencia os eventos do jogo
-        running = manageEvents(game)
+        for event in pygame.event.get():
+            match event.type:
+                case pygame.QUIT:
+                    running = False
+                case _:
+                    # Os eventos que não encerram o aplicativo são enviados à cena ativa.
+                    game.scene_manager.handle_event(event)
 
-        # Define e configura os elementos que serão desenhados na tela
-        game.draw(screen, delta_time)
+        # Atualiza a lógica e desenha a cena usando o tempo desde o quadro anterior.
+        game.scene_manager.update(delta_time)
+        game.scene_manager.draw(screen)
 
-        # Atualiza graficamente os elementos
+        # Atualiza todos os elementos na tela
         pygame.display.flip()
 
-    # Encerra a execução do jogo
+    # Encerra a aplicação
     pygame.quit()
-
-# -- Recebe cada evento e coordena as respostas --
-# Retorna True para continuar a execução do jogo e False para encerrar o loop principal
-def manageEvents(game: Game):
-    # Captura todos os eventos
-    for event in pygame.event.get():
-
-        # Acionado para eventos de tecla pressionada
-        if event.type == pygame.KEYDOWN:
-
-            # Verifica o estado do jogo para corresponder com a(s) tecla(s) pressionada(s)
-            match(game.state):
-                case Game.START_MENU:
-                    if event.key == pygame.K_RETURN:
-                        game.state = Game.PLAYING
-                    break
-                case Game.PLAYING:
-                    if event.key == pygame.K_RETURN:
-                        game.state = Game.START_MENU
-                case Game.DIALOG:
-                    if event.key == pygame.K_RETURN:
-                        game.state = Game.PLAYING
-                case _:
-                    pass
-
-        # Acionado quando o usuário clica no botão de Encerrar aplicação (X no canto superior direito da janela)
-        if event.type == pygame.QUIT:
-            return False
-
-    return True
 
 if __name__ == "__main__":
     main()
