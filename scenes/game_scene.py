@@ -3,6 +3,7 @@ import pygame
 
 from scenes.scene import Scene
 
+from ui.dialogue_box import DialogueBox
 
 class GameScene(Scene):
 
@@ -13,15 +14,33 @@ class GameScene(Scene):
         self.npcs = game.npcs
         self.dialogue_manager = game.dialogue_manager
 
+        self.dialogue_box = DialogueBox()
+        self.active_speaker = ""
+
+    
     def handle_event(self, event):
         if event.type != pygame.KEYDOWN:
             return
 
         if event.key == pygame.K_e:
             if self.dialogue_manager.is_active:
+                # Primeiro, tenta avançar a página.
+                if self.dialogue_box.advance_page():
+                    return
+
+                # Na última página: avança a fala.
                 self.dialogue_manager.advance()
+
+                if self.dialogue_manager.is_active:
+                    self.dialogue_box.show_text(
+                        self.dialogue_manager.current_text
+                    )
+                else:
+                    self.active_speaker = ""
+
             else:
                 self.interact_with_nearest_npc()
+
 
     def interact_with_nearest_npc(self):
         nearby_npcs = [
@@ -36,16 +55,16 @@ class GameScene(Scene):
             nearby_npcs,
             key=lambda item: item.position.distance_to(
                 self.player.position
-            )
+            ),
         )
 
+        self.active_speaker = npc.npc_id
         self.dialogue_manager.start(npc.dialogue_id)
 
-    def update(self, delta_time):
-        if not self.dialogue_manager.is_active:
-            self.player.update(delta_time)
+        self.dialogue_box.show_text(
+            self.dialogue_manager.current_text
+        )
 
-        self.npcs.update(delta_time)
 
     def draw(self, screen):
         screen.fill((35, 45, 55))
@@ -53,5 +72,14 @@ class GameScene(Scene):
         self.npcs.draw(screen)
         screen.blit(self.player.image, self.player.rect)
 
-        # A caixa de diálogo será desenhada aqui
-        # quando DialogueBox for implementada.
+        if self.dialogue_manager.is_active:
+            self.dialogue_box.draw(
+                screen,
+                speaker_name=self.active_speaker,
+            )
+
+    def update(self, delta_time):
+        if not self.dialogue_manager.is_active:
+            self.player.update(delta_time)
+
+        self.npcs.update(delta_time)

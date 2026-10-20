@@ -12,8 +12,8 @@ class MainMenu(Scene):
     def __init__(self, game):
         super().__init__(game)
 
-        self.title_font = pygame.font.Font("assets/fonts/stairsnslabs.ttf", 32)
-        self.body_font = pygame.font.Font("assets/fonts/stairsnslabs.ttf", 16)
+        self.title_font = pygame.font.Font("assets/fonts/BPSHSfont.ttf", 124)
+        self.body_font = pygame.font.Font("assets/fonts/typewcond_regular.otf", 54)
 
     def handle_event(self, event: pygame.Event):
         if event.type == pygame.KEYDOWN:
@@ -29,7 +29,7 @@ class MainMenu(Scene):
 
         draw_text(
             screen,
-            "Fatec Presas Abertas",
+            "\"Fatec Presas Abertas\"",
             self.title_font,
             (255, 255, 255),
             (center_x, 220),
@@ -41,6 +41,6 @@ class MainMenu(Scene):
             "Pressione ENTER para iniciar",
             self.body_font,
             (200, 200, 200),
-            (center_x, 320),
+            (center_x, 420),
             centered = True
         )
