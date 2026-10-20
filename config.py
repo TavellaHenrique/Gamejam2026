@@ -7,7 +7,7 @@ FPS = 60 # Frames per Second - Usada para limitar o número máximo de quadros e
 
 # |-- Cores --|
 # Background
-BG_COLOR_DEFAULT = (56, 6, 27)
+BG_COLOR_DEFAULT = (74, 7, 7)
 
 # Textos
 FONT_COLOR_DEFAULT = (0, 0, 0)

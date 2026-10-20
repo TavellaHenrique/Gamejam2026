@@ -1,5 +1,5 @@
 
-from scene import Scene
+from scenes.scene import Scene
 
 class SceneManager:
     def __init__(self, game):
