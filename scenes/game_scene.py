@@ -2,8 +2,8 @@
 import pygame
 
 from scenes.scene import Scene
-
-from ui.dialogue_box import DialogueBox
+from systems.npc_controller import NPCController
+from entities.npc import NPC
 
 class GameScene(Scene):
 
@@ -11,114 +11,39 @@ class GameScene(Scene):
         super().__init__(game)
 
         self.player = game.player
-        self.npcs = game.npcs
-        self.dialogue_manager = game.dialogue_manager
 
-        self.dialogue_box = DialogueBox()
-        self.active_speaker = ""
+        self.npc_controller = NPCController(
+            game,
+            npcs=[
+                NPC(
+                    npc_id="weird_girl",
+                    display_name="Garota estranha",
+                    position=(600, 300),
+                    sprite_path="assets/sprites/npcs/Idle_Down.png",
+                    dialogue_id="weird_girl_intro"
+                ),
+                NPC(
+                    npc_id="poeta",
+                    display_name="Poeta",
+                    position=(200, 100),
+                    sprite_path="assets/sprites/npcs/Idle_Down.png",
+                    dialogue_id="poema"
+                )
+            ]
+        )
     
     def handle_event(self, event):
-        if event.type != pygame.KEYDOWN:
-            return
+        self.npc_controller.handle_event(event)
 
-        if event.key == pygame.K_e:
-            if self.dialogue_manager.is_active:
-                # Primeiro, tenta avançar a página.
-                if self.dialogue_box.advance_page():
-                    return
+    def update(self, delta_time):
+        if not self.npc_controller.dialogue_manager.is_active:
+            self.player.update(delta_time)
 
-                # Na última página: avança a fala.
-                self.dialogue_manager.advance()
-
-                if self.dialogue_manager.is_active:
-                    self.dialogue_box.show_text(
-                        self.dialogue_manager.current_text
-                    )
-                else:
-                    self.active_speaker = ""
-
-            else:
-                self.interact_with_nearest_npc()
-
-    def interact_with_nearest_npc(self):
-        npc = self.get_nearest_interactable_npc()
-
-        if npc is None:
-            return
-
-        self.active_speaker = npc.display_name
-        self.dialogue_manager.start(npc.dialogue_id)
-
-        self.dialogue_box.show_text(
-            self.dialogue_manager.current_text
-        )
-
-    def get_nearest_interactable_npc(self):
-        nearby_npcs = [
-            npc for npc in self.npcs
-            if npc.can_interact(self.player)
-        ]
-
-        if not nearby_npcs:
-            return None
-
-        return min(
-            nearby_npcs,
-            key=lambda npc: npc.position.distance_to(
-                self.player.position
-            ),
-        )
-
-    def draw_interaction_prompt(self, screen):
-        if self.dialogue_manager.is_active:
-            return
-
-        npc = self.get_nearest_interactable_npc()
-
-        if npc is None:
-            return
-
-        font = pygame.font.Font(
-            "assets/fonts/typewcond_regular.otf", 20
-        )
-        text = font.render(
-            "E - Interagir", True, (255, 255, 255)
-        )
-
-        text_rect = text.get_rect(
-            midbottom=(
-                npc.rect.centerx,
-                npc.rect.top + 60,
-            )
-        )
-
-        # Fundo escuro para facilitar a leitura.
-        background_rect = text_rect.inflate(16, 10)
-        background = pygame.Surface(
-            background_rect.size, pygame.SRCALPHA
-        )
-        background.fill((20, 24, 32, 210))
-
-        screen.blit(background, background_rect.topleft)
-        screen.blit(text, text_rect)
-
+        self.npc_controller.update(delta_time)
 
     def draw(self, screen):
         screen.fill((35, 45, 55))
 
-        self.npcs.draw(screen)
+        self.npc_controller.draw_npcs(screen)
         screen.blit(self.player.image, self.player.rect)
-
-        self.draw_interaction_prompt(screen)
-
-        if self.dialogue_manager.is_active:
-            self.dialogue_box.draw(
-                screen,
-                speaker_name=self.active_speaker,
-            )
-
-    def update(self, delta_time):
-        if not self.dialogue_manager.is_active:
-            self.player.update(delta_time)
-
-        self.npcs.update(delta_time)
+        self.npc_controller.draw_ui(screen)
