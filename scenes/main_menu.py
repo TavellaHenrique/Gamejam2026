@@ -6,6 +6,8 @@ from config import BG_COLOR_DEFAULT
 from ui.text import draw_text
 from scenes.scene import Scene
 
+from scenes.game_scene import GameScene
+
 class MainMenu(Scene):
     def __init__(self, game):
         super().__init__(game)
@@ -14,12 +16,11 @@ class MainMenu(Scene):
         self.body_font = pygame.font.Font("assets/fonts/stairsnslabs.ttf", 16)
 
     def handle_event(self, event: pygame.Event):
-        if (event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN):
-            # TODO: Iniciar jogo
-            pass
-
-    def update(self, delta_time):
-        self.game.player.update(delta_time)
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                self.game.scene_manager.change_scene(
+                    GameScene(self.game)
+                )
 
     def draw(self, screen: pygame.Surface):
         screen.fill(BG_COLOR_DEFAULT)
@@ -42,9 +43,4 @@ class MainMenu(Scene):
             (200, 200, 200),
             (center_x, 320),
             centered = True
-        )
-
-        screen.blit(
-            self.game.player.image,
-            self.game.player.rect
         )
