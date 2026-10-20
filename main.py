@@ -35,10 +35,7 @@ def main():
 
     # Inicio do loop principal
     while running:
-        delta_time = clock.tick()
-
-        # Define a taxa de atualização de imagens
-        pygame.time.delay(60)
+        delta_time = clock.tick(60) / 1000.0
 
         # Gerencia os eventos do jogo
         running = manageEvents(game)

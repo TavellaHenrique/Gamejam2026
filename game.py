@@ -72,10 +72,10 @@ class Game:
     def draw_collision_areas(self, screen):
         npc: NonPlayableCharacter = None
 
-        self.player.show_collision_area(screen, pygame.color.THECOLORS.get("green"))
+        self.player.collision_area.show(screen, pygame.color.THECOLORS.get("green"))
 
         for npc in self.npcs.sprites():
-            npc.show_collision_area(screen, pygame.color.THECOLORS.get("red"))
+            npc.collision_area.show(screen, pygame.color.THECOLORS.get("red"))
             npc.show_interaction_area(screen, pygame.color.THECOLORS.get("yellow"))
 
     def handle_collision(self, screen, player_previous_pos):
@@ -83,19 +83,19 @@ class Game:
         npc: NonPlayableCharacter = None
         for npc in self.npcs.sprites():
             # Colisão entre áreas sólidas
-            if self.player.collision_area.colliderect(npc.collision_area):
+            if self.player.collision_area.rect.colliderect(npc.collision_area):
                 self.player.rect.topleft = player_previous_pos
-                self.player.update_collision_area()
+                self.player.collision_area.update()
         
             # Colisão do jogador com uma área de interação
-            if self.player.collision_area.colliderect(npc.interaction_area):
+            if self.player.collision_area.rect.colliderect(npc.interaction_area):
                 self.draw_text(
                     screen,
                     "Aperte E para interagir",
                     self.default_font,
                     FONT_COLOR_DEFAULT_TEXT,
                     npc.rect.centerx,
-                    npc.collision_area.top - 20
+                    npc.collision_area.rect.top - 20
                 )
         
                 keys = pygame.key.get_pressed()

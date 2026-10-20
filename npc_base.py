@@ -2,9 +2,9 @@
 import pygame
 
 from animated_character import AnimatedCharacter
-from character_collision import CharacterCollision
+from collision_area import CollisionArea
 
-class NonPlayableCharacter(AnimatedCharacter, CharacterCollision):
+class NonPlayableCharacter(AnimatedCharacter):
     def __init__(self, pos_x, pos_y, collision_area_width, collision_area_height):
         super().__init__()
     
@@ -16,7 +16,7 @@ class NonPlayableCharacter(AnimatedCharacter, CharacterCollision):
     
         self.set_image(pos_x, pos_y)
 
-        self.set_collision_area(collision_area_width, collision_area_height)
+        self.collision_area = CollisionArea(self, collision_area_width, collision_area_height)
 
         interaction_area_width = 100
         interaction_area_height = 100

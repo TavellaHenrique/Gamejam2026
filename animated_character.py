@@ -20,14 +20,10 @@ class AnimatedCharacter(pygame.sprite.Sprite):
         self.frame_index = 0
 
         # Tempo até trocar de quadro, em milissegundos (ms)
-        self.frame_delay = 120
+        self.frame_delay = 0.120
 
         # Variável de controle do tempo de exibição de cada quadro
         self.animation_timer = 0
-
-        # -- Física e movimento --
-        # Velocidade do personagem (por enquanto, estática)
-        self.speed = 10
 
     def get_sprites_from_sheet(self, path, frame_width, frame_height, frame_count, scale) -> list:
         sheet = pygame.image.load(path).convert_alpha()
@@ -43,8 +39,10 @@ class AnimatedCharacter(pygame.sprite.Sprite):
 
     def update(self, delta_time):
         self.animation_timer += delta_time
+
         if self.animation_timer >= self.frame_delay:
-            self.animation_timer -= self.frame_delay
+            self.animation_timer = 0
+
             self.frame_index = (self.frame_index + 1) % len(self.animations.get(self.current_animation))
 
         self.image = self.animations.get(self.current_animation)[self.frame_index]

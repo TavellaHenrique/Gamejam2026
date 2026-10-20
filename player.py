@@ -1,9 +1,9 @@
 import pygame
 
 from animated_character import AnimatedCharacter
-from character_collision import CharacterCollision
+from collision_area import CollisionArea
 
-class Player(AnimatedCharacter, CharacterCollision):
+class Player(AnimatedCharacter):
     IDLE = "idle"
     WALKING = "walking"
 
@@ -20,7 +20,11 @@ class Player(AnimatedCharacter, CharacterCollision):
 
         self.set_image(pos_x, pos_y)
 
-        self.set_collision_area(collision_area_width, collision_area_height)
+        self.collision_area = CollisionArea(self, collision_area_height, collision_area_height)
+
+        self.position = pygame.Vector2(pos_x, pos_y)
+
+        self.speed = 240
 
     def get_animations(self):
         self.animations = {
@@ -69,32 +73,36 @@ class Player(AnimatedCharacter, CharacterCollision):
     def update(self, delta_time):
         keys = pygame.key.get_pressed()
 
-        if (
-            keys[pygame.K_a] or
-            keys[pygame.K_d] or
-            keys[pygame.K_s] or
-            keys[pygame.K_w]
-        ):
+        self.direction = pygame.Vector2(
+            keys[pygame.K_d] - keys[pygame.K_a],
+            keys[pygame.K_s] - keys[pygame.K_w]
+        )
+
+        if self.direction.length_squared() > 0:
+            self.direction = self.direction.normalize()
             self.state = self.WALKING
 
-            if keys[pygame.K_a]:
-                self.rect.x -= self.speed
-                self.facing_direction = "left"
-            if keys[pygame.K_d]:
-                self.rect.x += self.speed
-                self.facing_direction = "right"
-            if keys[pygame.K_s]:
-                self.rect.y += self.speed
-                self.facing_direction = "down"
-            if keys[pygame.K_w]:
-                self.rect.y -= self.speed
-                self.facing_direction = "up"
+            if abs(self.direction.x) > abs(self.direction.y):
+                self.facing_direction = (
+                    "right" if self.direction.x > 0 else "left"
+                )
+            else:
+                self.facing_direction = (
+                    "down" if self.direction.y > 0 else "up"
+                )
 
+            self.position += self.direction * self.speed * delta_time
+
+            self.rect.topleft = (
+                round(self.position.x),
+                round(self.position.y)
+            )
         else:
             self.state = self.IDLE
 
-        self.update_collision_area()
+        self.collision_area.update()
         self.update_animation()
+        
         super().update(delta_time)
 
     def update_animation(self):
