@@ -4,7 +4,7 @@ class Scene:
         self.game = game
 
     # Deve lidar com os eventos de teclados, mouse e afins
-    def handle_events(self, event):
+    def handle_event(self, event):
         pass
 
     # Atualiza movimento, animações e lógica da cena
