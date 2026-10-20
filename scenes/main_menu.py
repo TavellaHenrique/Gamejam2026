@@ -18,6 +18,9 @@ class MainMenu(Scene):
             # TODO: Iniciar jogo
             pass
 
+    def update(self, delta_time):
+        self.game.player.update(delta_time)
+
     def draw(self, screen: pygame.Surface):
         screen.fill(BG_COLOR_DEFAULT)
 
@@ -41,4 +44,7 @@ class MainMenu(Scene):
             centered = True
         )
 
-
+        screen.blit(
+            self.game.player.image,
+            self.game.player.rect
+        )

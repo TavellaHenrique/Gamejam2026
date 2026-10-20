@@ -2,9 +2,11 @@
 from scenes.scene_manager import SceneManager
 from scenes.main_menu import MainMenu
 
+from entities.player import Player
+
 class Game:
     def __init__(self):
-        self.player = None # Player()
+        self.player = Player(200, 200)
         self.inventory = None # Inventory()
         self.dialogue_manager = None # DialogueManager()
 

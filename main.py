@@ -30,7 +30,7 @@ def main():
     # Loop principal
     while running:
         # Faz os quadros avançarem (até o máximo passado como argumento) e armazena o tempo passado entre cada um
-        delta_time = clock.tick(FPS) // 1000 # milli
+        delta_time = clock.tick(FPS) / 1000.0
 
         for event in pygame.event.get():
             match event.type:
