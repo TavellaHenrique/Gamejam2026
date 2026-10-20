@@ -27,10 +27,17 @@ class Game:
     def create_npcs(self):
         self.npcs.add(
             NPC(
-                npc_id="Professor01",
-                display_name="James",
-                position=(400, 300),
+                npc_id="weird_girl",
+                display_name="Garota estranha",
+                position=(600, 300),
                 sprite_path="assets/sprites/npcs/Idle_Down.png",
-                dialogue_id="professor01_intro"
+                dialogue_id="weird_girl_intro"
+            ),
+            NPC(
+                npc_id="poeta",
+                display_name="Poeta",
+                position=(200, 100),
+                sprite_path="assets/sprites/npcs/Idle_Down.png",
+                dialogue_id="poema"
             )
         )

@@ -1,6 +1,13 @@
 {
-    "professor01_intro": [
-        "Olá fatecano!!!",
-        "Sabe, caixas de diálogo assim são bem tranquilas de fazer, até textos longos e repetitivos, que dizem a mesma coisa e só se repetem."
+    "weird_girl_intro": [
+        "Já leu Drácula?",
+        "Vampiros são meus favoritos!",
+        "Me conta se achar um por aí."
+    ],
+    "poema": [
+        "Roses are #FF0000",
+        "Violets are #0000FF",
+        "If you can read this",
+        "You're a nerd (4^(0.5))"
     ]
 }
