@@ -186,6 +186,29 @@ class Player(AnimatedCharacter):
         self.is_moving = False
         self.update_player_animation(False)
 
+    def face_direction(self, direction):
+        """Orienta o jogador usando um vetor ou direção cardinal/diagonal."""
+        directions = {
+            "up": (0, -1),
+            "down": (0, 1),
+            "left": (-1, 0),
+            "right": (1, 0),
+            "up_left": (-1, -1),
+            "up_right": (1, -1),
+            "down_left": (-1, 1),
+            "down_right": (1, 1),
+        }
+        vector = pygame.Vector2(
+            directions[direction]
+            if isinstance(direction, str)
+            else direction
+        )
+        if vector.length_squared() == 0:
+            raise ValueError("A direção não pode ser zero.")
+        self.facing = vector.normalize()
+        self.is_moving = False
+        self.update_player_animation(False)
+
     def update_player_animation(self, moving):
         """Escolhe a animação conforme a direção e o estado atual do movimento."""
         if self.animation_mode == self.ANIMATION_8_DIRECTIONS:

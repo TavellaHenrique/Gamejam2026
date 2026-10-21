@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from entities.npc import NPC
 from systems.cutscene import Cutscene
 from systems.trigger import Trigger as AreaTrigger
 
@@ -20,6 +21,21 @@ def npc(npc_id, npc_arrival):
     )
 
 
+def npcs(destinations):
+    """Move vários NPCs em paralelo com um mapeamento ID -> destino."""
+    if not destinations:
+        raise ValueError("Informe ao menos um NPC para movimentar.")
+    return CutsceneAction("npcs", {"destinations": dict(destinations)})
+
+
+def face_direction(actor_id, direction):
+    """Orienta o jogador ou um NPC para uma direção explícita."""
+    return CutsceneAction(
+        "face_direction",
+        {"actor_id": actor_id, "direction": direction},
+    )
+
+
 def player_destination(destination, obstacles=()):
     """Cria uma ação de movimento do jogador até um destino."""
     return CutsceneAction(
@@ -33,31 +49,53 @@ def wait(seconds):
     return CutsceneAction("wait", {"seconds": seconds})
 
 
-def dialogue(text, speaker="Calouro", face_npc=None):
+def dialogue(text, speaker="Calouro"):
     """Cria uma fala inline, sem exigir uma entrada no JSON."""
     return CutsceneAction(
         "dialogue",
-        {"text": text, "speaker": speaker, "face_npc": face_npc},
+        {"text": text, "speaker": speaker},
     )
 
 
-def dialogue_from_id(dialogue_id, speaker="", face_npc=None):
-    """Cria uma fala consultada pelo identificador no arquivo de diálogos."""
+def dialogue_from_id(dialogue_id, speaker=None):
+    """Busca texto e falante pelo ID; permite sobrescrever o nome se necessário."""
     return CutsceneAction(
         "dialogue_from_id",
         {
             "dialogue_id": dialogue_id,
             "speaker": speaker,
-            "face_npc": face_npc,
         },
     )
 
 
-def npc_dialogue(npc_id, text, face_player=True):
+def npc_dialogue(npc_id, text):
     """Cria uma fala inline atribuída ao NPC indicado."""
     return CutsceneAction(
         "npc_dialogue",
-        {"npc_id": npc_id, "text": text, "face_player": face_player},
+        {"npc_id": npc_id, "text": text},
+    )
+
+
+def spawn_npc(remove_at_end=True, **npc_options):
+    """Cria um NPC durante o roteiro e o remove ao fim por padrão."""
+    if "npc_id" not in npc_options:
+        raise ValueError("NPC temporário precisa de npc_id.")
+    return CutsceneAction(
+        "spawn_npc",
+        {
+            "npc_options": dict(npc_options),
+            "remove_at_end": remove_at_end,
+        },
+    )
+
+
+def fade_out(npc_id, duration=1.0):
+    """Faz o NPC desaparecer gradualmente e o remove ao concluir."""
+    if duration < 0:
+        raise ValueError("A duração do fade-out não pode ser negativa.")
+    return CutsceneAction(
+        "fade_out",
+        {"npc_id": npc_id, "duration": duration},
     )
 
 
@@ -110,11 +148,15 @@ class CutsceneController:
         player,
         npc_controller,
         dialogue_manager,
+        game,
+        cutscene_id,
         bounds=None,
     ):
         self.player = player
         self.npc_controller = npc_controller
         self.dialogue_manager = dialogue_manager
+        self.game = game
+        self.cutscene_id = cutscene_id
         self.bounds = bounds
         self.steps = []
         self.step_index = 0
@@ -126,6 +168,10 @@ class CutsceneController:
         self.trigger = None
         self.triggers = []
         self.wait_timer = 0.0
+        self.fade_npc_id = None
+        self.fade_elapsed = 0.0
+        self.fade_duration = 0.0
+        self.temporary_npc_ids = set()
 
     @classmethod
     def create_story_cutscene(
@@ -133,13 +179,18 @@ class CutsceneController:
         game,
         npc_controller,
         *actions,
+        cutscene_id,
         bounds=None,
     ):
-        """Monta uma sequência a partir de ações declarativas."""
+        """Monta uma sequência identificada e persistente na execução atual."""
+        if not cutscene_id:
+            raise ValueError("Toda cutscene precisa de um cutscene_id.")
         cutscene = cls(
             game.player,
             npc_controller,
             game.dialogue_manager,
+            game,
+            cutscene_id,
             bounds=bounds,
         )
         if not actions:
@@ -170,6 +221,14 @@ class CutsceneController:
         options = action.options
         if action.kind == "npc":
             self.move_npc(options["npc_id"], [options["destination"]])
+        elif action.kind == "npcs":
+            self.move_npcs(
+                {
+                    npc_id: [destination]
+                    for npc_id, destination
+                    in options["destinations"].items()
+                }
+            )
         elif action.kind == "player":
             self.move_player(
                 [options["destination"]],
@@ -184,11 +243,7 @@ class CutsceneController:
             self.steps.append(
                 (
                     "inline_dialogue",
-                    (
-                        (options["text"],),
-                        options["speaker"],
-                        options["face_npc"],
-                    ),
+                    ((options["text"],), options["speaker"]),
                 )
             )
         elif action.kind == "dialogue_from_id":
@@ -198,7 +253,6 @@ class CutsceneController:
                     (
                         options["dialogue_id"],
                         options["speaker"],
-                        options["face_npc"],
                     ),
                 )
             )
@@ -206,11 +260,31 @@ class CutsceneController:
             self.steps.append(
                 (
                     "npc_dialogue",
+                    (options["npc_id"], options["text"]),
+                )
+            )
+        elif action.kind == "face_direction":
+            self.steps.append(
+                (
+                    "face_direction",
+                    (options["actor_id"], options["direction"]),
+                )
+            )
+        elif action.kind == "spawn_npc":
+            self.steps.append(
+                (
+                    "spawn_npc",
                     (
-                        options["npc_id"],
-                        options["text"],
-                        options["face_player"],
+                        options["npc_options"],
+                        options["remove_at_end"],
                     ),
+                )
+            )
+        elif action.kind == "fade_out":
+            self.steps.append(
+                (
+                    "fade_out",
+                    (options["npc_id"], options["duration"]),
                 )
             )
         elif action.kind == "trigger":
@@ -259,18 +333,20 @@ class CutsceneController:
         self.steps.append(("player_movement", (tuple(points), tuple(obstacles))))
         return self
 
-    def face_npc(self, npc_id, target="player"):
-        """Adiciona uma etapa que orienta o NPC para o jogador ou uma posição."""
-        self.steps.append(("face_npc", (npc_id, target)))
+    def face_direction(self, actor_id, direction):
+        """Adiciona uma etapa que define a direção explícita de um ator."""
+        self.steps.append(("face_direction", (actor_id, direction)))
         return self
 
-    def dialogue(self, dialogue_id, speaker="", face_npc=None):
-        """Adiciona uma fala e, opcionalmente, orienta um NPC para o jogador."""
-        self.steps.append(("dialogue", (dialogue_id, speaker, face_npc)))
+    def dialogue(self, dialogue_id, speaker=""):
+        """Adiciona uma fala consultada pelo identificador do diálogo."""
+        self.steps.append(("dialogue", (dialogue_id, speaker)))
         return self
 
     def draw_trigger(self, screen):
         """Desenha o gatilho do roteiro, se este possuir um."""
+        if self.game.is_cutscene_completed(self.cutscene_id):
+            return
         for area_trigger, visible in self.triggers:
             # Só desenha gatilhos marcados como visíveis e ainda não acionados.
             if visible and not area_trigger.has_triggered:
@@ -279,6 +355,8 @@ class CutsceneController:
     def start(self):
         """Inicia a sequência a partir da primeira etapa configurada."""
         if self.is_active:
+            return False
+        if self.game.is_cutscene_completed(self.cutscene_id):
             return False
         if not self.steps:
             raise ValueError("A cutscene precisa de pelo menos uma etapa.")
@@ -342,6 +420,19 @@ class CutsceneController:
                 return
             self._finish_current_step()
 
+        elif self.waiting_for == "npc_fade":
+            self.fade_elapsed += delta_time
+            opacity = 255 * (
+                1 - self.fade_elapsed / self.fade_duration
+            )
+            npc = self.npc_controller.get_npc(self.fade_npc_id)
+            npc.set_opacity(opacity)
+            if self.fade_elapsed < self.fade_duration:
+                return
+            self.npc_controller.remove_npc(self.fade_npc_id)
+            self.fade_npc_id = None
+            self._finish_current_step()
+
         self._run_ready_steps()
 
     def _run_ready_steps(self):
@@ -380,6 +471,27 @@ class CutsceneController:
                     self.waiting_for = "npc_movement"
                     return
 
+            elif action == "spawn_npc":
+                npc_options, remove_at_end = arguments
+                spawned_npc = self.npc_controller.add_npc(
+                    NPC(**npc_options)
+                )
+                if remove_at_end:
+                    self.temporary_npc_ids.add(spawned_npc.npc_id)
+
+            elif action == "fade_out":
+                npc_id, duration = arguments
+                npc = self.npc_controller.get_npc(npc_id)
+                self.fade_npc_id = npc_id
+                self.fade_elapsed = 0.0
+                self.fade_duration = duration
+                if duration == 0:
+                    self.npc_controller.remove_npc(npc_id)
+                    self.fade_npc_id = None
+                else:
+                    self.waiting_for = "npc_fade"
+                    return
+
             elif action == "player_movement":
                 points, obstacles = arguments
                 if not points:
@@ -392,20 +504,20 @@ class CutsceneController:
                     self.waiting_for = "player_movement"
                     return
 
-            elif action == "face_npc":
-                npc_id, target = arguments
-                if target == "player":
-                    target = self.player
-                self.npc_controller.face_npc(npc_id, target)
+            elif action == "face_direction":
+                actor_id, direction = arguments
+                if actor_id == "player":
+                    self.player.face_direction(direction)
+                else:
+                    self.npc_controller.face_direction(
+                        actor_id,
+                        direction,
+                    )
 
             elif action == "dialogue":
-                dialogue_id, speaker, face_npc = arguments
+                dialogue_id, speaker = arguments
                 if self.dialogue_manager.is_active:
                     return
-                if face_npc is not None:
-                    npc = self.npc_controller.get_npc(face_npc)
-                    self.npc_controller.face_npc(face_npc, self.player)
-                    self.player.look_at(npc.position)
                 if self.dialogue_manager.start(
                     dialogue_id,
                     speaker=speaker,
@@ -414,25 +526,18 @@ class CutsceneController:
                     return
 
             elif action == "inline_dialogue":
-                lines, speaker, face_npc = arguments
+                lines, speaker = arguments
                 if self.dialogue_manager.is_active:
                     return
-                if face_npc is not None:
-                    npc = self.npc_controller.get_npc(face_npc)
-                    self.npc_controller.face_npc(face_npc, self.player)
-                    self.player.look_at(npc.position)
                 if self.dialogue_manager.start_lines(lines, speaker=speaker):
                     self.waiting_for = "dialogue"
                     return
 
             elif action == "npc_dialogue":
-                npc_id, text, face_player = arguments
+                npc_id, text = arguments
                 if self.dialogue_manager.is_active:
                     return
                 npc = self.npc_controller.get_npc(npc_id)
-                if face_player:
-                    self.npc_controller.face_npc(npc_id, self.player)
-                    self.player.look_at(npc.position)
                 if self.dialogue_manager.start_lines(
                     (text,),
                     speaker=npc.display_name,
@@ -447,4 +552,16 @@ class CutsceneController:
 
     def _finish_current_step(self):
         self.step_index += 1
+        self.waiting_for = None
+        if self.step_index >= len(self.steps):
+            self._complete()
+
+    def _complete(self):
+        """Registra a conclusão e remove NPCs temporários restantes."""
+        for npc_id in tuple(self.temporary_npc_ids):
+            if self.npc_controller.has_npc(npc_id):
+                self.npc_controller.remove_npc(npc_id)
+        self.temporary_npc_ids.clear()
+        self.game.mark_cutscene_completed(self.cutscene_id)
+        self.is_active = False
         self.waiting_for = None

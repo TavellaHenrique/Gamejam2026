@@ -7,9 +7,13 @@ from scenes.scene import Scene
 from systems.cutscene_controller import (
     CutsceneController,
     dialogue,
+    face_direction,
+    fade_out,
     npc,
     npc_dialogue,
+    npcs,
     player_destination,
+    spawn_npc,
     trigger,
     wait,
 )
@@ -30,7 +34,7 @@ class GameScene(Scene):
 
         self.door = Door(
             rect=(900, 245, 56, 112),
-            prompt="Entrar na próxima área",
+            prompt="Segunda área",
         )
         surface = pygame.display.get_surface()
         self.bounds = pygame.Rect(
@@ -83,15 +87,41 @@ class GameScene(Scene):
                 trigger_radius=32,
                 visible=True,
                 action=(
-                    npc("weird_girl", npc_arrival=(520, 260)),
+                    spawn_npc(
+                        npc_id="cutscene_guest",
+                        display_name="Visitante misterioso",
+                        position=(720, 180),
+                        sprite_path="assets/sprites/npcs/Idle_Down.png",
+                        dialogue_id="poema",
+                        use_player_animations=True,
+                        interactable=False,
+                    ),
+                    # Os três personagens se deslocam em paralelo após o trigger.
+                    npcs(
+                        {
+                            "weird_girl": (520, 260),
+                            "poeta": (160, 80),
+                            "cutscene_guest": (820, 250),
+                        }
+                    ),
+                    face_direction("weird_girl", "down"),
+                    face_direction("poeta", "right"),
+                    face_direction("cutscene_guest", "left"),
+                    face_direction("player", "up"),
                     npc_dialogue(
                         "weird_girl",
                         "Você também ouviu o sino tocar? A torre está trancada há anos.",
                     ),
                     dialogue(
-                        "Ouvi vindo da sala de arquivos. Talvez alguém tenha encontrado outra entrada.",
-                        face_npc="weird_girl",
+                        "Ouvi vindo da sala de arquivos.",
                     ),
+                    dialogue(
+                        "Talvez alguém tenha encontrado outra entrada.",
+                    ),
+                    wait(0.75),
+                    # O visitante segue até a porta e desaparece em fade-out.
+                    npc("cutscene_guest", npc_arrival=(880, 300)),
+                    fade_out("cutscene_guest", duration=1.25),
                 ),
             ),
             wait(1),
@@ -101,16 +131,18 @@ class GameScene(Scene):
                 trigger_radius=10,
                 visible=True,
                 action=(
+                    face_direction("weird_girl", "left"),
+                    face_direction("player", "right"),
                     npc_dialogue(
                         "weird_girl",
                         "Olha! A porta lateral está aberta. Acho que o barulho veio de lá.",
                     ),
                     dialogue(
                         "Vamos investigar juntos. Mas se ouvirmos outro sino, é melhor correr.",
-                        face_npc="weird_girl",
                     ),
                 ),
             ),
+            cutscene_id="game_scene_1",
             bounds=self.bounds,
         )
         self.cutscene_controller.start()

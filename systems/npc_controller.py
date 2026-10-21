@@ -22,12 +22,17 @@ class NPCController:
 
     def __init__(self, game, npcs=()):
         """Guarda referências do jogo e prepara os NPCs e elementos da interface."""
+        self.game = game
         # Reutiliza os objetos centrais do jogo para consultar o jogador e controlar diálogos.
         self.player = game.player
         self.dialogue_manager = game.dialogue_manager
 
         # O grupo permite atualizar e desenhar todos os NPCs usando as APIs do Pygame.
-        self.npcs = pygame.sprite.Group(*npcs)
+        available_npcs = (
+            npc for npc in npcs
+            if not game.is_npc_removed(npc.npc_id)
+        )
+        self.npcs = pygame.sprite.Group(*available_npcs)
         npc_ids = [npc.npc_id for npc in self.npcs]
         if len(npc_ids) != len(set(npc_ids)):
             raise ValueError("Cada NPC precisa ter um npc_id único.")
@@ -78,6 +83,30 @@ class NPCController:
         self.npc_cutscenes[npc] = cutscene
         return cutscene
 
+    def add_npc(self, npc):
+        """Adiciona um NPC à cena ativa, validando o identificador."""
+        if any(existing.npc_id == npc.npc_id for existing in self.npcs):
+            raise ValueError(f"NPC já registrado: {npc.npc_id}")
+        self.npcs.add(npc)
+        return npc
+
+    def remove_npc(self, npc_id):
+        """Remove um NPC e limpa referências de movimento/interação."""
+        npc = self.get_npc(npc_id)
+        self.npcs.remove(npc)
+        self.game.mark_npc_removed(npc_id)
+        self.npc_cutscenes.pop(npc, None)
+        self.wanderers.pop(npc, None)
+        self.nearby_ambient_npcs.discard(npc)
+        if self.pending_interaction_npc is npc:
+            self.pending_interaction_npc = None
+            self.previous_npc_facing = None
+            self.is_approaching_npc = False
+            self.interaction_cutscene.is_active = False
+        if self.dialogue_manager.ambient_anchor is npc:
+            self.dialogue_manager.clear_ambient_speech()
+        return npc
+
     def get_npc(self, npc_id):
         """Retorna um NPC registrado pelo identificador."""
         for npc in self.npcs:
@@ -86,12 +115,28 @@ class NPCController:
 
         raise KeyError(f"NPC não encontrado: {npc_id}")
 
-    def face_npc(self, npc_id, target):
-        """Orienta um NPC registrado para uma entidade ou posição."""
-        npc = self.get_npc(npc_id)
-        if hasattr(target, "position"):
-            target = target.position
-        npc.look_at(target)
+    def has_npc(self, npc_id):
+        """Indica se existe um NPC registrado com o identificador informado."""
+        return any(npc.npc_id == npc_id for npc in self.npcs)
+
+    def face_direction(self, npc_id, direction):
+        """Orienta um NPC para um vetor ou direção cardinal/diagonal."""
+        directions = {
+            "up": (0, -1),
+            "down": (0, 1),
+            "left": (-1, 0),
+            "right": (1, 0),
+            "up_left": (-1, -1),
+            "up_right": (1, -1),
+            "down_left": (-1, 1),
+            "down_right": (1, 1),
+        }
+        vector = (
+            directions[direction]
+            if isinstance(direction, str)
+            else direction
+        )
+        self.get_npc(npc_id).set_facing(vector)
 
     def is_npc_moving(self, npc_id):
         """Indica se o NPC está executando um trajeto roteirizado."""

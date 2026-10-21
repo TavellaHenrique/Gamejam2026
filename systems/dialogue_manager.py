@@ -17,6 +17,23 @@ class DialogueManager:
         """Loads dialogue data and initializes the dialogue presentation."""
         with open(dialogues_path, "r", encoding="utf-8") as file:
             self.dialogues = json.load(file)
+        for dialogue_id, dialogue in self.dialogues.items():
+            if not isinstance(dialogue, dict):
+                raise ValueError(
+                    f"O diálogo '{dialogue_id}' precisa conter speaker e lines."
+                )
+            if "speaker" not in dialogue or "lines" not in dialogue:
+                raise ValueError(
+                    f"O diálogo '{dialogue_id}' precisa conter speaker e lines."
+                )
+            if not isinstance(dialogue["speaker"], str):
+                raise ValueError(
+                    f"O falante do diálogo '{dialogue_id}' precisa ser texto."
+                )
+            if not isinstance(dialogue["lines"], list):
+                raise ValueError(
+                    f"As falas do diálogo '{dialogue_id}' precisam ser uma lista."
+                )
 
         self.dialogue_box = DialogueBox()
         self.active_dialogue = None
@@ -53,13 +70,22 @@ class DialogueManager:
         if dialogue_id not in self.dialogues:
             raise KeyError(f"Diálogo não encontrado: {dialogue_id}")
 
-        return tuple(self.dialogues[dialogue_id])
+        return tuple(self.dialogues[dialogue_id]["lines"])
 
-    def start(self, dialogue_id, speaker=""):
+    def get_speaker(self, dialogue_id):
+        """Returns the speaker configured for a dialogue identifier."""
+        if dialogue_id not in self.dialogues:
+            raise KeyError(f"Diálogo não encontrado: {dialogue_id}")
+
+        return self.dialogues[dialogue_id]["speaker"]
+
+    def start(self, dialogue_id, speaker=None):
         """Starts a dialogue by identifier and prepares its first page."""
         if self.is_active:
             return False
 
+        if speaker is None:
+            speaker = self.get_speaker(dialogue_id)
         return self.start_lines(self.get_lines(dialogue_id), speaker=speaker)
 
     def start_lines(self, lines, speaker=""):

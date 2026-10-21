@@ -47,6 +47,7 @@ class NPC(AnimatedCharacter):
         self.facing = pygame.Vector2(0, 1)
         self.is_moving = False
         self.use_player_animations = use_player_animations
+        self.opacity = 255
 
         # A animação usa o sprite informado ou, no NPC de demonstração, os sprites do jogador.
         if use_player_animations:
@@ -80,6 +81,9 @@ class NPC(AnimatedCharacter):
 
         self._base_image = self.image
         self._apply_facing_image()
+        if self.opacity < 255:
+            self.image = self.image.copy()
+            self.image.set_alpha(self.opacity)
 
         self.rect = self.image.get_rect(
             center=(
@@ -120,6 +124,10 @@ class NPC(AnimatedCharacter):
         self.is_moving = False
         self._select_animation(moving=False)
         self._apply_facing_image()
+
+    def set_opacity(self, opacity):
+        """Atualiza a opacidade do sprite sem alterar os quadros compartilhados."""
+        self.opacity = max(0, min(255, round(opacity)))
 
     def _apply_facing_image(self):
         """Aplica a orientação horizontal disponível no spritesheet do NPC."""
