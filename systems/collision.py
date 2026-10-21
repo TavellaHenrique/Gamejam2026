@@ -4,18 +4,26 @@ import pygame
 
 
 def get_entity_hitbox(entity, position=None):
-    """Retorna apenas a área visível do sprite na posição central informada."""
+    """Retorna a metade inferior da área visível, mantendo a largura do sprite."""
     image = entity.image
     center = entity.position if position is None else pygame.Vector2(position)
     if getattr(entity, "_collision_cached_image", None) is not image:
         entity._collision_cached_image = image
         entity._collision_cached_visible_bounds = image.get_bounding_rect()
 
+    visible_bounds = entity._collision_cached_visible_bounds
+    lower_height = max(1, visible_bounds.height // 2)
+    lower_bounds = pygame.Rect(
+        visible_bounds.left,
+        visible_bounds.bottom - lower_height,
+        visible_bounds.width,
+        lower_height,
+    )
     image_origin = (
         round(center.x - image.get_width() / 2),
         round(center.y - image.get_height() / 2),
     )
-    return entity._collision_cached_visible_bounds.move(image_origin)
+    return lower_bounds.move(image_origin)
 
 
 def can_occupy(entity, position, bounds, obstacles=()):
@@ -52,6 +60,7 @@ def can_step(entity, start, destination, bounds, obstacles=()):
         bounds,
         obstacles,
     )
+    # Aceita uma posição sem colisão ou que reduza uma colisão já existente.
     return destination_score == 0 or destination_score < current_score
 
 
@@ -100,6 +109,7 @@ def move_with_collisions(entity, displacement, bounds, obstacles=()):
                 bounds,
                 obstacles,
             )
+            # Move para espaço livre ou permite escapar de uma sobreposição anterior.
             if candidate_score == 0 or candidate_score < current_score:
                 destination = candidate
 

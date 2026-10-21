@@ -10,6 +10,36 @@
         "If you can read this",
         "You're a nerd (4^(0.5))"
     ],
+    "cutscene_girl_intro": [
+        "Você também ouviu o sino tocar? A torre está trancada há anos."
+    ],
+    "cutscene_player_reply": [
+        "Ouvi vindo da sala de arquivos. Talvez alguém tenha encontrado outra entrada."
+    ],
+    "cutscene_girl_reveal": [
+        "Olha! A porta lateral está aberta. Acho que o barulho veio de lá."
+    ],
+    "cutscene_player_end": [
+        "Vamos investigar juntos. Mas se ouvirmos outro sino, é melhor correr."
+    ],
+    "diretor": [
+        "Bem-vindo ao campus. O elevador leva aos laboratórios e ao corredor."
+    ],
+    "atendente_cantina": [
+        "O almoço de hoje está saindo agora. Pode sentar onde quiser."
+    ],
+    "funcionaria_limpeza": [
+        "Estou deixando o refeitório em ordem. Cuidado com as mesas."
+    ],
+    "thiago": [
+        "Estou organizando o material do laboratório antes da próxima aula."
+    ],
+    "adriano": [
+        "Este laboratório está livre por enquanto. Só não mexa nos equipamentos."
+    ],
+    "professora": [
+        "Estou esperando a próxima turma no corredor. A aula começa em breve."
+    ],
     "falas_aleatorias": [
         "Que aula é agora?",
         "Qual andar de Cálculo?",

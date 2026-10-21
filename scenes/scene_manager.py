@@ -40,6 +40,7 @@ class SceneManager:
 
     def handle_event(self, event):
         """Encaminha eventos somente quando há uma cena ativa."""
+        # Durante a transição a cena está sendo substituída e não recebe comandos.
         if self.current_scene and self.transition_phase is None:
             self.current_scene.handle_event(event)
 
