@@ -1,10 +1,9 @@
-"""Cena de demonstração conectada à cena principal por uma porta."""
-
 import pygame
 
-from config import SCREEN_HEIGHT, SCREEN_WIDTH
 from entities.door import Door
 from entities.npc import NPC
+from scenes.scene import Scene
+from scenes.laboratorio6 import Laboratorio6
 from systems.cutscene_controller import (
     CutsceneController,
     change_scene,
@@ -21,22 +20,16 @@ from systems.cutscene_controller import (
     wait,
     dialogue_from_id,
 )
-from scenes.scene import Scene
 from systems.npc_controller import NPCController
 
 
-def _create_saguao(game):
-    from scenes.game_scene import Saguao
-
-    return Saguao(game)
-
-
-class Laboratorio(Scene):
-    """Área com porta, jogador e NPCs ambulantes."""
+class Saguao(Scene):
+    """Cena de jogo com a história demonstrativa e seus NPCs."""
 
     def __init__(self, game, player_spawn=None):
-        """Cria a área e inicializa dois NPCs ambulantes."""
+        """Configura o jogador compartilhado e os NPCs da cena."""
         super().__init__(game)
+
         self.player = game.player
         if player_spawn is None:
             player_spawn = game.player_spawn_point
@@ -44,21 +37,14 @@ class Laboratorio(Scene):
             game.set_player_spawn_point(player_spawn)
         self.player.position.update(player_spawn)
         self.player.rect.center = player_spawn
-        surface = pygame.display.get_surface()
-        self.bounds = pygame.Rect(
-            0,
-            0,
-            surface.get_width() if surface else SCREEN_WIDTH,
-            surface.get_height() if surface else SCREEN_HEIGHT,
-        )
-        self.background_color = (48, 66, 58)
-        self.title_font = pygame.font.Font(
-            "assets/fonts/typewcond_regular.otf",
-            36,
+
+        self.door = Door(
+            rect=(900, 245, 56, 112),
+            prompt="Segunda área",
         )
         self.door = Door(
-            rect=(0, 100, 56, 112),
-            prompt="Área anterior",
+            rect=(450, 0, 100, 40),
+            prompt="Primeira área",
         )
         surface = pygame.display.get_surface()
         self.bounds = pygame.Rect(
@@ -73,52 +59,13 @@ class Laboratorio(Scene):
             game,
             npcs=[
                 NPC(
-                    npc_id="professor2",
-                    display_name="Professor",
+                    npc_id="diretor",
+                    display_name="Diretor",
                     position=(500, 200),
                     sprite_path="assets/sprites/npcs/Idle_Down.png",
-                    dialogue_id="professor2",
+                    dialogue_id="diretor_saguao_2",
                     use_player_animations=True,
-                ),
-                NPC(
-                    npc_id="estudante6",
-                    display_name="",
-                    position=(100, 500),
-                    sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                    dialogue_id="",
-                    use_player_animations=True,
-                ),
-                NPC(
-                    npc_id="estudante7",
-                    display_name="",
-                    position=(200, 500),
-                    sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                    dialogue_id="",
-                    use_player_animations=True,
-                ),
-                NPC(
-                    npc_id="estudante8",
-                    display_name="",
-                    position=(300, 500),
-                    sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                    dialogue_id="",
-                    use_player_animations=True,
-                ), #400, 500 - player
-                NPC(
-                    npc_id="estudante4",
-                    display_name="",
-                    position=(500, 500),
-                    sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                    dialogue_id="",
-                    use_player_animations=True,
-                ),
-                NPC(
-                    npc_id="estudante5",
-                    display_name="",
-                    position=(600, 500),
-                    sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                    dialogue_id="",
-                    use_player_animations=True,
+                    interactable=True
                 ),
             ],
             npc_scope=type(self),
@@ -127,39 +74,61 @@ class Laboratorio(Scene):
             game,
             self.npc_controller,
             trigger(
-                trigger_position=(400, 500),
+                trigger_position=(self.player.position),
                 trigger_radius=16,
                 visible=False,
                 action=(
-                    dialogue_from_id("professor1_intro_2"),
-                    dialogue_from_id("jogador_intro_2"),
-                    npc("professor2", npc_arrival=(700, 200)),
-                    face_direction("professor2", "down"),
-                    player_destination((400, 100)),
-                    player_destination((40, 100)),
-                    change_scene(
-                        lambda: _create_saguao(game),
-                        duration=0.5,
-                        player_spawn=(450, 100),
+                    spawn_npc(
+                        npc_id="estudante1",
+                        display_name="estudante1",
+                        position=(440, 544),
+                        sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
+                        dialogue_id="estudante1",
+                        use_player_animations=True,
+                        interactable=False,
                     ),
-                    # npc("professor1", npc_arrival=(500, 40)),
-                    # fade_out("professor1", duration=0.50),
-                    # npcs(
-                    #     {
-                    #         "estudante1": (450, 40),
-                    #         "estudante2": (500, 40),
-                    #         "estudante3": (550, 40),
-                    #     }
-                    # ),
-                    # fade_out("estudante1", duration=0.25),
-                    # fade_out("estudante2", duration=0.25),
-                    # fade_out("estudante3", duration=0.25),
-                    # player_destination((500, 40)),
-                    # change_scene(
-                    #     lambda: SecondArea(game),
-                    #     duration=0.5,
-                    #     player_spawn=(0, 100),
-                    # ),
+                    spawn_npc(
+                        npc_id="estudante2",
+                        display_name="estudante2",
+                        position=(500, 544),
+                        sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
+                        dialogue_id="estudante2",
+                        use_player_animations=True,
+                        interactable=False,
+                    ),
+                    spawn_npc(
+                        npc_id="estudante3",
+                        display_name="estudante3",
+                        position=(550, 544),
+                        sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
+                        dialogue_id="estudante3",
+                        use_player_animations=True,
+                        interactable=False,
+                    ),
+                    dialogue_from_id("jogador_intro"),
+                    dialogue_from_id("diretor_saguao_1"),
+                    npc("diretor", npc_arrival=(500, 40)),
+                    fade_out("diretor", duration=0.50),
+                    npcs(
+                        {
+                            "estudante1": (450, 40),
+                            "estudante2": (500, 40),
+                            "estudante3": (550, 40),
+                        }
+                    ),
+                    fade_out("estudante1", duration=0.25),
+                    fade_out("estudante2", duration=0.25),
+                    fade_out("estudante3", duration=0.25),
+                    player_destination((500, 40)),
+                    change_scene(
+                        lambda: Laboratorio6(game),
+                        player_spawn=(400, 500),
+                        text="Passa um tempo",
+                        fade_out_duration=0.5,
+                        duration=1.5,
+                        fade_in_duration=0.5,
+                        font_size=44,
+                    )
                     # Os três personagens se deslocam em paralelo após o trigger.
                     # npcs(
                     #     {
@@ -219,55 +188,66 @@ class Laboratorio(Scene):
             #     duration=0.8,
             #     player_spawn=(145, 300),
             # ),
-            cutscene_id="game_scene_2",
+            cutscene_id="game_scene_1",
             bounds=self.bounds,
         )
         self.cutscene_controller.start()
 
     def handle_event(self, event):
-        """Avança diálogos e inicia o retorno ao interagir com a porta."""
+        """Delega falas da cutscene e encaminha outras interações."""
         if self.cutscene_controller.handle_event(event):
             return
 
         if (
+            # O evento precisa ser o pressionamento da tecla de interação.
             event.type == pygame.KEYDOWN
             and event.key == pygame.K_e
+            # A porta só pode ser usada quando o jogador está próximo.
             and self.door.can_interact(self.player)
+            # Diálogo ou cutscene ativa impede a troca de cena.
+            and not self.game.dialogue_manager.is_active
+            and not self.cutscene_controller.is_active
         ):
             self.game.scene_manager.transition_to(
-                lambda: _create_saguao(self.game),
-                player_spawn=(840, 300),
+                lambda: Laboratorio6(self.game),
+                player_spawn=(145, 300),
             )
+            return
+
+        self.npc_controller.handle_event(event)
 
     def update(self, delta_time):
-        """Move entidades com colisão e escolhe destinos dos NPCs a cada cinco segundos."""
+        """Atualiza a cutscene, os NPCs e o jogador."""
         self.cutscene_controller.update(delta_time)
+        self.npc_controller.update(delta_time)
+
         self.player.update(
             delta_time,
             accept_input=(
-                # Diálogos e etapas da cutscene bloqueiam o controle do jogador.
+                # Diálogos bloqueiam o controle para não andar durante as falas.
                 not self.game.dialogue_manager.is_active
+                # A cutscene bloqueia o teclado, exceto enquanto aguarda o gatilho.
                 and not self.cutscene_controller.locks_player_control
+                # A aproximação automática à conversa controla o jogador.
+                and not self.npc_controller.interaction_cutscene.is_active
+                # O jogador não deve se mover enquanto está sendo posicionado.
+                and not self.npc_controller.is_approaching_npc
+                # Uma interação pendente ainda está preparando a conversa.
+                and self.npc_controller.pending_interaction_npc is None
             ),
             bounds=self.bounds,
             obstacles=self.npc_controller.get_player_obstacles(
                 (self.door.rect,)
             ),
         )
-        self.npc_controller.update(delta_time)
 
     def draw(self, screen):
-        """Desenha o fundo, porta, NPCs, jogador e suas falas compactas."""
-        screen.fill(self.background_color)
+        """Desenha o fundo, personagens e interface da cena."""
+        screen.fill((35, 45, 55))
 
-        title = self.title_font.render(
-            "Segunda área",
-            True,
-            (255, 255, 255),
-        )
-        screen.blit(title, (24, 20))
-
+        # Desenha os personagens sobre o cenário e a interface acima deles.
         self.door.draw(screen, self.player)
+        self.cutscene_controller.draw_trigger(screen)
         self.npc_controller.draw_npcs(screen)
         screen.blit(self.player.image, self.player.rect)
         self.npc_controller.draw_ui(screen)

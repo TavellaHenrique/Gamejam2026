@@ -8,14 +8,20 @@
             "Precisarei estudar muito e conseguir abstrair o máximo de conteúdo que eu conseguir dos professores!"
         ]
     },
-    "professor1_intro": {
-        "speaker": "Professor",
+    "diretor_saguao_1": {
+        "speaker": "Diretor",
         "lines": [
-            "Sejam bem-vindos à FATEC! Eu sou o professor 1 e dou aula de Lógica de programação. Peço que os novatos me sigam!"
+            "Sejam bem-vindos à FATEC! Eu sou o diretor e estou aqui para ajudar vocês durante o período letivo. Peço que os novatos me sigam para a primeira aula!"
         ]
     },
-    "professor1_intro_2": {
-        "speaker": "Professor",
+    "diretor_saguao_2": {
+        "speaker": "Diretor",
+        "lines": [
+            "Bem vindo à FATEC! Estou pensando em fazer um café comunitário amanhã…"
+        ]
+    },
+    "thiago_lab6_1": {
+        "speaker": "Thiago",
         "lines": [
             "Chamada feita, pessoal! Até amanhã!"
         ]
@@ -25,6 +31,21 @@
         "lines": [
             "Esse professor é muito legal. Gostei da tatuagem de Espadas dele.", 
             "Agora vou dar uma explorada por aqui, já que a aula acabou."
+        ]
+    },
+    "thiago_lab6_2": {
+        "speaker": "Thiago",
+        "lines": [
+            "Eae, gostou da aula?",
+            "Fico feliz em saber!",
+            "Caso precise, estarei sempre por aqui.",
+            "Olha o Birdow avisando que acabou a aula!"
+        ]
+    },
+    "adriano_lab1_1": {
+        "speaker": "Adriano",
+        "lines": [
+            "Você é calouro? Acho que vai gostar da minha aula, tenho uns cursos muito legais pra você fazer da Oracle, da AWS…"
         ]
     }
     ,

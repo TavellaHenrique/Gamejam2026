@@ -6,7 +6,7 @@ from config import BG_COLOR_DEFAULT
 from ui.text import draw_text
 from scenes.scene import Scene
 
-from scenes.game_scene import Saguao
+from scenes.saguao import Saguao
 
 
 class MainMenu(Scene):
