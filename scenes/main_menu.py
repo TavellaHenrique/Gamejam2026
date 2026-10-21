@@ -6,7 +6,7 @@ from config import BG_COLOR_DEFAULT
 from ui.text import draw_text
 from scenes.scene import Scene
 
-from scenes.game_scene import GameScene
+from scenes.game_scene import Saguao
 
 
 class MainMenu(Scene):
@@ -24,7 +24,7 @@ class MainMenu(Scene):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 self.game.scene_manager.change_scene(
-                    GameScene(self.game)
+                    Saguao(self.game)
                 )
 
     def draw(self, screen: pygame.Surface):

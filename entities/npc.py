@@ -1,10 +1,12 @@
 
 import pygame
-from systems.animation import Animation
+
+from systems.animated_character import AnimatedCharacter
 from systems.collision import move_with_collisions
+from systems.trigger import Trigger
 
 
-class NPC(pygame.sprite.Sprite):
+class NPC(AnimatedCharacter):
     """Personagem não controlável que pode exibir um diálogo ao jogador."""
 
     def __init__(
@@ -26,7 +28,7 @@ class NPC(pygame.sprite.Sprite):
         interactable=True,
     ):
         """Configura identidade, alcance de interação e animação do NPC."""
-        super().__init__()
+        super().__init__("idle")
 
         # Identificadores e nome são usados para encontrar o diálogo e exibir o personagem.
         self.npc_id = npc_id
@@ -34,6 +36,10 @@ class NPC(pygame.sprite.Sprite):
         self.dialogue_id = dialogue_id
         self.position = pygame.Vector2(position)
         self.interaction_radius = interaction_radius
+        self.interaction_trigger = Trigger(
+            position=self.position,
+            radius=interaction_radius,
+        )
         self.ambient_radius = ambient_radius
         self.ambient_lines = tuple(ambient_lines)
         self.speed = speed
@@ -41,14 +47,14 @@ class NPC(pygame.sprite.Sprite):
         self.facing = pygame.Vector2(0, 1)
         self.is_moving = False
         self.use_player_animations = use_player_animations
+        self.opacity = 255
 
         # A animação usa o sprite informado ou, no NPC de demonstração, os sprites do jogador.
-        self.animation = Animation("idle")
         if use_player_animations:
             self._load_player_animations()
         else:
-            self.animation.animations = {
-                "idle": self.animation.get_sprites_from_spritesheet(
+            self.animations = {
+                "idle": self.get_sprites_from_spritesheet(
                     path=sprite_path,
                     frame_width=frame_width,
                     frame_height=frame_height,
@@ -57,24 +63,27 @@ class NPC(pygame.sprite.Sprite):
                 )
             }
 
-        self.animation.set_image()
+        self.set_image()
 
         # O retângulo de colisão acompanha o centro da posição lógica do NPC.
-        self.image = self.animation.image
-        self._base_image = self.animation.image
+        self._base_image = self.image
         self.rect = self.image.get_rect(
             center=(
                 round(self.position.x),
                 round(self.position.y)
             )
         )
+        self.interaction_trigger.position.update(self.position)
 
     def update(self, delta_time):
         """Avança a animação e sincroniza o sprite com a posição atual."""
-        self.animation.update(delta_time)
+        super().update(delta_time)
 
-        self._base_image = self.animation.image
+        self._base_image = self.image
         self._apply_facing_image()
+        if self.opacity < 255:
+            self.image = self.image.copy()
+            self.image.set_alpha(self.opacity)
 
         self.rect = self.image.get_rect(
             center=(
@@ -82,15 +91,14 @@ class NPC(pygame.sprite.Sprite):
                 round(self.position.y)
             )
         )
+        self.interaction_trigger.position.update(self.position)
 
     def can_interact(self, player):
         """Indica se o jogador está dentro do raio de interação deste NPC."""
         if not self.interactable:
             return False
 
-        distance = self.position.distance_to(player.position)
-
-        return distance <= self.interaction_radius
+        return self.interaction_trigger.contains(player)
 
     def is_in_ambient_range(self, player):
         """Indica se o jogador entrou no raio maior usado para falas aleatórias."""
@@ -104,10 +112,22 @@ class NPC(pygame.sprite.Sprite):
         if direction.length_squared() == 0:
             return
 
+        self.set_facing(direction)
+
+    def set_facing(self, direction):
+        """Define a direção do NPC e atualiza sua animação de parado."""
+        direction = pygame.Vector2(direction)
+        if direction.length_squared() == 0:
+            return
+
         self.facing = direction.normalize()
         self.is_moving = False
         self._select_animation(moving=False)
         self._apply_facing_image()
+
+    def set_opacity(self, opacity):
+        """Atualiza a opacidade do sprite sem alterar os quadros compartilhados."""
+        self.opacity = max(0, min(255, round(opacity)))
 
     def _apply_facing_image(self):
         """Aplica a orientação horizontal disponível no spritesheet do NPC."""
@@ -175,7 +195,7 @@ class NPC(pygame.sprite.Sprite):
         }
 
         def load(path):
-            return self.animation.get_sprites_from_spritesheet(
+            return self.get_sprites_from_spritesheet(
                 path=f"{base_path}/{path}",
                 **frame_settings,
             )
@@ -201,7 +221,7 @@ class NPC(pygame.sprite.Sprite):
             "down_right": "Walk/walk_Right_Down.png",
         }
 
-        self.animation.animations = {
+        self.animations = {
             "idle": load(idle_paths["down"]),
             **{
                 f"idle_{direction}": load(path)
@@ -231,4 +251,4 @@ class NPC(pygame.sprite.Sprite):
             (1, 1): "down_right",
         }.get((x, y), "down")
         animation_name = f"{'walk' if moving else 'idle'}_{direction}"
-        self.animation.play(animation_name)
+        self.play(animation_name)

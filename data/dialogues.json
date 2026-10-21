@@ -1,25 +1,123 @@
 {
-    "weird_girl_intro": [
-        "Já leu Drácula?",
-        "Vampiros são meus favoritos!",
-        "Me conta se achar um por aí."
-    ],
-    "poema": [
-        "Roses are #FF0000",
-        "Violets are #0000FF",
-        "If you can read this",
-        "You're a nerd (4^(0.5))"
-    ],
-    "falas_aleatorias": [
-        "Que aula é agora?",
-        "Qual andar de Cálculo?",
-        "Você sabe onde vai ser a próxima aula?",
-        "Será que hoje tem prova?",
-        "Alguém viu o professor por aí?",
-        "Estou tentando encontrar uma sala livre.",
-        "Você já terminou o trabalho?",
-        "A cantina está aberta agora?",
-        "Que horas começa a próxima aula?",
-        "Hoje o campus está bem movimentado."
-    ]
+    "jogador_intro": {
+        "speaker": "Você",
+        "lines": [
+            "Hoje é meu primeiro dia na FATEC! Estou muito feliz!",
+            "Eu não consegui dormir muito bem ontem, meu pescoço está doendo um pouco, mas estou muito empolgado para o começo das aulas",
+            "Mas como meu sonho é ser o maior programador do mundo", 
+            "Precisarei estudar muito e conseguir abstrair o máximo de conteúdo que eu conseguir dos professores!"
+        ]
+    },
+    "professor1_intro": {
+        "speaker": "Professor",
+        "lines": [
+            "Sejam bem-vindos à FATEC! Eu sou o professor 1 e dou aula de Lógica de programação. Peço que os novatos me sigam!"
+        ]
+    },
+    "professor1_intro_2": {
+        "speaker": "Professor",
+        "lines": [
+            "Chamada feita, pessoal! Até amanhã!"
+        ]
+    },
+    "jogador_intro_2": {
+        "speaker": "Você",
+        "lines": [
+            "Esse professor é muito legal. Gostei da tatuagem de Espadas dele.", 
+            "Agora vou dar uma explorada por aqui, já que a aula acabou."
+        ]
+    }
+    ,
+    "weird_girl_intro": {
+        "speaker": "Garota estranha",
+        "lines": [
+            "Já leu Drácula?",
+            "Vampiros são meus favoritos!",
+            "Me conta se achar um por aí."
+        ]
+    },
+    "poema": {
+        "speaker": "Poeta",
+        "lines": [
+            "Roses are #FF0000",
+            "Violets are #0000FF",
+            "If you can read this",
+            "You're a nerd (4^(0.5))"
+        ]
+    },
+    "cutscene_girl_intro": {
+        "speaker": "Garota estranha",
+        "lines": [
+            "Você também ouviu o sino tocar? A torre está trancada há anos."
+        ]
+    },
+    "cutscene_player_reply": {
+        "speaker": "Calouro",
+        "lines": [
+            "Ouvi vindo da sala de arquivos. Talvez alguém tenha encontrado outra entrada."
+        ]
+    },
+    "cutscene_girl_reveal": {
+        "speaker": "Garota estranha",
+        "lines": [
+            "Olha! A porta lateral está aberta. Acho que o barulho veio de lá."
+        ]
+    },
+    "cutscene_player_end": {
+        "speaker": "Calouro",
+        "lines": [
+            "Vamos investigar juntos. Mas se ouvirmos outro sino, é melhor correr."
+        ]
+    },
+    "diretor": {
+        "speaker": "Diretor",
+        "lines": [
+            "Bem-vindo ao campus. O elevador leva aos laboratórios e ao corredor."
+        ]
+    },
+    "atendente_cantina": {
+        "speaker": "Atendente",
+        "lines": [
+            "O almoço de hoje está saindo agora. Pode sentar onde quiser."
+        ]
+    },
+    "funcionaria_limpeza": {
+        "speaker": "Funcionária da limpeza",
+        "lines": [
+            "Estou deixando o refeitório em ordem. Cuidado com as mesas."
+        ]
+    },
+    "thiago": {
+        "speaker": "Thiago",
+        "lines": [
+            "Estou organizando o material do laboratório antes da próxima aula."
+        ]
+    },
+    "adriano": {
+        "speaker": "Adriano",
+        "lines": [
+            "Este laboratório está livre por enquanto. Só não mexa nos equipamentos."
+        ]
+    },
+    "professora": {
+        "speaker": "Professora",
+        "lines": [
+            "Estou esperando a próxima turma no corredor. A aula começa em breve."
+        ]
+    },
+    "falas_aleatorias": {
+        "speaker": "",
+        "lines": [
+            "Que aula é agora?",
+            "Qual andar de Cálculo?",
+            "Você sabe onde vai ser a próxima aula?",
+            "Será que hoje tem prova?",
+            "Alguém viu o professor por aí?",
+            "Estou tentando encontrar uma sala livre.",
+            "Você já terminou o trabalho?",
+            "A cantina está aberta agora?",
+            "Que horas começa a próxima aula?",
+            "Hoje o campus está bem movimentado."
+        ]
+    }
 }

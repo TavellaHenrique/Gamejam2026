@@ -1,10 +1,11 @@
 
 import pygame
-from systems.animation import Animation
+
+from systems.animated_character import AnimatedCharacter
 from systems.collision import move_with_collisions
 
 
-class Player(pygame.sprite.Sprite):
+class Player(AnimatedCharacter):
     """Personagem controlado pelo jogador, com movimento e animações direcionais."""
 
     # Modos de animação disponíveis para escolher a quantidade de direções animadas.
@@ -18,22 +19,22 @@ class Player(pygame.sprite.Sprite):
         animation_mode=ANIMATION_8_DIRECTIONS
     ):
         """Inicializa posição, velocidade, direção e conjunto de animações."""
+        super().__init__("idle")
         self.position = pygame.Vector2(position)
         self.speed = speed
 
         self.animation_mode = animation_mode
-        self.animation = Animation("idle")
 
         # A direção inicial aponta para baixo e é mantida quando o jogador para.
         self.facing = pygame.Vector2(0, 1)
         self.is_moving = False
+        self._last_update_position = self.position.copy()
 
         # Carrega as animações antes de selecionar o primeiro quadro do sprite.
         self.get_animations()
 
-        self.animation.set_image()
+        self.set_image()
 
-        self.image = self.animation.image
         self.rect = self.image.get_rect(
             center=(
                 round(self.position.x),
@@ -52,21 +53,24 @@ class Player(pygame.sprite.Sprite):
         # Durante uma cutscene, outra rotina movimenta o jogador sem ler o teclado.
         if accept_input:
             self.move(delta_time, bounds, obstacles)
+        else:
+            # A cutscene can move the player outside this update method.
+            self.is_moving = self.position != self._last_update_position
 
         # Seleciona animação correspondente
         self.update_player_animation(self.is_moving)
 
         # Atualiza quadro da animação
-        self.animation.update(delta_time)
+        super().update(delta_time)
 
         # Sincroniza imagem e retângulo com a posição atual
-        self.image = self.animation.image
         self.rect = self.image.get_rect(
             center=(
                 round(self.position.x),
                 round(self.position.y)
             )
         )
+        self._last_update_position.update(self.position)
 
     def move(self, delta_time, bounds=None, obstacles=()):
         """Lê as teclas direcionais e move o jogador proporcionalmente ao tempo."""
@@ -181,7 +185,29 @@ class Player(pygame.sprite.Sprite):
         self.facing = direction.normalize()
         self.is_moving = False
         self.update_player_animation(False)
-        self.image = self.animation.image
+
+    def face_direction(self, direction):
+        """Orienta o jogador usando um vetor ou direção cardinal/diagonal."""
+        directions = {
+            "up": (0, -1),
+            "down": (0, 1),
+            "left": (-1, 0),
+            "right": (1, 0),
+            "up_left": (-1, -1),
+            "up_right": (1, -1),
+            "down_left": (-1, 1),
+            "down_right": (1, 1),
+        }
+        vector = pygame.Vector2(
+            directions[direction]
+            if isinstance(direction, str)
+            else direction
+        )
+        if vector.length_squared() == 0:
+            raise ValueError("A direção não pode ser zero.")
+        self.facing = vector.normalize()
+        self.is_moving = False
+        self.update_player_animation(False)
 
     def update_player_animation(self, moving):
         """Escolhe a animação conforme a direção e o estado atual do movimento."""
@@ -231,10 +257,10 @@ class Player(pygame.sprite.Sprite):
 
     def set_animation(self, animation_name):
         """Troca a animação atual somente quando o nome solicitado é diferente."""
-        if animation_name == self.animation.current_animation:
+        if animation_name == self.current_animation:
             return
 
-        self.animation.play(animation_name)
+        self.play(animation_name)
     
     def get_animations(self):
         """Carrega os spritesheets usados pelo jogador e monta o mapa de animações."""
@@ -250,12 +276,12 @@ class Player(pygame.sprite.Sprite):
 
         def load_animation(path):
             """Carrega um spritesheet relativo à pasta base do personagem."""
-            return self.animation.get_sprites_from_spritesheet(
+            return self.get_sprites_from_spritesheet(
                 path=f"{base_path}/{path}",
                 **frame_settings
             )
 
-        self.animation.animations = {
+        self.animations = {
             # -- Idle --
             "idle": load_animation("Idle/Idle_Down.png"),
             "idle_up": load_animation("Idle/Idle_Up.png"),

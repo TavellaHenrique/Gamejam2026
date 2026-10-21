@@ -2,6 +2,8 @@
 
 import pygame
 
+from systems.trigger import Trigger
+
 
 class Door:
     """Desenha uma porta e indica quando o jogador pode usá-la."""
@@ -13,6 +15,7 @@ class Door:
             interaction_margin * 2,
             interaction_margin * 2,
         )
+        self.interaction_trigger = Trigger(rect=self.interaction_rect)
         self.prompt = prompt
         self.color = color
         self.font = pygame.font.Font(
@@ -22,15 +25,20 @@ class Door:
 
     def can_interact(self, player):
         """Retorna True quando o centro do jogador entra na área da porta."""
-        return self.interaction_rect.collidepoint(player.position)
+        return self.interaction_trigger.contains(player)
 
     def draw(self, screen, player):
         """Desenha o bloco opaco marrom, detalhes simples e o aviso de interação."""
         pygame.draw.rect(screen, self.color, self.rect)
         pygame.draw.rect(screen, (65, 38, 22), self.rect, width=4)
 
-        knob_position = (self.rect.right - 12, self.rect.centery)
-        pygame.draw.circle(screen, (220, 180, 70), knob_position, 4)
+        knob_rect = pygame.Rect(
+            self.rect.right - 16,
+            self.rect.centery - 4,
+            8,
+            8,
+        )
+        pygame.draw.rect(screen, (220, 180, 70), knob_rect)
 
         if not self.can_interact(player):
             return
