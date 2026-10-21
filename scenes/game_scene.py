@@ -4,8 +4,10 @@ import pygame
 from entities.door import Door
 from entities.npc import NPC
 from scenes.scene import Scene
+from scenes.second_area import SecondArea
 from systems.cutscene_controller import (
     CutsceneController,
+    change_scene,
     dialogue,
     face_direction,
     fade_out,
@@ -14,8 +16,10 @@ from systems.cutscene_controller import (
     npcs,
     player_destination,
     spawn_npc,
+    time_passes,
     trigger,
     wait,
+    dialogue_from_id,
 )
 from systems.npc_controller import NPCController
 
@@ -28,13 +32,20 @@ class GameScene(Scene):
         super().__init__(game)
 
         self.player = game.player
-        if player_spawn is not None:
-            self.player.position.update(player_spawn)
-            self.player.rect.center = player_spawn
+        if player_spawn is None:
+            player_spawn = game.player_spawn_point
+        else:
+            game.set_player_spawn_point(player_spawn)
+        self.player.position.update(player_spawn)
+        self.player.rect.center = player_spawn
 
         self.door = Door(
             rect=(900, 245, 56, 112),
             prompt="Segunda área",
+        )
+        self.door = Door(
+            rect=(450, 0, 100, 40),
+            prompt="Primeira área",
         )
         surface = pygame.display.get_surface()
         self.bounds = pygame.Rect(
@@ -49,33 +60,12 @@ class GameScene(Scene):
             game,
             npcs=[
                 NPC(
-                    npc_id="weird_girl",
-                    display_name="Garota estranha",
-                    position=(600, 300),
+                    npc_id="professor1",
+                    display_name="Professor",
+                    position=(500, 200),
                     sprite_path="assets/sprites/npcs/Idle_Down.png",
-                    dialogue_id="weird_girl_intro",
+                    dialogue_id="professor1",
                     use_player_animations=True,
-                ),
-                NPC(
-                    npc_id="poeta",
-                    display_name="Poeta",
-                    position=(200, 100),
-                    sprite_path="assets/sprites/npcs/Idle_Down.png",
-                    dialogue_id="poema",
-                    use_player_animations=True,
-                ),
-                NPC(
-                    npc_id="estudante",
-                    display_name="Estudante",
-                    position=(420, 380),
-                    sprite_path="assets/sprites/npcs/Idle_Down.png",
-                    dialogue_id="poema",
-                    ambient_radius=180,
-                    ambient_lines=game.dialogue_manager.get_lines(
-                        "falas_aleatorias"
-                    ),
-                    use_player_animations=True,
-                    interactable=False,
                 ),
             ],
         )
@@ -83,65 +73,116 @@ class GameScene(Scene):
             game,
             self.npc_controller,
             trigger(
-                trigger_position=(280, 200),
-                trigger_radius=32,
-                visible=True,
+                trigger_position=(500, 544),
+                trigger_radius=16,
+                visible=False,
                 action=(
                     spawn_npc(
-                        npc_id="cutscene_guest",
-                        display_name="Visitante misterioso",
-                        position=(720, 180),
-                        sprite_path="assets/sprites/npcs/Idle_Down.png",
-                        dialogue_id="poema",
+                        npc_id="estudante1",
+                        display_name="estudante1",
+                        position=(440, 544),
+                        sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
+                        dialogue_id="estudante1",
                         use_player_animations=True,
                         interactable=False,
                     ),
-                    # Os três personagens se deslocam em paralelo após o trigger.
+                    spawn_npc(
+                        npc_id="estudante2",
+                        display_name="estudante2",
+                        position=(550, 544),
+                        sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
+                        dialogue_id="estudante2",
+                        use_player_animations=True,
+                        interactable=False,
+                    ),
+                    spawn_npc(
+                        npc_id="estudante3",
+                        display_name="estudante3",
+                        position=(590, 544),
+                        sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
+                        dialogue_id="estudante3",
+                        use_player_animations=True,
+                        interactable=False,
+                    ),
+                    dialogue_from_id("jogador_intro"),
+                    dialogue_from_id("professor1_intro"),
+                    npc("professor1", npc_arrival=(500, 40)),
+                    fade_out("professor1", duration=0.50),
                     npcs(
                         {
-                            "weird_girl": (520, 260),
-                            "poeta": (160, 80),
-                            "cutscene_guest": (820, 250),
+                            "estudante1": (450, 40),
+                            "estudante2": (500, 40),
+                            "estudante3": (550, 40),
                         }
                     ),
-                    face_direction("weird_girl", "down"),
-                    face_direction("poeta", "right"),
-                    face_direction("cutscene_guest", "left"),
-                    face_direction("player", "up"),
-                    npc_dialogue(
-                        "weird_girl",
-                        "Você também ouviu o sino tocar? A torre está trancada há anos.",
+                    fade_out("estudante1", duration=0.25),
+                    fade_out("estudante2", duration=0.25),
+                    fade_out("estudante3", duration=0.25),
+                    player_destination((500, 40)),
+                    change_scene(
+                        lambda: SecondArea(game),
+                        duration=0.5,
+                        player_spawn=(400, 500),
                     ),
-                    dialogue(
-                        "Ouvi vindo da sala de arquivos.",
-                    ),
-                    dialogue(
-                        "Talvez alguém tenha encontrado outra entrada.",
-                    ),
-                    wait(0.75),
-                    # O visitante segue até a porta e desaparece em fade-out.
-                    npc("cutscene_guest", npc_arrival=(880, 300)),
-                    fade_out("cutscene_guest", duration=1.25),
+                    # Os três personagens se deslocam em paralelo após o trigger.
+                    # npcs(
+                    #     {
+                    #         "estudante1": (520, 260),
+                    #         "estudante2": (550, 260),
+                    #         "estudante3": (590, 260),
+                    #     }
+                    # ),
+                    # face_direction("professor1", "left"),
+                    # face_direction("poeta", "right"),
+                    # face_direction("cutscene_guest", "left"),
+                    # face_direction("player", "right"),
+                    # npc_dialogue(
+                    #     "professor1",
+                    #     "Você também ouviu o sino tocar? A torre está trancada há anos.",
+                    # ),
+                    # dialogue(
+                    #     "Ouvi vindo da sala de arquivos.",
+                    # ),
+                    # dialogue(
+                    #     "Talvez alguém tenha encontrado outra entrada.",
+                    # ),
+                    # time_passes(
+                    #     text="Passa um tempo",
+                    #     fade_out_duration=0.8,
+                    #     duration=1.8,
+                    #     fade_in_duration=0.8,
+                    #     font_size=44,
+                    # ),
+                    # wait(0.75),
+                    # # O visitante segue até a porta e desaparece em fade-out.
+                    # npc("cutscene_guest", npc_arrival=(880, 300)),
+                    # fade_out("cutscene_guest", duration=1.25),
                 ),
             ),
-            wait(1),
-            player_destination((360, 240)),
-            trigger(
-                trigger_position=(360, 240),
-                trigger_radius=10,
-                visible=True,
-                action=(
-                    face_direction("weird_girl", "left"),
-                    face_direction("player", "right"),
-                    npc_dialogue(
-                        "weird_girl",
-                        "Olha! A porta lateral está aberta. Acho que o barulho veio de lá.",
-                    ),
-                    dialogue(
-                        "Vamos investigar juntos. Mas se ouvirmos outro sino, é melhor correr.",
-                    ),
-                ),
-            ),
+            # wait(1),
+            # player_destination((360, 240)),
+            # trigger(
+            #     trigger_position=(360, 240),
+            #     trigger_radius=10,
+            #     visible=False,
+            #     action=(
+            #         face_direction("weird_girl", "left"),
+            #         face_direction("player", "right"),
+            #         npc_dialogue(
+            #             "weird_girl",
+            #             "Olha! A porta lateral está aberta. Acho que o barulho veio de lá.",
+            #         ),
+            #         dialogue(
+            #             "Vamos investigar juntos. Mas se ouvirmos outro sino, é melhor correr.",
+            #         ),
+            #     ),
+            # ),
+            # # A transição substitui o spawn global e inicia a cena seguinte nesse ponto.
+            # change_scene(
+            #     lambda: SecondArea(game),
+            #     duration=0.8,
+            #     player_spawn=(145, 300),
+            # ),
             cutscene_id="game_scene_1",
             bounds=self.bounds,
         )
@@ -162,10 +203,9 @@ class GameScene(Scene):
             and not self.game.dialogue_manager.is_active
             and not self.cutscene_controller.is_active
         ):
-            from scenes.second_area import SecondArea
-
             self.game.scene_manager.transition_to(
-                lambda: SecondArea(self.game, player_spawn=(145, 300))
+                lambda: SecondArea(self.game),
+                player_spawn=(145, 300),
             )
             return
 
@@ -212,3 +252,4 @@ class GameScene(Scene):
         )
         screen.blit(hint, (20, 20))
         self.npc_controller.draw_ui(screen)
+        self.cutscene_controller.draw_overlay(screen)

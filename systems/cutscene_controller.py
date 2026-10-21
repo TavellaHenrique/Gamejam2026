@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+import pygame
+
 from entities.npc import NPC
 from systems.cutscene import Cutscene
 from systems.trigger import Trigger as AreaTrigger
@@ -44,9 +46,60 @@ def player_destination(destination, obstacles=()):
     )
 
 
+def set_player_spawn_point(position):
+    """Define onde o jogador surgirá quando uma cena não informar outro ponto."""
+    return CutsceneAction(
+        "set_player_spawn_point",
+        {"position": tuple(position)},
+    )
+
+
 def wait(seconds):
     """Cria uma pausa temporizada na sequência."""
     return CutsceneAction("wait", {"seconds": seconds})
+
+
+def change_scene(scene_factory, duration=0.5, player_spawn=None):
+    """Inicia uma transição para outra cena e encerra a cutscene atual."""
+    if not callable(scene_factory):
+        raise TypeError("scene_factory precisa ser uma função chamável.")
+    if duration <= 0:
+        raise ValueError("A duração da transição precisa ser positiva.")
+    if player_spawn is not None:
+        player_spawn = tuple(player_spawn)
+    return CutsceneAction(
+        "change_scene",
+        {
+            "scene_factory": scene_factory,
+            "duration": duration,
+            "player_spawn": player_spawn,
+        },
+    )
+
+
+def time_passes(
+    text="Passa um tempo",
+    fade_out_duration=0.5,
+    duration=1.5,
+    fade_in_duration=0.5,
+    font_size=36,
+):
+    """Escurece a tela, mantém uma legenda e retorna gradualmente à cena."""
+    durations = (fade_out_duration, duration, fade_in_duration)
+    if any(value < 0 for value in durations):
+        raise ValueError("Durações de transição não podem ser negativas.")
+    if font_size <= 0:
+        raise ValueError("O tamanho da fonte precisa ser positivo.")
+    return CutsceneAction(
+        "time_passes",
+        {
+            "text": text,
+            "fade_out_duration": fade_out_duration,
+            "duration": duration,
+            "fade_in_duration": fade_in_duration,
+            "font_size": font_size,
+        },
+    )
 
 
 def dialogue(text, speaker="Calouro"):
@@ -172,6 +225,10 @@ class CutsceneController:
         self.fade_elapsed = 0.0
         self.fade_duration = 0.0
         self.temporary_npc_ids = set()
+        self.screen_transition = None
+        self.screen_transition_elapsed = 0.0
+        self.screen_transition_font = None
+        self.screen_transition_font_size = None
 
     @classmethod
     def create_story_cutscene(
@@ -234,11 +291,39 @@ class CutsceneController:
                 [options["destination"]],
                 obstacles=options["obstacles"],
             )
+        elif action.kind == "set_player_spawn_point":
+            self.steps.append(
+                ("set_player_spawn_point", options["position"])
+            )
         elif action.kind == "wait":
             seconds = options["seconds"]
             if seconds < 0:
                 raise ValueError("A duração de wait não pode ser negativa.")
             self.steps.append(("wait", seconds))
+        elif action.kind == "change_scene":
+            self.steps.append(
+                (
+                    "change_scene",
+                    (
+                        options["scene_factory"],
+                        options["duration"],
+                        options["player_spawn"],
+                    ),
+                )
+            )
+        elif action.kind == "time_passes":
+            self.steps.append(
+                (
+                    "time_passes",
+                    (
+                        options["text"],
+                        options["fade_out_duration"],
+                        options["duration"],
+                        options["fade_in_duration"],
+                        options["font_size"],
+                    ),
+                )
+            )
         elif action.kind == "dialogue":
             self.steps.append(
                 (
@@ -352,6 +437,49 @@ class CutsceneController:
             if visible and not area_trigger.has_triggered:
                 area_trigger.draw(screen)
 
+    def draw_overlay(self, screen):
+        """Desenha a transição de tela e a legenda centralizada, se ativa."""
+        if self.screen_transition is None:
+            return
+
+        text, fade_out_duration, hold_duration, fade_in_duration, font_size = (
+            self.screen_transition
+        )
+        elapsed = self.screen_transition_elapsed
+
+        if elapsed < fade_out_duration:
+            alpha = round(255 * elapsed / fade_out_duration)
+        elif elapsed < fade_out_duration + hold_duration:
+            alpha = 255
+        else:
+            fade_in_elapsed = elapsed - fade_out_duration - hold_duration
+            alpha = round(
+                255 * (1 - fade_in_elapsed / fade_in_duration)
+            )
+
+        overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, max(0, min(255, alpha))))
+        screen.blit(overlay, (0, 0))
+
+        if (
+            alpha >= 128
+            and elapsed >= fade_out_duration
+            and elapsed < fade_out_duration + hold_duration
+            and text
+        ):
+            if self.screen_transition_font_size != font_size:
+                self.screen_transition_font = pygame.font.Font(
+                    None,
+                    font_size,
+                )
+                self.screen_transition_font_size = font_size
+            label = self.screen_transition_font.render(
+                text,
+                True,
+                (255, 255, 255),
+            )
+            screen.blit(label, label.get_rect(center=screen.get_rect().center))
+
     def start(self):
         """Inicia a sequência a partir da primeira etapa configurada."""
         if self.is_active:
@@ -433,6 +561,17 @@ class CutsceneController:
             self.fade_npc_id = None
             self._finish_current_step()
 
+        elif self.waiting_for == "screen_transition":
+            self.screen_transition_elapsed += delta_time
+            transition_duration = sum(
+                self.screen_transition[1:4]
+            )
+            if self.screen_transition_elapsed < transition_duration:
+                return
+            self.screen_transition = None
+            self.screen_transition_elapsed = 0.0
+            self._finish_current_step()
+
         self._run_ready_steps()
 
     def _run_ready_steps(self):
@@ -455,6 +594,31 @@ class CutsceneController:
                     return
                 self._finish_current_step()
                 continue
+
+            elif action == "time_passes":
+                self.screen_transition = arguments
+                self.screen_transition_elapsed = 0.0
+                transition_duration = sum(arguments[1:4])
+                if transition_duration > 0:
+                    self.waiting_for = "screen_transition"
+                    return
+                self.screen_transition = None
+
+            elif action == "change_scene":
+                scene_factory, duration, player_spawn = arguments
+                if not self.game.scene_manager.transition_to(
+                    scene_factory,
+                    duration=duration,
+                    player_spawn=player_spawn,
+                ):
+                    raise RuntimeError(
+                        "Já existe uma transição de cena em andamento."
+                    )
+                self._complete()
+                return
+
+            elif action == "set_player_spawn_point":
+                self.game.set_player_spawn_point(arguments)
 
             elif action == "npc_movements":
                 active_npc_ids = []

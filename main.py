@@ -40,12 +40,14 @@ def main():
                 case pygame.QUIT:
                     running = False
                 case _:
-                    # Os eventos que não encerram o aplicativo são enviados à cena ativa.
-                    game.scene_manager.handle_event(event)
+                    # O jogo trata atalhos globais antes de encaminhar o evento à cena.
+                    if not game.handle_global_event(event):
+                        game.scene_manager.handle_event(event)
 
         # Atualiza a lógica e desenha a cena usando o tempo desde o quadro anterior.
         game.scene_manager.update(delta_time)
         game.scene_manager.draw(screen)
+        game.draw_debug_overlay(screen)
 
         # Atualiza todos os elementos na tela
         pygame.display.flip()

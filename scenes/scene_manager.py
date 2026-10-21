@@ -25,12 +25,18 @@ class SceneManager:
         self.current_scene = new_scene
         self.current_scene.on_enter()
 
-    def transition_to(self, scene_factory, duration=0.5):
+    def transition_to(self, scene_factory, duration=0.5, player_spawn=None):
         """Troca de cena com fade preto; a fábrica cria a cena no meio da transição."""
         if self.transition_phase is not None:
             return False
         if duration <= 0:
             raise ValueError("A duração da transição precisa ser positiva.")
+        if not callable(scene_factory):
+            raise TypeError("scene_factory precisa ser uma função chamável.")
+
+        # Um spawn informado na transição prevalece sobre o ponto global atual.
+        if player_spawn is not None:
+            self.game.set_player_spawn_point(player_spawn)
 
         self.transition_factory = scene_factory
         self.transition_duration = duration
