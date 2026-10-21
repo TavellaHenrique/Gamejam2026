@@ -17,7 +17,7 @@ class Game:
     def __init__(self):
         """Cria as entidades e os gerenciadores centrais antes da primeira cena."""
         # O jogador e o inventário pertencem ao jogo, não a uma cena específica.
-        self.player_spawn_point = pygame.Vector2(500, 544)
+        self.player_spawn_point = pygame.Vector2(600, 544)
         self.player = Player(self.player_spawn_point)
         self.inventory = None  # Inventory()
         # Conclusões ficam no Game para sobreviver à recriação das cenas.
@@ -96,10 +96,10 @@ class Game:
         """Registra a conclusão para impedir que a cutscene seja repetida."""
         self.completed_cutscenes.add(cutscene_id)
 
-    def is_npc_removed(self, npc_id):
-        """Verifica se um NPC foi removido durante a execução atual."""
-        return npc_id in self.removed_npcs
+    def is_npc_removed(self, npc_id, npc_scope=None):
+        """Verifica se um NPC foi removido neste escopo durante a execução."""
+        return (npc_scope, npc_id) in self.removed_npcs
 
-    def mark_npc_removed(self, npc_id):
-        """Mantém removido um NPC quando a cena for recriada."""
-        self.removed_npcs.add(npc_id)
+    def mark_npc_removed(self, npc_id, npc_scope=None):
+        """Mantém removido um NPC quando o mesmo escopo for recriado."""
+        self.removed_npcs.add((npc_scope, npc_id))

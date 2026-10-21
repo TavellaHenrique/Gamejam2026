@@ -54,7 +54,23 @@ class DialogueBox:
                 else:
                     if current_line:
                         lines.append(current_line)
-                    current_line = word
+                    current_line = ""
+                    if self.font.size(word)[0] <= max_width:
+                        current_line = word
+                    else:
+                        fragment = ""
+                        for character in word:
+                            candidate_fragment = fragment + character
+                            if (
+                                fragment
+                                and self.font.size(candidate_fragment)[0]
+                                > max_width
+                            ):
+                                lines.append(fragment)
+                                fragment = character
+                            else:
+                                fragment = candidate_fragment
+                        current_line = fragment
 
             if current_line:
                 lines.append(current_line)
@@ -78,7 +94,7 @@ class DialogueBox:
 
         available_height = (
             self.box_height
-            - 2 * self.padding
+            - self.padding
             - speaker_height
             - hint_height
         )

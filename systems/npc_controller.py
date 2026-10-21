@@ -20,9 +20,10 @@ class NPCController:
     BELOW_Y_THRESHOLD = 40
     BELOW_X_THRESHOLD = 42
 
-    def __init__(self, game, npcs=()):
+    def __init__(self, game, npcs=(), npc_scope=None):
         """Guarda referências do jogo e prepara os NPCs e elementos da interface."""
         self.game = game
+        self.npc_scope = npc_scope
         # Reutiliza os objetos centrais do jogo para consultar o jogador e controlar diálogos.
         self.player = game.player
         self.dialogue_manager = game.dialogue_manager
@@ -30,7 +31,7 @@ class NPCController:
         # O grupo permite atualizar e desenhar todos os NPCs usando as APIs do Pygame.
         available_npcs = (
             npc for npc in npcs
-            if not game.is_npc_removed(npc.npc_id)
+            if not game.is_npc_removed(npc.npc_id, self.npc_scope)
         )
         self.npcs = pygame.sprite.Group(*available_npcs)
         npc_ids = [npc.npc_id for npc in self.npcs]
@@ -94,7 +95,7 @@ class NPCController:
         """Remove um NPC e limpa referências de movimento/interação."""
         npc = self.get_npc(npc_id)
         self.npcs.remove(npc)
-        self.game.mark_npc_removed(npc_id)
+        self.game.mark_npc_removed(npc_id, self.npc_scope)
         self.npc_cutscenes.pop(npc, None)
         self.wanderers.pop(npc, None)
         self.nearby_ambient_npcs.discard(npc)

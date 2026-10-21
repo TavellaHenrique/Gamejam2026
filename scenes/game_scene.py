@@ -1,10 +1,9 @@
-
 import pygame
 
 from entities.door import Door
 from entities.npc import NPC
 from scenes.scene import Scene
-from scenes.second_area import SecondArea
+from scenes.second_area import Laboratorio
 from systems.cutscene_controller import (
     CutsceneController,
     change_scene,
@@ -24,7 +23,7 @@ from systems.cutscene_controller import (
 from systems.npc_controller import NPCController
 
 
-class GameScene(Scene):
+class Saguao(Scene):
     """Cena de jogo com a história demonstrativa e seus NPCs."""
 
     def __init__(self, game, player_spawn=None):
@@ -68,12 +67,13 @@ class GameScene(Scene):
                     use_player_animations=True,
                 ),
             ],
+            npc_scope=type(self),
         )
         self.cutscene_controller = CutsceneController.create_story_cutscene(
             game,
             self.npc_controller,
             trigger(
-                trigger_position=(500, 544),
+                trigger_position=(self.player.position),
                 trigger_radius=16,
                 visible=False,
                 action=(
@@ -89,7 +89,7 @@ class GameScene(Scene):
                     spawn_npc(
                         npc_id="estudante2",
                         display_name="estudante2",
-                        position=(550, 544),
+                        position=(500, 544),
                         sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
                         dialogue_id="estudante2",
                         use_player_animations=True,
@@ -98,7 +98,7 @@ class GameScene(Scene):
                     spawn_npc(
                         npc_id="estudante3",
                         display_name="estudante3",
-                        position=(590, 544),
+                        position=(550, 544),
                         sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
                         dialogue_id="estudante3",
                         use_player_animations=True,
@@ -120,10 +120,14 @@ class GameScene(Scene):
                     fade_out("estudante3", duration=0.25),
                     player_destination((500, 40)),
                     change_scene(
-                        lambda: SecondArea(game),
-                        duration=0.5,
+                        lambda: Laboratorio(game),
                         player_spawn=(400, 500),
-                    ),
+                        text="Passa um tempo",
+                        fade_out_duration=0.5,
+                        duration=1.5,
+                        fade_in_duration=0.5,
+                        font_size=44,
+                    )
                     # Os três personagens se deslocam em paralelo após o trigger.
                     # npcs(
                     #     {
@@ -204,7 +208,7 @@ class GameScene(Scene):
             and not self.cutscene_controller.is_active
         ):
             self.game.scene_manager.transition_to(
-                lambda: SecondArea(self.game),
+                lambda: Laboratorio(self.game),
                 player_spawn=(145, 300),
             )
             return

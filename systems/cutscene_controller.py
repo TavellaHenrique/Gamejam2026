@@ -59,20 +59,65 @@ def wait(seconds):
     return CutsceneAction("wait", {"seconds": seconds})
 
 
-def change_scene(scene_factory, duration=0.5, player_spawn=None):
-    """Inicia uma transição para outra cena e encerra a cutscene atual."""
+def change_scene(
+    scene_factory,
+    duration=None,
+    player_spawn=None,
+    text=None,
+    fade_out_duration=None,
+    fade_in_duration=None,
+    font_size=36,
+):
+    """Troca de cena, opcionalmente com a pausa e legenda de time_passes."""
     if not callable(scene_factory):
         raise TypeError("scene_factory precisa ser uma função chamável.")
-    if duration <= 0:
-        raise ValueError("A duração da transição precisa ser positiva.")
     if player_spawn is not None:
         player_spawn = tuple(player_spawn)
+
+    has_time_passes = any(
+        value is not None
+        for value in (text, fade_out_duration, fade_in_duration)
+    )
+    if has_time_passes:
+        hold_duration = 1.5 if duration is None else duration
+        fade_out_duration = (
+            0.5 if fade_out_duration is None else fade_out_duration
+        )
+        fade_in_duration = (
+            0.5 if fade_in_duration is None else fade_in_duration
+        )
+        if any(
+            value < 0
+            for value in (
+                fade_out_duration,
+                hold_duration,
+                fade_in_duration,
+            )
+        ):
+            raise ValueError("Durações de transição não podem ser negativas.")
+        if font_size <= 0:
+            raise ValueError("O tamanho da fonte precisa ser positivo.")
+        transition = (
+            text or "",
+            fade_out_duration,
+            hold_duration,
+            fade_in_duration,
+            font_size,
+        )
+        transition_duration = None
+    else:
+        transition_duration = 0.5 if duration is None else duration
+        if transition_duration <= 0:
+            raise ValueError("A duração da transição precisa ser positiva.")
+        transition = None
+
     return CutsceneAction(
         "change_scene",
         {
             "scene_factory": scene_factory,
-            "duration": duration,
+            "duration": transition_duration,
             "player_spawn": player_spawn,
+            "transition": transition,
         },
     )
 
@@ -308,6 +353,7 @@ class CutsceneController:
                         options["scene_factory"],
                         options["duration"],
                         options["player_spawn"],
+                        options["transition"],
                     ),
                 )
             )
@@ -605,11 +651,12 @@ class CutsceneController:
                 self.screen_transition = None
 
             elif action == "change_scene":
-                scene_factory, duration, player_spawn = arguments
+                scene_factory, duration, player_spawn, transition = arguments
                 if not self.game.scene_manager.transition_to(
                     scene_factory,
                     duration=duration,
                     player_spawn=player_spawn,
+                    time_passes=transition,
                 ):
                     raise RuntimeError(
                         "Já existe uma transição de cena em andamento."

@@ -25,7 +25,13 @@ from scenes.scene import Scene
 from systems.npc_controller import NPCController
 
 
-class SecondArea(Scene):
+def _create_saguao(game):
+    from scenes.game_scene import Saguao
+
+    return Saguao(game)
+
+
+class Laboratorio(Scene):
     """Área com porta, jogador e NPCs ambulantes."""
 
     def __init__(self, game, player_spawn=None):
@@ -67,110 +73,93 @@ class SecondArea(Scene):
             game,
             npcs=[
                 NPC(
-                    npc_id="professor1",
+                    npc_id="professor2",
                     display_name="Professor",
                     position=(500, 200),
                     sprite_path="assets/sprites/npcs/Idle_Down.png",
-                    dialogue_id="professor1",
+                    dialogue_id="professor2",
                     use_player_animations=True,
                 ),
                 NPC(
-                    npc_id="estudante1",
-                    display_name="Estudante 1",
+                    npc_id="estudante6",
+                    display_name="",
                     position=(100, 500),
                     sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                    dialogue_id="estudante1",
+                    dialogue_id="",
                     use_player_animations=True,
                 ),
                 NPC(
-                    npc_id="estudante2",
-                    display_name="Estudante 2",
+                    npc_id="estudante7",
+                    display_name="",
                     position=(200, 500),
                     sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                    dialogue_id="estudante2",
+                    dialogue_id="",
                     use_player_animations=True,
                 ),
                 NPC(
-                    npc_id="estudante3",
-                    display_name="Estudante 3",
+                    npc_id="estudante8",
+                    display_name="",
                     position=(300, 500),
                     sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                    dialogue_id="estudante3",
+                    dialogue_id="",
                     use_player_animations=True,
-                ),
+                ), #400, 500 - player
                 NPC(
                     npc_id="estudante4",
-                    display_name="Estudante 4",
+                    display_name="",
                     position=(500, 500),
                     sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                    dialogue_id="estudante4",
+                    dialogue_id="",
                     use_player_animations=True,
                 ),
                 NPC(
                     npc_id="estudante5",
-                    display_name="Estudante 5",
+                    display_name="",
                     position=(600, 500),
                     sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                    dialogue_id="estudante5",
+                    dialogue_id="",
                     use_player_animations=True,
                 ),
             ],
+            npc_scope=type(self),
         )
         self.cutscene_controller = CutsceneController.create_story_cutscene(
             game,
             self.npc_controller,
             trigger(
-                trigger_position=(500, 544),
+                trigger_position=(400, 500),
                 trigger_radius=16,
                 visible=False,
                 action=(
-                    spawn_npc(
-                        npc_id="estudante1",
-                        display_name="estudante1",
-                        position=(440, 544),
-                        sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                        dialogue_id="estudante1",
-                        use_player_animations=True,
-                        interactable=False,
-                    ),
-                    spawn_npc(
-                        npc_id="estudante2",
-                        display_name="estudante2",
-                        position=(550, 544),
-                        sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                        dialogue_id="estudante2",
-                        use_player_animations=True,
-                        interactable=False,
-                    ),
-                    spawn_npc(
-                        npc_id="estudante3",
-                        display_name="estudante3",
-                        position=(590, 544),
-                        sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                        dialogue_id="estudante3",
-                        use_player_animations=True,
-                        interactable=False,
-                    ),
-                    dialogue_from_id("jogador_intro"),
-                    dialogue_from_id("professor1_intro"),
-                    npc("professor1", npc_arrival=(500, 40)),
-                    fade_out("professor1", duration=0.50),
-                    npcs(
-                        {
-                            "estudante1": (450, 40),
-                            "estudante2": (500, 40),
-                            "estudante3": (550, 40),
-                        }
-                    ),
-                    fade_out("estudante1", duration=0.25),
-                    fade_out("estudante2", duration=0.25),
-                    fade_out("estudante3", duration=0.25),
-                    player_destination((500, 40)),
+                    dialogue_from_id("professor1_intro_2"),
+                    dialogue_from_id("jogador_intro_2"),
+                    npc("professor2", npc_arrival=(700, 200)),
+                    face_direction("professor2", "down"),
+                    player_destination((400, 100)),
+                    player_destination((40, 100)),
                     change_scene(
-                        lambda: SecondArea(game),
+                        lambda: _create_saguao(game),
                         duration=0.5,
-                        player_spawn=(0, 100),
+                        player_spawn=(450, 100),
                     ),
+                    # npc("professor1", npc_arrival=(500, 40)),
+                    # fade_out("professor1", duration=0.50),
+                    # npcs(
+                    #     {
+                    #         "estudante1": (450, 40),
+                    #         "estudante2": (500, 40),
+                    #         "estudante3": (550, 40),
+                    #     }
+                    # ),
+                    # fade_out("estudante1", duration=0.25),
+                    # fade_out("estudante2", duration=0.25),
+                    # fade_out("estudante3", duration=0.25),
+                    # player_destination((500, 40)),
+                    # change_scene(
+                    #     lambda: SecondArea(game),
+                    #     duration=0.5,
+                    #     player_spawn=(0, 100),
+                    # ),
                     # Os três personagens se deslocam em paralelo após o trigger.
                     # npcs(
                     #     {
@@ -230,30 +219,25 @@ class SecondArea(Scene):
             #     duration=0.8,
             #     player_spawn=(145, 300),
             # ),
-            cutscene_id="game_scene_1",
+            cutscene_id="game_scene_2",
             bounds=self.bounds,
         )
         self.cutscene_controller.start()
 
-        def handle_event(self, event):
-            """Inicia o fade para a cena principal ao interagir com a porta."""
-            if self.cutscene_controller.handle_event(event):
-                return
+    def handle_event(self, event):
+        """Avança diálogos e inicia o retorno ao interagir com a porta."""
+        if self.cutscene_controller.handle_event(event):
+            return
 
-            if (
-                # O jogador precisa usar o comando de interação.
-                event.type == pygame.KEYDOWN
-                # A porta responde à tecla E.
-                and event.key == pygame.K_e
-                # A área de interação só vale quando o jogador está próximo.
-                and self.door.can_interact(self.player)
-            ):
-                from scenes.game_scene import GameScene
-
-                self.game.scene_manager.transition_to(
-                    lambda: GameScene(self.game),
-                    player_spawn=(840, 300),
-                )
+        if (
+            event.type == pygame.KEYDOWN
+            and event.key == pygame.K_e
+            and self.door.can_interact(self.player)
+        ):
+            self.game.scene_manager.transition_to(
+                lambda: _create_saguao(self.game),
+                player_spawn=(840, 300),
+            )
 
     def update(self, delta_time):
         """Move entidades com colisão e escolhe destinos dos NPCs a cada cinco segundos."""
