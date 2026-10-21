@@ -1,6 +1,8 @@
 
 import pygame
+
 from systems.animation import Animation
+from systems.inventory import Inventory
 
 class Player(pygame.sprite.Sprite):
 
@@ -32,6 +34,8 @@ class Player(pygame.sprite.Sprite):
                 round(self.position.y)
             )
         )
+
+        self.inventory = Inventory()
 
     def update(self, delta_time):
         # Calcula movimentação
