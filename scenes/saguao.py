@@ -31,7 +31,7 @@ class Saguao(TilemapScene):
         """Configura o jogador compartilhado e os NPCs da cena."""
         super().__init__(
             game,
-            "assets/tileset/saguao.jpeg",
+            "assets/tileset/saguao/saguao_base.jpg",
             player_spawn=player_spawn,
         )
         self.player = game.player
@@ -77,25 +77,60 @@ class Saguao(TilemapScene):
                 (0, 0, 230, 96),
                 (346, 0, 529, 96),
                 (922, 0, 38, 96),
-                (18, 108, 31, 67),
-                (435, 108, 31, 67),
-                (92, 167, 73, 25),
-                (188, 167, 73, 25),
-                (508, 167, 73, 25),
-                (620, 167, 73, 25),
-                (92, 384, 73, 25),
-                (508, 337, 73, 25),
-                (604, 337, 73, 25),
                 (55, 205, 24, 72),
                 (290, 205, 24, 72),
                 (738, 205, 24, 72),
                 (55, 300, 24, 72),
                 (290, 300, 24, 72),
                 (738, 284, 24, 72),
-                (12, 376, 20, 32),
-                (412, 344, 20, 32),
                 *stair_obstacles,
             )
+        )
+        self.map_objects = [
+            self.create_map_object(
+                "assets/tileset/scene_objects/Vaso.png",
+                (17, 103),
+                collision_rect=(1, 5, 31, 67),
+                occlusion_y=60,
+            ),
+            self.create_map_object(
+                "assets/tileset/scene_objects/Vaso.png",
+                (433, 103),
+                collision_rect=(2, 5, 31, 67),
+                occlusion_y=60,
+            ),
+            self.create_map_object(
+                "assets/tileset/scene_objects/vaso_2.png",
+                (18, 566),
+                collision_rect=(3, 22, 31, 32),
+                occlusion_y=45,
+            ),
+            *(
+                self.create_map_object(
+                    "assets/tileset/scene_objects/banco.png",
+                    (x, y),
+                    collision_rect=(3, 2, 73, 25),
+                    occlusion_y=16,
+                )
+                for x, y in (
+                    (89, 165),
+                    (185, 165),
+                    (505, 165),
+                    (617, 165),
+                    (89, 381),
+                    (505, 334),
+                    (601, 334),
+                )
+            ),
+        ]
+        self.map_objects.extend(
+            self.create_map_object(
+                "assets/tileset/scene_objects/lixeira.png",
+                position,
+                collision_rect=(0, 0, 20, 32),
+                occlusion_y=16,
+            )
+            for position in ((12, 376), (412, 344))
         )
         self.items = [
             Item(
@@ -161,7 +196,7 @@ class Saguao(TilemapScene):
                 ),
             ],
             npc_scope=type(self),
-            static_obstacles=self.environment_obstacles,
+            static_obstacles=self.get_scene_obstacles(),
         )
         self.cutscene_controller = CutsceneController.create_story_cutscene(
             game,
@@ -350,7 +385,7 @@ class Saguao(TilemapScene):
         self.npc_controller.update(
             delta_time,
             player_bounds=self.bounds,
-            player_obstacles=self.get_door_obstacles(),
+            player_obstacles=(),
         )
 
         self.player.update(
@@ -369,9 +404,7 @@ class Saguao(TilemapScene):
                 and self.npc_controller.pending_interaction_npc is None
             ),
             bounds=self.bounds,
-            obstacles=self.npc_controller.get_player_obstacles(
-                self.get_door_obstacles()
-            ),
+            obstacles=self.npc_controller.get_player_obstacles(),
         )
 
     def draw(self, screen):
@@ -380,8 +413,7 @@ class Saguao(TilemapScene):
         for item in self.items:
             item.draw(world)
         self.cutscene_controller.draw_trigger(world)
-        self.npc_controller.draw_npcs(world)
-        world.blit(self.player.image, self.player.rect)
+        self.draw_scene_entities(world, self.npc_controller.npcs)
         self.render_world(screen)
 
         nearby_item = next((item for item in self.items if item.can_interact(self.player)), None)

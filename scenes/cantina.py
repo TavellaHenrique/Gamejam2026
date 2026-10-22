@@ -17,7 +17,7 @@ class Cantina(TilemapScene):
             player_spawn = self.map_point((480, 400))
         super().__init__(
             game,
-            "assets/tileset/cantina.jpeg",
+            "assets/tileset/cantina/cantina_base.jpg",
             player_spawn=player_spawn,
         )
         self.door = Door(
@@ -32,24 +32,94 @@ class Cantina(TilemapScene):
             for rect in (
                 (0, 0, 895, 88),
                 (943, 0, 17, 95),
-                (22, 115, 418, 85),
-                (485, 88, 168, 63),
-                (696, 28, 173, 93),
-                (48, 277, 95, 106),
-                (224, 277, 95, 106),
-                (416, 277, 95, 106),
-                (608, 277, 95, 106),
-                (48, 422, 95, 106),
-                (224, 422, 95, 106),
-                (416, 422, 95, 106),
-                (608, 422, 95, 106),
                 (865, 208, 87, 320),
-                (72, 585, 31, 40),
                 (17, 585, 20, 32),
                 (833, 585, 20, 32),
-                (888, 585, 31, 40),
             )
         )
+        self.map_objects = [
+            self.create_map_object(
+                "assets/tileset/scene_objects/mesa_refeitorio.png",
+                (0, 113),
+                collision_rect=(22, 2, 213, 85),
+                occlusion_y=70,
+            ),
+            self.create_map_object(
+                "assets/tileset/scene_objects/mesa_refeitorio.png",
+                (205, 113),
+                collision_rect=(0, 2, 235, 85),
+                occlusion_y=70,
+            ),
+            self.create_map_object(
+                "assets/tileset/scene_objects/pia.png",
+                (484, 82),
+                collision_rect=(1, 6, 51, 57),
+                occlusion_y=45,
+            ),
+            self.create_map_object(
+                "assets/tileset/scene_objects/pia.png",
+                (580, 82),
+                collision_rect=(0, 6, 51, 57),
+                occlusion_y=45,
+            ),
+            *(
+                self.create_map_object(
+                    "assets/tileset/scene_objects/lixeira.png",
+                    position,
+                    collision_rect=(0, 0, 20, 32),
+                    occlusion_y=16,
+                )
+                for position in ((541, 88), (637, 88))
+            ),
+            self.create_map_object(
+                "assets/tileset/scene_objects/Maquina_verde.png",
+                (695, 26),
+                collision_rect=(1, 2, 54, 93),
+                occlusion_y=65,
+            ),
+            self.create_map_object(
+                "assets/tileset/scene_objects/maquina_roxa.png",
+                (761, 30),
+                collision_rect=(0, -2, 55, 93),
+                occlusion_y=65,
+            ),
+            self.create_map_object(
+                "assets/tileset/scene_objects/maquina_roxa.png",
+                (831, 30),
+                collision_rect=(0, -2, 55, 93),
+                occlusion_y=65,
+            ),
+            *(
+                self.create_map_object(
+                    "assets/tileset/scene_objects/mesa_cadeira.png",
+                    position,
+                    collision_rect=(0, 0, 95, 106),
+                    occlusion_y=55,
+                )
+                for position in (
+                    (48, 277),
+                    (224, 277),
+                    (416, 277),
+                    (608, 277),
+                    (48, 422),
+                    (224, 422),
+                    (416, 422),
+                    (608, 422),
+                )
+            ),
+            self.create_map_object(
+                "assets/tileset/scene_objects/Vaso.png",
+                (74, 550),
+                collision_rect=(2, 35, 31, 40),
+                occlusion_y=60,
+            ),
+            self.create_map_object(
+                "assets/tileset/scene_objects/Vaso.png",
+                (888, 550),
+                collision_rect=(0, 35, 31, 40),
+                occlusion_y=60,
+            ),
+        ]
         self.hint_font = pygame.font.Font(
             "assets/fonts/typewcond_regular.otf",
             22,
@@ -87,7 +157,7 @@ class Cantina(TilemapScene):
                 )
             ),
             npc_scope=type(self),
-            static_obstacles=self.environment_obstacles,
+            static_obstacles=self.get_scene_obstacles(),
         )
 
     def handle_event(self, event):
@@ -117,7 +187,7 @@ class Cantina(TilemapScene):
         self.npc_controller.update(
             delta_time,
             player_bounds=self.bounds,
-            player_obstacles=self.get_door_obstacles(),
+            player_obstacles=(),
         )
         self.player.update(
             delta_time,
@@ -126,15 +196,12 @@ class Cantina(TilemapScene):
                 and self.npc_controller.pending_interaction_npc is None
             ),
             bounds=self.bounds,
-            obstacles=self.npc_controller.get_player_obstacles(
-                self.get_door_obstacles()
-            ),
+            obstacles=self.npc_controller.get_player_obstacles(),
         )
 
     def draw(self, screen):
         world = self.begin_world_draw()
-        self.npc_controller.draw_npcs(world)
-        world.blit(self.player.image, self.player.rect)
+        self.draw_scene_entities(world, self.npc_controller.npcs)
         self.render_world(screen)
         self.npc_controller.draw_ui(screen, camera=self.camera)
 

@@ -7,6 +7,7 @@ import pygame
 from config import SCREEN_HEIGHT, SCREEN_WIDTH
 from scenes.scene import Scene
 from systems.camera_manager import CameraManager
+from systems.collision import get_entity_hitbox
 
 
 LABORATORY_OBSTACLES = (
@@ -15,22 +16,24 @@ LABORATORY_OBSTACLES = (
     (0, 96, 14, 529),
     (946, 96, 14, 529),
     (14, 625, 932, 15),
-    (62, 208, 73, 96),
-    (174, 248, 73, 56), # cadeira/mesa primeira fileira, 3 colunas da esquerda
-    (278, 248, 73, 56), # cadeira/mesa primeira fileira, 3 colunas da esquerda
-    (462, 248, 73, 56), # cadeira/mesa primeira fileira, 3 colunas da esquerda
-    (590, 208, 73, 96),
-    (62, 332, 73, 88),
-    (174, 332, 73, 88),
-    (278, 332, 73, 88),
-    (462, 332, 73, 88),
-    (590, 332, 73, 88),
-    (62, 432, 73, 98),
-    (174, 432, 73, 98),
-    (278, 432, 73, 98),
-    (462, 432, 73, 98),
-    (590, 432, 73, 98),
-    (912, 115, 34, 510),
+)
+
+LABORATORY_FURNITURE = (
+    ((52, 205), (62, 208, 73, 96)),
+    ((164, 205), (174, 248, 73, 56)),
+    ((268, 205), (278, 248, 73, 56)),
+    ((452, 205), (462, 248, 73, 56)),
+    ((580, 205), (590, 208, 73, 96)),
+    ((52, 317), (62, 332, 73, 88)),
+    ((180, 317), (174, 332, 73, 88)),
+    ((292, 317), (278, 332, 73, 88)),
+    ((452, 317), (462, 332, 73, 88)),
+    ((580, 317), (590, 332, 73, 88)),
+    ((52, 429), (62, 432, 73, 98)),
+    ((180, 429), (174, 432, 73, 98)),
+    ((293, 437), (278, 432, 73, 98)),
+    ((452, 429), (462, 432, 73, 98)),
+    ((580, 429), (590, 432, 73, 98)),
 )
 
 
@@ -39,6 +42,7 @@ class TilemapScene(Scene):
 
     TILESET_SCALE = 1.5
     CAMERA_ZOOM_FACTOR = 0.5
+    _object_image_cache = {}
 
     def __init__(self, game, tileset_path, player_spawn=None):
         super().__init__(game)
@@ -81,6 +85,7 @@ class TilemapScene(Scene):
         self.camera.follow(self.player)
         self.camera.update(0)
         self.environment_obstacles = ()
+        self.map_objects = []
 
     @classmethod
     def map_point(cls, position):
@@ -100,6 +105,120 @@ class TilemapScene(Scene):
     def get_door_obstacles(self):
         """Returns every door's blocking rectangle in world coordinates."""
         return tuple(door.rect for door in getattr(self, "doors", ()))
+
+    def create_map_object(
+        self,
+        image_path,
+        position,
+        collision_rect=None,
+        occlusion_y=None,
+    ):
+        """Creates a placed, collidable foreground prop in map coordinates."""
+        cache_key = (image_path, self.TILESET_SCALE)
+        image = self._object_image_cache.get(cache_key)
+        if image is None:
+            source = pygame.image.load(image_path).convert_alpha()
+            size = (
+                round(source.get_width() * self.TILESET_SCALE),
+                round(source.get_height() * self.TILESET_SCALE),
+            )
+            image = pygame.transform.scale(source, size)
+            self._object_image_cache[cache_key] = image
+
+        world_position = self.map_point(position)
+        rect = image.get_rect(
+            topleft=(round(world_position.x), round(world_position.y))
+        )
+        scaled_collision = None
+        if collision_rect is not None:
+            scaled_collision = pygame.Rect(
+                round(world_position.x + collision_rect[0] * self.TILESET_SCALE),
+                round(world_position.y + collision_rect[1] * self.TILESET_SCALE),
+                round(collision_rect[2] * self.TILESET_SCALE),
+                round(collision_rect[3] * self.TILESET_SCALE),
+            )
+
+        if occlusion_y is None:
+            occlusion_y = image.get_height() / self.TILESET_SCALE / 2
+        return TilemapObject(
+            image,
+            rect,
+            scaled_collision,
+            round(world_position.y + occlusion_y * self.TILESET_SCALE),
+        )
+
+    def get_scene_obstacles(self):
+        """Returns map boundaries, object collision, and door rectangles."""
+        object_obstacles = (
+            obj.collision_rect
+            for obj in self.map_objects
+            if obj.collision_rect is not None
+        )
+        return (
+            *self.environment_obstacles,
+            *object_obstacles,
+            *self.get_door_obstacles(),
+        )
+
+    def create_laboratory_objects(self):
+        """Creates the shared object layout used by both laboratory scenes."""
+        objects = [
+            self.create_map_object(
+                "assets/tileset/scene_objects/mesa_prof.png",
+                (44, 110),
+                collision_rect=(4, 53, 91, 25),
+                occlusion_y=62,
+            )
+        ]
+        objects.extend(
+            self.create_map_object(
+                "assets/tileset/scene_objects/Vaso.png",
+                position,
+                collision_rect=(13, 54, 34, 20),
+                occlusion_y=60,
+            )
+            for position in (
+                (913, 119),
+                (913, 190),
+                (913, 262),
+                (913, 335),
+                (913, 478),
+                (913, 551),
+            )
+        )
+        for position, obstacle in LABORATORY_FURNITURE:
+            objects.append(
+                self.create_map_object(
+                    "assets/tileset/scene_objects/mesa_computador_cadeira.png",
+                    position,
+                    collision_rect=(
+                        obstacle[0] - position[0],
+                        obstacle[1] - position[1],
+                        obstacle[2],
+                        obstacle[3],
+                    ),
+                    occlusion_y=60,
+                )
+            )
+        return objects
+
+    def draw_scene_entities(self, surface, npc_group):
+        """Draws characters and props in depth order using their foot hitboxes."""
+        drawables = [
+            (
+                get_entity_hitbox(entity).top,
+                1,
+                entity.image,
+                entity.rect,
+            )
+            for entity in (*tuple(npc_group), self.player)
+        ]
+        drawables.extend(
+            (obj.occlusion_y, 0, obj.image, obj.rect)
+            for obj in self.map_objects
+        )
+        for _, _, image, rect in sorted(drawables, key=lambda item: item[:2]):
+            surface.blit(image, rect)
 
     def update_camera(self, delta_time, cutscene_controller):
         """Follows the player except while a cutscene is moving the camera."""
@@ -138,3 +257,17 @@ class TilemapScene(Scene):
             screen.blit(background, background_rect.topleft)
             screen.blit(label, label_rect)
             return
+
+
+class TilemapObject:
+    """A sprite positioned in the map with collision and depth metadata."""
+
+    def __init__(self, image, rect, collision_rect, occlusion_y):
+        self.image = image
+        self.rect = rect
+        self.collision_rect = collision_rect
+        self.occlusion_y = occlusion_y
+
+    def should_draw_in_front_of(self, entity):
+        """Uses the top of the entity's leg hitbox as its depth reference."""
+        return get_entity_hitbox(entity).top < self.occlusion_y

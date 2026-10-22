@@ -44,7 +44,7 @@ class Laboratorio1(TilemapScene):
         spawn = self._fit_demo_point((1000, 875))
         super().__init__(
             game,
-            "assets/tileset/laboratorio.jpeg",
+            "assets/tileset/laboratorio/laboratorio_base.jpg",
             player_spawn=spawn,
         )
         self.door = Door(
@@ -57,6 +57,7 @@ class Laboratorio1(TilemapScene):
         self.environment_obstacles = tuple(
             self.map_rect(rect) for rect in LABORATORY_OBSTACLES
         )
+        self.map_objects = self.create_laboratory_objects()
         self.title_font = pygame.font.Font(
             "assets/fonts/typewcond_regular.otf",
             28,
@@ -104,7 +105,7 @@ class Laboratorio1(TilemapScene):
             ),
             # define o escopo da classe para que o NPCController possa instanciar NPCs dinamicamente
             npc_scope=type(self),
-            static_obstacles=self.environment_obstacles,
+            static_obstacles=self.get_scene_obstacles(),
         )
         self.cutscene_controller = CutsceneController.create_story_cutscene(
             game,
@@ -272,8 +273,7 @@ class Laboratorio1(TilemapScene):
         # desenha o mundo em coordenadas absolutas, permitindo que a câmera controle a posição e o zoom da cena
         world = self.begin_world_draw()
         self.cutscene_controller.draw_trigger(world)
-        self.npc_controller.draw_npcs(world)
-        world.blit(self.player.image, self.player.rect)
+        self.draw_scene_entities(world, self.npc_controller.npcs)
         self.render_world(screen)
         self.npc_controller.draw_ui(screen, camera=self.camera)
         if (
