@@ -2,6 +2,7 @@ import pygame
 
 from entities.door import Door
 from entities.npc import NPC
+from items.item import Item
 from scenes.scene import Scene
 from scenes.laboratorio6 import Laboratorio6
 from systems.cutscene_controller import (
@@ -45,6 +46,13 @@ class Saguao(Scene):
         self.door = Door(
             rect=(450, 0, 100, 40),
             prompt="Primeira área",
+        )
+        self.debug_item = Item(
+            item_id="lab_key",
+            name="Chave do laboratório",
+            description="O professor vai pedir isso na história.",
+            position=(620, 420),
+            interaction_radius=36,
         )
         surface = pygame.display.get_surface()
         self.bounds = pygame.Rect(
@@ -199,25 +207,26 @@ class Saguao(Scene):
             return
 
         if (
-            # O evento precisa ser o pressionamento da tecla de interação.
             event.type == pygame.KEYDOWN
             and event.key == pygame.K_e
-            # A porta só pode ser usada quando o jogador está próximo.
-            and self.door.can_interact(self.player)
-            # Diálogo ou cutscene ativa impede a troca de cena.
             and not self.game.dialogue_manager.is_active
             and not self.cutscene_controller.is_active
         ):
-            self.game.scene_manager.transition_to(
-                lambda: Laboratorio6(self.game),
-                player_spawn=(145, 300),
-            )
-            return
+            if self.debug_item.can_interact(self.player):
+                picked = self.debug_item.pick_up(self.player)
+
+            if self.door.can_interact(self.player):
+                self.game.scene_manager.transition_to(
+                    lambda: Laboratorio6(self.game),
+                    player_spawn=(145, 300),
+                )
+                return
 
         self.npc_controller.handle_event(event)
 
     def update(self, delta_time):
         """Atualiza a cutscene, os NPCs e o jogador."""
+        self.debug_item.update()
         self.cutscene_controller.update(delta_time)
         self.npc_controller.update(
             delta_time,
@@ -251,8 +260,18 @@ class Saguao(Scene):
 
         # Desenha os personagens sobre o cenário e a interface acima deles.
         self.door.draw(screen, self.player)
+        self.debug_item.draw(screen)
         self.cutscene_controller.draw_trigger(screen)
         self.npc_controller.draw_npcs(screen)
         screen.blit(self.player.image, self.player.rect)
+
+        if self.debug_item.can_interact(self.player):
+            prompt = self.hint_font.render(
+                f"Pressione E para coletar {self.debug_item.name}",
+                True,
+                (255, 255, 255),
+            )
+            screen.blit(prompt, (self.player.rect.centerx - 90, self.player.rect.top - 30))
+
         self.npc_controller.draw_ui(screen)
         self.cutscene_controller.draw_overlay(screen)

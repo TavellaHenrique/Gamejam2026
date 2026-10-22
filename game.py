@@ -20,6 +20,8 @@ class Game:
         self.player_spawn_point = pygame.Vector2(600, 544)
         self.player = Player(self.player_spawn_point)
         self.inventory = None  # Inventory()
+        self.inventory_open = False
+        self.inventory_selected_index = 0
         # Conclusões ficam no Game para sobreviver à recriação das cenas.
         self.completed_cutscenes = set()
         self.removed_npcs = set()
@@ -40,14 +42,120 @@ class Game:
         self.player_spawn_point.update(position)
 
     def handle_global_event(self, event):
-        """Alterna a legenda de coordenadas quando K é pressionado fora de sequências."""
-        if event.type != pygame.KEYDOWN or event.key != pygame.K_k:
+        """Trata atalhos globais como coordenadas e inventário."""
+        if event.type != pygame.KEYDOWN:
+            return False
+
+        if event.key == pygame.K_i:
+            if self.dialogue_manager.is_active or self._is_cutscene_active():
+                return False
+            self.inventory_open = not self.inventory_open
+            if self.inventory_open:
+                self.inventory_selected_index = 0
+            return True
+
+        if self.inventory_open:
+            if event.key in (pygame.K_a, pygame.K_w, pygame.K_s, pygame.K_d):
+                items = self.player.inventory.get_all_items() if self.player.inventory else []
+                if not items:
+                    return True
+
+                cols = 4
+                row, col = divmod(self.inventory_selected_index, cols)
+                if event.key == pygame.K_a:
+                    col = max(0, col - 1)
+                elif event.key == pygame.K_d:
+                    col = min(cols - 1, col + 1)
+                elif event.key == pygame.K_w:
+                    row = max(0, row - 1)
+                elif event.key == pygame.K_s:
+                    row = min((len(items) - 1) // cols, row + 1)
+
+                new_index = min(len(items) - 1, row * cols + col)
+                self.inventory_selected_index = new_index
+                return True
+            return False
+
+        if event.key != pygame.K_k:
             return False
         if self.dialogue_manager.is_active or self._is_cutscene_active():
             return False
 
         self.show_mouse_coordinates = not self.show_mouse_coordinates
         return True
+
+    def draw_inventory(self, screen):
+        """Desenha uma janela simples do inventário em frente à cena."""
+        if not self.inventory_open or self.player is None:
+            return
+
+        items = self.player.inventory.get_all_items() if self.player.inventory else []
+        panel_rect = pygame.Rect(220, 120, 620, 420)
+
+        panel_surface = pygame.Surface((panel_rect.width, panel_rect.height), pygame.SRCALPHA)
+        panel_surface.fill((15, 18, 28, 220))
+        screen.blit(panel_surface, panel_rect)
+
+        pygame.draw.rect(screen, (76, 88, 102), panel_rect, width=3, border_radius=8)
+
+        title_font = pygame.font.Font(None, 32)
+        title = title_font.render("Inventário", True, (255, 255, 255))
+        screen.blit(title, (panel_rect.x + 24, panel_rect.y + 18))
+
+        hint_font = pygame.font.Font(None, 18)
+        hint = hint_font.render("Pressione I para fechar", True, (180, 200, 220))
+        screen.blit(hint, (panel_rect.right - 150, panel_rect.y + 24))
+
+        if not items:
+            empty_font = pygame.font.Font(None, 26)
+            empty_text = empty_font.render("Nenhum item coletado", True, (200, 200, 200))
+            empty_rect = empty_text.get_rect(center=panel_rect.center)
+            screen.blit(empty_text, empty_rect)
+            return
+
+        slot_size = 92
+        gap = 16
+        cols = 4
+        start_x = panel_rect.x + 32
+        start_y = panel_rect.y + 70
+
+        for index, item in enumerate(items):
+            col = index % cols
+            row = index // cols
+            slot_rect = pygame.Rect(
+                start_x + col * (slot_size + gap),
+                start_y + row * (slot_size + gap + 28),
+                slot_size,
+                slot_size,
+            )
+            is_selected = index == self.inventory_selected_index
+            fill_color = (155, 110, 255) if is_selected else (60, 70, 82)
+            outline_color = (255, 255, 255) if is_selected else (110, 128, 145)
+            pygame.draw.rect(screen, fill_color, slot_rect, border_radius=8)
+            pygame.draw.rect(screen, outline_color, slot_rect, width=2, border_radius=8)
+
+            icon = pygame.Surface((42, 42), pygame.SRCALPHA)
+            icon.fill((190, 170, 255, 200))
+            icon_rect = icon.get_rect(center=slot_rect.center)
+            icon_rect.y -= 8
+            screen.blit(icon, icon_rect)
+
+            item_name = item.name if len(item.name) <= 10 else item.name[:10] + "..."
+            name_label = hint_font.render(item_name, True, (255, 255, 255))
+            name_rect = name_label.get_rect(center=(slot_rect.centerx, slot_rect.bottom - 14))
+            screen.blit(name_label, name_rect)
+
+        if self.inventory_selected_index < len(items):
+            selected_item = items[self.inventory_selected_index]
+            info_rect = pygame.Rect(panel_rect.x + 32, panel_rect.bottom - 70, panel_rect.width - 64, 42)
+            pygame.draw.rect(screen, (30, 35, 42), info_rect, border_radius=8)
+            description_font = pygame.font.Font(None, 22)
+            description = description_font.render(
+                f"{selected_item.name}: {selected_item.description}",
+                True,
+                (245, 245, 245),
+            )
+            screen.blit(description, (info_rect.x + 12, info_rect.y + 12))
 
     def draw_debug_overlay(self, screen):
         """Desenha a posição atual do mouse no canto superior esquerdo."""

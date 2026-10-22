@@ -42,8 +42,10 @@ def main():
                         game.scene_manager.handle_event(event)
 
         # Atualiza a lógica e desenha a cena usando o tempo desde o quadro anterior.
-        game.scene_manager.update(delta_time)
+        if not game.inventory_open:
+            game.scene_manager.update(delta_time)
         game.scene_manager.draw(screen)
+        game.draw_inventory(screen)
         game.draw_debug_overlay(screen)
 
         # Atualiza todos os elementos na tela
