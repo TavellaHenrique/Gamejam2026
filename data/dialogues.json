@@ -106,7 +106,14 @@
     "thiago_lab6_2": {
         "speaker": "Thiago",
         "lines": [
-            "Eae, gostou da aula?",
+            "Eae, gostou da aula?"
+        ],
+        "speaker2": "Você",
+        "lines2": [
+            "Gostei demais, professor! A aula foi muito boa e o conteúdo foi bem explicado."
+        ],
+        "speaker3": "Thiago",
+        "lines3": [
             "Fico feliz em saber!",
             "Caso precise, estarei sempre por aqui.",
             "Olha o Birdow avisando que acabou a aula!"
