@@ -9,10 +9,15 @@ class Scene:
         """Guarda a instância do jogo para acesso ao estado compartilhado."""
         self.game = game
 
+    def is_inventory_open(self):
+        """Indica se o inventário está aberto e deve pausar a interação do mundo."""
+        return bool(getattr(self.game, "inventory_open", False))
+
     # Deve lidar com os eventos de teclados, mouse e afins
     def handle_event(self, event):
         """Ponto de extensão para processar eventos recebidos pela cena."""
-        pass
+        if self.is_inventory_open():
+            return
 
     # Atualiza movimento, animações e lógica da cena
     def update(self, delta_time):

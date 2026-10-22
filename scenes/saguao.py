@@ -120,6 +120,10 @@ class Saguao(TilemapScene):
                 interaction_radius=48,
             ),
         ]
+        for item in self.items:
+            if self.player.inventory.has_item(item.id):
+                item.collected = True
+                item.visible = False
         self.hint_font = pygame.font.Font(
             "assets/fonts/typewcond_regular.otf",
             20,
@@ -293,6 +297,9 @@ class Saguao(TilemapScene):
 
     def handle_event(self, event):
         """Delega falas da cutscene e encaminha outras interações."""
+        if self.is_inventory_open():
+            return
+
         if self.cutscene_controller.handle_event(event):
             return
 
@@ -349,8 +356,9 @@ class Saguao(TilemapScene):
         self.player.update(
             delta_time,
             accept_input=(
-                # Diálogos bloqueiam o controle para não andar durante as falas.
-                not self.game.dialogue_manager.is_active
+                # Diálogos, cutscene e inventário bloqueiam o controle para não andar durante as falas.
+                not self.game.inventory_open
+                and not self.game.dialogue_manager.is_active
                 # A cutscene bloqueia o teclado, exceto enquanto aguarda o gatilho.
                 and not self.cutscene_controller.locks_player_control
                 # A aproximação automática à conversa controla o jogador.

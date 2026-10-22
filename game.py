@@ -46,15 +46,13 @@ class Game:
         if event.type != pygame.KEYDOWN:
             return False
 
-        if event.key == pygame.K_i:
-            if self.dialogue_manager.is_active or self._is_cutscene_active():
-                return False
-            self.inventory_open = not self.inventory_open
-            if self.inventory_open:
-                self.inventory_selected_index = 0
-            return True
-
         if self.inventory_open:
+            if event.key == pygame.K_i:
+                if self.dialogue_manager.is_active or self._is_cutscene_active():
+                    return False
+                self.inventory_open = False
+                return True
+
             if event.key in (pygame.K_a, pygame.K_w, pygame.K_s, pygame.K_d):
                 items = self.player.inventory.get_all_items() if self.player.inventory else []
                 if not items:
@@ -74,7 +72,16 @@ class Game:
                 new_index = min(len(items) - 1, row * cols + col)
                 self.inventory_selected_index = new_index
                 return True
-            return False
+
+            return True
+
+        if event.key == pygame.K_i:
+            if self.dialogue_manager.is_active or self._is_cutscene_active():
+                return False
+            self.inventory_open = not self.inventory_open
+            if self.inventory_open:
+                self.inventory_selected_index = 0
+            return True
 
         if event.key != pygame.K_k:
             return False
