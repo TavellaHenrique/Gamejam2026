@@ -20,6 +20,76 @@
             "Bem vindo à FATEC! Estou pensando em fazer um café comunitário amanhã…"
         ]
     },
+    "diretor_demo_1": {
+        "speaker": "Diretor",
+        "lines": [
+            "Bem vindo à FATEC! Estou pensando em fazer um café comunitário amanhã…"
+        ],"speaker2": "Aluno",
+        "lines2": [
+            "Testando ver se funfa"
+        ],"speaker3": "Diretor",
+        "lines3": [
+            "comunitário amanhã… Funfou?"
+        ]
+    },
+    "camera_demo_abertura": {
+        "speaker": "Professor",
+        "lines": [
+            "Bem-vindo à demonstração completa do sistema de cutscenes.",
+            "Use E para avançar os diálogos. Depois, você poderá controlar o jogador quando aparecer um gatilho."
+        ],
+        "speaker2": "Calouro",
+        "lines2": [
+            "Quero ver a câmera, os movimentos, os gatilhos e as falas dos NPCs."
+        ]
+    },
+    "camera_demo_camera": {
+        "speaker": "Professor",
+        "lines": [
+            "A câmera está fazendo pan e zoom enquanto a sequência está pausada.",
+            "Também posso mudar a direção de um personagem e movê-lo por vários pontos."
+        ]
+    },
+    "camera_demo_movimento": {
+        "speaker": "Assistente",
+        "lines": [
+            "Cada NPC recebeu um trajeto direto pela ação npc(...).",
+            "Agora a cutscene vai mover o jogador e atualizar o ponto de surgimento."
+        ],
+        "speaker2": "Calouro",
+        "lines2": [
+            "Uma fala pode ter vários interlocutores, e cada trecho avança com E."
+        ]
+    },
+    "camera_demo_gatilho": {
+        "speaker": "Professor",
+        "lines": [
+            "A sequência vai aguardar você entrar no círculo amarelo.",
+            "Use WASD para caminhar até ele. A cutscene só continua quando o gatilho detectar sua entrada."
+        ]
+    },
+    "camera_demo_gatilho_ativado": {
+        "speaker": "Professor",
+        "lines": [
+            "Gatilho ativado! Essa fala só começou depois que você entrou na área."
+        ],
+        "speaker2": "Calouro",
+        "lines2": [
+            "A câmera, os diálogos, o movimento e o gatilho estão funcionando juntos."
+        ]
+    },
+    "camera_demo_fade": {
+        "speaker": "Assistente",
+        "lines": [
+            "Agora vou demonstrar o desaparecimento gradual de um NPC temporário."
+        ]
+    },
+    "camera_demo_final": {
+        "speaker": "Professor",
+        "lines": [
+            "Demonstração concluída! Você ainda pode caminhar pelo laboratório e interagir comigo com E."
+        ]
+    },
     "thiago_lab6_1": {
         "speaker": "Thiago",
         "lines": [

@@ -26,17 +26,55 @@ class DialogueManager:
                 raise ValueError(
                     f"O diálogo '{dialogue_id}' precisa conter speaker e lines."
                 )
-            if not isinstance(dialogue["speaker"], str):
+
+            speaker_indices = {
+                key[len("speaker"):]
+                for key in dialogue
+                if key.startswith("speaker")
+                and key[len("speaker"):].isdigit()
+            }
+            lines_indices = {
+                key[len("lines"):]
+                for key in dialogue
+                if key.startswith("lines")
+                and key[len("lines"):].isdigit()
+            }
+            turn_indices = speaker_indices | lines_indices
+            if (
+                speaker_indices != lines_indices
+                or turn_indices != {
+                    str(index)
+                    for index in range(
+                        2,
+                        max(
+                            (int(index) for index in turn_indices),
+                            default=1,
+                        ) + 1,
+                    )
+                }
+            ):
                 raise ValueError(
-                    f"O falante do diálogo '{dialogue_id}' precisa ser texto."
+                    f"Os falantes e as falas do diálogo '{dialogue_id}' "
+                    "precisam formar pares numerados a partir de 2."
                 )
-            if not isinstance(dialogue["lines"], list):
-                raise ValueError(
-                    f"As falas do diálogo '{dialogue_id}' precisam ser uma lista."
-                )
+
+            for index in ("", *sorted(turn_indices, key=int)):
+                speaker_key = f"speaker{index}"
+                lines_key = f"lines{index}"
+                if not isinstance(dialogue[speaker_key], str):
+                    raise ValueError(
+                        f"O falante '{speaker_key}' do diálogo "
+                        f"'{dialogue_id}' precisa ser texto."
+                    )
+                if not isinstance(dialogue[lines_key], list):
+                    raise ValueError(
+                        f"As falas '{lines_key}' do diálogo "
+                        f"'{dialogue_id}' precisam ser uma lista."
+                    )
 
         self.dialogue_box = DialogueBox()
         self.active_dialogue = None
+        self.active_speakers = ()
         self.active_speaker = ""
         self.current_line = 0
         self.current_pages = []
@@ -67,10 +105,29 @@ class DialogueManager:
 
     def get_lines(self, dialogue_id):
         """Returns the configured lines for a dialogue identifier."""
+        return tuple(
+            line
+            for _, lines in self.get_turns(dialogue_id)
+            for line in lines
+        )
+
+    def get_turns(self, dialogue_id):
+        """Returns the ordered speakers and their lines for a dialogue."""
         if dialogue_id not in self.dialogues:
             raise KeyError(f"Diálogo não encontrado: {dialogue_id}")
 
-        return tuple(self.dialogues[dialogue_id]["lines"])
+        dialogue = self.dialogues[dialogue_id]
+        turns = [(dialogue["speaker"], tuple(dialogue["lines"]))]
+        index = 2
+        while f"speaker{index}" in dialogue:
+            turns.append(
+                (
+                    dialogue[f"speaker{index}"],
+                    tuple(dialogue[f"lines{index}"]),
+                )
+            )
+            index += 1
+        return tuple(turns)
 
     def get_speaker(self, dialogue_id):
         """Returns the speaker configured for a dialogue identifier."""
@@ -84,9 +141,10 @@ class DialogueManager:
         if self.is_active:
             return False
 
-        if speaker is None:
-            speaker = self.get_speaker(dialogue_id)
-        return self.start_lines(self.get_lines(dialogue_id), speaker=speaker)
+        turns = self.get_turns(dialogue_id)
+        if speaker is not None:
+            turns = tuple((speaker, lines) for _, lines in turns)
+        return self._start_turns(turns)
 
     def start_lines(self, lines, speaker=""):
         """Starts dialogue from inline text while keeping progression centralized."""
@@ -95,12 +153,31 @@ class DialogueManager:
 
         if isinstance(lines, str):
             lines = (lines,)
+        else:
+            lines = tuple(lines)
         if not lines:
             raise ValueError("O diálogo precisa conter ao menos uma fala.")
 
-        self.active_dialogue = tuple(lines)
+        return self._start_turns(((speaker, lines),))
+
+    def _start_turns(self, turns):
+        """Starts ordered speaker turns and flattens them for line progression."""
+        lines = tuple(
+            line
+            for _, turn_lines in turns
+            for line in turn_lines
+        )
+        if not lines:
+            raise ValueError("O diálogo precisa conter ao menos uma fala.")
+
+        self.active_dialogue = lines
+        self.active_speakers = tuple(
+            speaker
+            for speaker, turn_lines in turns
+            for _ in turn_lines
+        )
         self.current_line = 0
-        self.active_speaker = speaker
+        self.active_speaker = self.active_speakers[0]
         self.clear_ambient_speech()
         self._prepare_current_line()
         return True
@@ -133,6 +210,7 @@ class DialogueManager:
             self.close()
             return True
 
+        self.active_speaker = self.active_speakers[self.current_line]
         self._prepare_current_line()
         return False
 
@@ -144,6 +222,7 @@ class DialogueManager:
     def close(self):
         """Closes the active dialogue and clears its presentation state."""
         self.active_dialogue = None
+        self.active_speakers = ()
         self.active_speaker = ""
         self.current_line = 0
         self.current_pages = []

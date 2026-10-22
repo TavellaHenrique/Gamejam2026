@@ -244,6 +244,9 @@ class Laboratorio6(Scene):
                 lambda: _create_saguao(self.game),
                 player_spawn=(840, 300),
             )
+            return
+
+        self.npc_controller.handle_event(event)
 
     def update(self, delta_time):
         """Move entidades com colisão e escolhe destinos dos NPCs a cada cinco segundos."""
@@ -254,13 +257,23 @@ class Laboratorio6(Scene):
                 # Diálogos e etapas da cutscene bloqueiam o controle do jogador.
                 not self.game.dialogue_manager.is_active
                 and not self.cutscene_controller.locks_player_control
+                # A aproximação automática à conversa controla o jogador.
+                and not self.npc_controller.interaction_cutscene.is_active
+                # O jogador não deve se mover enquanto está sendo posicionado.
+                and not self.npc_controller.is_approaching_npc
+                # Uma interação pendente ainda está preparando a conversa.
+                and self.npc_controller.pending_interaction_npc is None
             ),
             bounds=self.bounds,
             obstacles=self.npc_controller.get_player_obstacles(
                 (self.door.rect,)
             ),
         )
-        self.npc_controller.update(delta_time)
+        self.npc_controller.update(
+            delta_time,
+            player_bounds=self.bounds,
+            player_obstacles=(self.door.rect,),
+        )
 
     def draw(self, screen):
         """Desenha o fundo, porta, NPCs, jogador e suas falas compactas."""

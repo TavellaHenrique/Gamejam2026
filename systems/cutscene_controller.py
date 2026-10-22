@@ -46,6 +46,22 @@ def player_destination(destination, obstacles=()):
     )
 
 
+def camera_move(position, duration=0.75, zoom=None):
+    """Move suavemente a câmera até um ponto durante uma cutscene."""
+    if duration < 0:
+        raise ValueError("A duração do movimento de câmera não pode ser negativa.")
+    if zoom is not None and zoom <= 0:
+        raise ValueError("O zoom da câmera deve ser positivo.")
+    return CutsceneAction(
+        "camera_move",
+        {
+            "position": tuple(position),
+            "duration": duration,
+            "zoom": zoom,
+        },
+    )
+
+
 def set_player_spawn_point(position):
     """Define onde o jogador surgirá quando uma cena não informar outro ponto."""
     return CutsceneAction(
@@ -249,6 +265,7 @@ class CutsceneController:
         game,
         cutscene_id,
         bounds=None,
+        camera=None,
     ):
         self.player = player
         self.npc_controller = npc_controller
@@ -256,6 +273,7 @@ class CutsceneController:
         self.game = game
         self.cutscene_id = cutscene_id
         self.bounds = bounds
+        self.camera = camera
         self.steps = []
         self.step_index = 0
         self.is_active = False
@@ -283,6 +301,7 @@ class CutsceneController:
         *actions,
         cutscene_id,
         bounds=None,
+        camera=None,
     ):
         """Monta uma sequência identificada e persistente na execução atual."""
         if not cutscene_id:
@@ -294,6 +313,7 @@ class CutsceneController:
             game,
             cutscene_id,
             bounds=bounds,
+            camera=camera,
         )
         if not actions:
             raise ValueError("Informe ao menos uma ação para a cutscene.")
@@ -335,6 +355,17 @@ class CutsceneController:
             self.move_player(
                 [options["destination"]],
                 obstacles=options["obstacles"],
+            )
+        elif action.kind == "camera_move":
+            self.steps.append(
+                (
+                    "camera_movement",
+                    (
+                        options["position"],
+                        options["duration"],
+                        options["zoom"],
+                    ),
+                )
             )
         elif action.kind == "set_player_spawn_point":
             self.steps.append(
@@ -568,6 +599,17 @@ class CutsceneController:
                 return
             self._finish_current_step()
 
+        elif self.waiting_for == "camera_movement":
+            if self.camera is None:
+                raise RuntimeError(
+                    "A cutscene solicitou movimento de câmera, mas nenhuma "
+                    "CameraManager foi configurada."
+                )
+            self.camera.update(delta_time)
+            if self.camera.is_animating:
+                return
+            self._finish_current_step()
+
         elif self.waiting_for == "npc_movement":
             if any(
                 self.npc_controller.is_npc_moving(npc_id)
@@ -668,15 +710,10 @@ class CutsceneController:
                 self.game.set_player_spawn_point(arguments)
 
             elif action == "npc_movements":
-                active_npc_ids = []
-                for npc_id, points in arguments:
-                    npc = self.npc_controller.get_npc(npc_id)
-                    cutscene = self.npc_controller.start_npc_cutscene(
-                        npc,
-                        points,
-                    )
-                    if cutscene.is_active:
-                        active_npc_ids.append(npc_id)
+                active_npc_ids = self.npc_controller.start_npc_cutscenes(
+                    dict(arguments),
+                    bounds=self.bounds,
+                )
                 if active_npc_ids:
                     self.waiting_for_npc_ids = tuple(active_npc_ids)
                     self.waiting_for = "npc_movement"
@@ -713,6 +750,17 @@ class CutsceneController:
                 self.player_cutscene.start(self.player, points)
                 if self.player_cutscene.is_active:
                     self.waiting_for = "player_movement"
+                    return
+
+            elif action == "camera_movement":
+                if self.camera is None:
+                    raise RuntimeError(
+                        "A ação camera_move exige uma CameraManager."
+                    )
+                position, duration, zoom = arguments
+                self.camera.move_to(position, duration=duration, zoom=zoom)
+                if self.camera.is_animating:
+                    self.waiting_for = "camera_movement"
                     return
 
             elif action == "face_direction":

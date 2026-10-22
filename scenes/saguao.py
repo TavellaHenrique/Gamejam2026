@@ -219,7 +219,11 @@ class Saguao(Scene):
     def update(self, delta_time):
         """Atualiza a cutscene, os NPCs e o jogador."""
         self.cutscene_controller.update(delta_time)
-        self.npc_controller.update(delta_time)
+        self.npc_controller.update(
+            delta_time,
+            player_bounds=self.bounds,
+            player_obstacles=(self.door.rect,),
+        )
 
         self.player.update(
             delta_time,

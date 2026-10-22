@@ -7,6 +7,7 @@ from ui.text import draw_text
 from scenes.scene import Scene
 
 from scenes.saguao import Saguao
+from scenes.laboratorio1 import Laboratorio1
 
 
 class MainMenu(Scene):
@@ -25,6 +26,10 @@ class MainMenu(Scene):
             if event.key == pygame.K_RETURN:
                 self.game.scene_manager.change_scene(
                     Saguao(self.game)
+                )
+            elif event.key == pygame.K_1:
+                self.game.scene_manager.change_scene(
+                    Laboratorio1(self.game)
                 )
 
     def draw(self, screen: pygame.Surface):
@@ -45,9 +50,17 @@ class MainMenu(Scene):
 
         draw_text(
             screen,
-            "Pressione ENTER para iniciar",
+            "ENTER - Iniciar jogo",
             self.body_font,
             (200, 200, 200),
             (center_x, 420),
             centered = True
+        )
+        draw_text(
+            screen,
+            "1 - Demonstração da câmera",
+            self.body_font,
+            (200, 200, 200),
+            (center_x, 490),
+            centered=True,
         )
