@@ -232,6 +232,8 @@ class Laboratorio6(Scene):
 
     def handle_event(self, event):
         """Avança diálogos e inicia o retorno ao interagir com a porta."""
+        if self.is_inventory_open():
+            return
         if self.cutscene_controller.handle_event(event):
             return
 
@@ -254,8 +256,9 @@ class Laboratorio6(Scene):
         self.player.update(
             delta_time,
             accept_input=(
-                # Diálogos e etapas da cutscene bloqueiam o controle do jogador.
-                not self.game.dialogue_manager.is_active
+                # Diálogos, cutscene e inventário bloqueiam o controle do jogador.
+                not self.game.inventory_open
+                and not self.game.dialogue_manager.is_active
                 and not self.cutscene_controller.locks_player_control
                 # A aproximação automática à conversa controla o jogador.
                 and not self.npc_controller.interaction_cutscene.is_active

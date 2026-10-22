@@ -173,6 +173,8 @@ class Laboratorio1(Scene):
 
     def handle_event(self, event):
         """Encaminha eventos à cutscene e ao sistema de interação dos NPCs."""
+        if self.is_inventory_open():
+            return
         if self.cutscene_controller.handle_event(event):
             return
         self.npc_controller.handle_event(event)
@@ -200,7 +202,8 @@ class Laboratorio1(Scene):
         self.player.update(
             delta_time,
             accept_input=(
-                not self.game.dialogue_manager.is_active
+                not self.game.inventory_open
+                and not self.game.dialogue_manager.is_active
                 and not self.cutscene_controller.locks_player_control
                 and not self.npc_controller.interaction_cutscene.is_active
                 and not self.npc_controller.is_approaching_npc
