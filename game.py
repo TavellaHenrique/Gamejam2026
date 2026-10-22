@@ -43,6 +43,18 @@ class Game:
 
     def handle_global_event(self, event):
         """Trata atalhos globais como coordenadas e inventário."""
+        if (
+            not self.inventory_open
+            and self.show_mouse_coordinates
+            and event.type == pygame.MOUSEBUTTONDOWN
+            and event.button == 1
+        ):
+            scene = self.scene_manager.current_scene
+            print_debug_target = getattr(scene, "print_debug_target", None)
+            if callable(print_debug_target):
+                print_debug_target(event.pos)
+                return True
+
         if event.type != pygame.KEYDOWN:
             return False
 
@@ -81,9 +93,6 @@ class Game:
 
         if event.key != pygame.K_k:
             return False
-        if self.dialogue_manager.is_active or self._is_cutscene_active():
-            return False
-
         self.show_mouse_coordinates = not self.show_mouse_coordinates
         return True
 
@@ -161,22 +170,42 @@ class Game:
             screen.blit(description, (info_rect.x + 12, info_rect.y + 12))
 
     def draw_debug_overlay(self, screen):
-        """Desenha a posição atual do mouse no canto superior esquerdo."""
+        """Shows mouse and world details while the collision debugger is active."""
         if not self.show_mouse_coordinates:
             return
 
-        mouse_x, mouse_y = pygame.mouse.get_pos()
-        label = self.coordinates_font.render(
-            f"X: {mouse_x}  Y: {mouse_y}",
-            True,
-            (255, 255, 255),
+        mouse_position = pygame.mouse.get_pos()
+        lines = [
+            f"Mouse X: {mouse_position[0]}  Y: {mouse_position[1]}",
+            "Clique em um alvo para imprimir os dados no terminal.",
+        ]
+        scene = self.scene_manager.current_scene
+        draw_debug_geometry = getattr(scene, "draw_debug_geometry", None)
+        if callable(draw_debug_geometry):
+            draw_debug_geometry(screen)
+        get_debug_info = getattr(scene, "get_debug_info", None)
+        if callable(get_debug_info):
+            lines.extend(get_debug_info(mouse_position))
+
+        labels = [
+            self.coordinates_font.render(line, True, (255, 255, 255))
+            for line in lines
+        ]
+        content_width = max(label.get_width() for label in labels)
+        content_height = sum(label.get_height() for label in labels)
+        background_rect = pygame.Rect(
+            10,
+            10,
+            min(screen.get_width() - 20, content_width + 20),
+            content_height + 16,
         )
-        label_rect = label.get_rect(topleft=(10, 10))
-        background_rect = label_rect.inflate(12, 8)
         background = pygame.Surface(background_rect.size, pygame.SRCALPHA)
         background.fill((0, 0, 0, 180))
         screen.blit(background, background_rect)
-        screen.blit(label, label_rect)
+        y = background_rect.y + 8
+        for label in labels:
+            screen.blit(label, (background_rect.x + 10, y))
+            y += label.get_height()
 
     def _is_cutscene_active(self):
         """Considera tanto a cutscene da cena quanto a interação roteirizada de NPC."""

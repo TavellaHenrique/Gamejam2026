@@ -94,6 +94,11 @@ class CameraManager:
         top = max(0, min(top, self.world_height - height))
         return pygame.Rect(left, top, width, height)
 
+    @property
+    def render_rect(self):
+        """Retorna o retângulo ocupado pela câmera na tela."""
+        return self._last_render_rect.copy()
+
     def follow(self, target):
         """Define o alvo que a câmera mantém centralizado."""
         self.follow_target = target
@@ -237,6 +242,19 @@ class CameraManager:
             + (position.x - source.left) * scale_x,
             self._last_render_rect.top
             + (position.y - source.top) * scale_y,
+        )
+
+    def screen_to_world(self, position):
+        """Converte um ponto da viewport renderizada para o mundo."""
+        position = pygame.Vector2(position)
+        source = self.viewport_rect
+        scale_x = source.width / self._last_render_rect.width
+        scale_y = source.height / self._last_render_rect.height
+        return pygame.Vector2(
+            source.left
+            + (position.x - self._last_render_rect.left) * scale_x,
+            source.top
+            + (position.y - self._last_render_rect.top) * scale_y,
         )
 
     def _clamp_zoom(self, zoom):

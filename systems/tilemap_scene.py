@@ -42,7 +42,7 @@ class TilemapScene(Scene):
     """Scene base that scales a background image and shows one map quadrant."""
 
     TILESET_SCALE = 1.2 # Scale factor for the tileset image to world coordinates.
-    CAMERA_ZOOM_FACTOR = 0.38 # Scale factor for the camera zoom to fit one quadrant of the tileset.
+    CAMERA_ZOOM_FACTOR = 0.1 # Scale factor for the camera zoom to fit one quadrant of the tileset.
     _object_image_cache = {}
     _example_image_cache = {}
 
@@ -148,6 +148,7 @@ class TilemapScene(Scene):
             rect,
             scaled_collision,
             round(world_position.y + occlusion_y * self.TILESET_SCALE),
+            name=image_path.replace("\\", "/").rsplit("/", 1)[-1],
         )
 
     def create_map_object_from_example(
@@ -204,6 +205,7 @@ class TilemapScene(Scene):
             rect,
             scaled_collision,
             round(world_position.y + occlusion_y * self.TILESET_SCALE),
+            name=example_path.replace("\\", "/").rsplit("/", 1)[-1],
         )
 
     def create_student_npc(self, npc_id, position, ambient_lines):
@@ -312,6 +314,213 @@ class TilemapScene(Scene):
         """Renders the camera's current map region onto the game window."""
         self.camera.render(screen)
 
+    def get_debug_info(self, screen_position):
+        """Returns world coordinates and details for the object under the cursor."""
+        render_rect = self.camera.render_rect
+        if not render_rect.collidepoint(screen_position):
+            return ["Mouse fora da área renderizada."]
+
+        world_position = self.camera.screen_to_world(screen_position)
+        lines = [
+            f"Mundo X: {world_position.x:.1f}  Y: {world_position.y:.1f}"
+        ]
+        target = self._get_debug_target(world_position)
+        if target is not None:
+            lines.extend(target["details"])
+        else:
+            lines.append("Alvo: nenhum")
+        return lines
+
+    def draw_debug_geometry(self, screen):
+        """Highlights entity hitboxes, props, and collision rectangles."""
+        for target in self._get_debug_targets():
+            for rect in target["outlines"]:
+                pygame.draw.rect(
+                    screen,
+                    target["color"],
+                    self._world_rect_to_screen(rect),
+                    width=2,
+                )
+
+    def print_debug_target(self, screen_position):
+        """Prints the clicked object details in the terminal."""
+        render_rect = self.camera.render_rect
+        if not render_rect.collidepoint(screen_position):
+            print("DEBUG: clique fora da área renderizada.")
+            return
+
+        world_position = self.camera.screen_to_world(screen_position)
+        target = self._get_debug_target(world_position)
+        if target is None:
+            print(
+                "DEBUG: nenhum alvo em "
+                f"X={world_position.x:.1f}, Y={world_position.y:.1f}"
+            )
+            return
+
+        print(
+            f"DEBUG: clique em X={world_position.x:.1f}, "
+            f"Y={world_position.y:.1f} - {target['name']}"
+        )
+        for detail in target["details"]:
+            print(f"  {detail}")
+
+    def _get_debug_target(self, world_position):
+        for target in self._get_debug_targets():
+            if target["rect"].collidepoint(world_position):
+                return target
+        return None
+
+    def _get_debug_targets(self):
+        targets = []
+        npc_controller = getattr(self, "npc_controller", None)
+        if npc_controller is not None:
+            for npc in npc_controller.npcs:
+                hitbox = get_entity_hitbox(npc)
+                targets.append(
+                    self._make_debug_target(
+                        "NPC",
+                        f"NPC {npc.display_name} ({npc.npc_id})",
+                        npc.position,
+                        npc.rect,
+                        (npc.rect, hitbox),
+                        (100, 220, 255),
+                        f"Hitbox: {self._rect_details(hitbox)}",
+                        f"Sprite: {self._rect_details(npc.rect)}",
+                    )
+                )
+
+        player_hitbox = get_entity_hitbox(self.player)
+        targets.append(
+            self._make_debug_target(
+                "Jogador",
+                "Jogador",
+                self.player.position,
+                self.player.rect,
+                (self.player.rect, player_hitbox),
+                (100, 255, 140),
+                f"Hitbox: {self._rect_details(player_hitbox)}",
+                f"Sprite: {self._rect_details(self.player.rect)}",
+            )
+        )
+
+        for index, obj in enumerate(getattr(self, "map_objects", ())):
+            name = getattr(obj, "name", f"Objeto do mapa {index + 1}")
+            outlines = [obj.rect]
+            collision_rect = getattr(obj, "collision_rect", None)
+            extra = []
+            if collision_rect is not None:
+                outlines.append(collision_rect)
+                extra.append(
+                    f"Colisão: {self._rect_details(collision_rect)}"
+                )
+            targets.append(
+                self._make_debug_target(
+                    "Objeto",
+                    name,
+                    obj.rect.center,
+                    obj.rect,
+                    tuple(outlines),
+                    (255, 210, 90),
+                    *extra,
+                )
+            )
+
+        for item in getattr(self, "items", ()):
+            if not item.visible:
+                continue
+            if item.image is not None:
+                rect = item.image.get_rect(
+                    center=(round(item.position.x), round(item.position.y))
+                )
+            else:
+                radius = round(item.interaction_radius)
+                rect = pygame.Rect(
+                    round(item.position.x) - radius,
+                    round(item.position.y) - radius,
+                    radius * 2,
+                    radius * 2,
+                )
+            targets.append(
+                self._make_debug_target(
+                    "Objeto",
+                    f"Item {item.name} ({item.item_id})",
+                    item.position,
+                    rect,
+                    (rect,),
+                    (255, 180, 100),
+                )
+            )
+
+        object_collisions = {
+            tuple(obj.collision_rect)
+            for obj in getattr(self, "map_objects", ())
+            if obj.collision_rect is not None
+        }
+        seen_collisions = set()
+        for index, obstacle in enumerate(self.get_scene_obstacles()):
+            rect = pygame.Rect(obstacle)
+            key = tuple(rect)
+            if key in object_collisions or key in seen_collisions:
+                continue
+            seen_collisions.add(key)
+            targets.append(
+                self._make_debug_target(
+                    "Colisão",
+                    f"Colisão de cenário {index + 1}",
+                    rect.center,
+                    rect,
+                    (rect,),
+                    (255, 100, 100),
+                )
+            )
+
+        return targets
+
+    def _make_debug_target(
+        self,
+        kind,
+        name,
+        position,
+        hit_rect,
+        outlines,
+        color,
+        *extra_details,
+    ):
+        position = pygame.Vector2(position)
+        details = [
+            f"Tipo: {kind}",
+            f"Nome: {name}",
+            f"Posição: X={position.x:.1f}, Y={position.y:.1f}",
+            f"Área: {self._rect_details(hit_rect)}",
+            *extra_details,
+        ]
+        return {
+            "kind": kind,
+            "name": name,
+            "rect": hit_rect,
+            "outlines": outlines,
+            "color": color,
+            "details": details,
+        }
+
+    @staticmethod
+    def _rect_details(rect):
+        return (
+            f"X={rect.x}, Y={rect.y}, "
+            f"Largura={rect.width}, Altura={rect.height}"
+        )
+
+    def _world_rect_to_screen(self, rect):
+        top_left = self.camera.world_to_screen(rect.topleft)
+        bottom_right = self.camera.world_to_screen(rect.bottomright)
+        return pygame.Rect(
+            round(top_left.x),
+            round(top_left.y),
+            max(1, round(bottom_right.x - top_left.x)),
+            max(1, round(bottom_right.y - top_left.y)),
+        )
+
     @staticmethod
     def draw_door_hint(screen, font, player, doors, prefix="E - "):
         """Shows an interaction hint for the nearest active transparent door."""
@@ -338,11 +547,12 @@ class TilemapScene(Scene):
 class TilemapObject:
     """A sprite positioned in the map with collision and depth metadata."""
 
-    def __init__(self, image, rect, collision_rect, occlusion_y):
+    def __init__(self, image, rect, collision_rect, occlusion_y, name=None):
         self.image = image
         self.rect = rect
         self.collision_rect = collision_rect
         self.occlusion_y = occlusion_y
+        self.name = name or "Objeto do mapa"
 
     def should_draw_in_front_of(self, entity):
         """Uses the top of the entity's leg hitbox as its depth reference."""

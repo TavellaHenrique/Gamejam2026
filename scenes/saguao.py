@@ -275,17 +275,17 @@ class Saguao(TilemapScene):
                     fade_out("diretor", duration=0.50),
                     npcs(
                         {
-                            "estudante1": self.map_point((805, 122)),
+                            "estudante1": self.map_point((785, 122)),
                             "estudante2": self.map_point((830, 122)),
-                            "estudante3": self.map_point((855, 122)),
+                            "estudante3": self.map_point((895, 122)),
                         }
                     ),
                     fade_out("estudante1", duration=0.25),
                     fade_out("estudante2", duration=0.25),
                     fade_out("estudante3", duration=0.25),
-                    player_destination(self.map_point((700, 400))),
-                    player_destination(self.map_point((900, 400))),
-                    player_destination(self.map_point((900, 150))),
+                    # player_destination(self.map_point((500, 300))),
+                    # player_destination(self.map_point((500, 200))),
+                    player_destination(self.map_point((900, 122))),
                     change_scene(
                         lambda: Laboratorio6(game),
                         player_spawn=self.map_point((900, 150)),

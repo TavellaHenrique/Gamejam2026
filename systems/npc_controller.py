@@ -480,6 +480,24 @@ class NPCController:
                     cutscene.path_index = 0
                     cutscene.is_active = True
                     job["route_ready"] = True
+
+                next_position = self._get_npc_cutscene_step(
+                    job,
+                    movement_delta,
+                )
+                if any(
+                    wanderer not in group_npcs
+                    and wanderer is not job["npc"]
+                    and self._npc_steps_overlap(
+                        job["npc"],
+                        next_position,
+                        wanderer,
+                        wanderer.position,
+                    )
+                    for wanderer in self.wanderers
+                ):
+                    if self._request_npc_clearance(group, job):
+                        continue
                 active_jobs.append(job)
 
             if not active_jobs:

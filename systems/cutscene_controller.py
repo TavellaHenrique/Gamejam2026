@@ -3,7 +3,9 @@ from dataclasses import dataclass
 import pygame
 
 from entities.npc import NPC
+from systems.collision import can_occupy
 from systems.cutscene import Cutscene
+from systems.navigation import find_path
 from systems.trigger import Trigger as AreaTrigger
 
 
@@ -588,12 +590,15 @@ class CutsceneController:
             return
 
         if self.waiting_for == "player_movement":
+            obstacles = self.npc_controller.get_player_obstacles(
+                self.player_obstacles
+            )
+            if not self._update_player_cutscene_route(obstacles):
+                return
             self.player_cutscene.update(
                 delta_time,
                 bounds=self.bounds,
-                obstacles=self.npc_controller.get_player_obstacles(
-                    self.player_obstacles
-                ),
+                obstacles=obstacles,
             )
             if self.player_cutscene.is_active:
                 return
@@ -661,6 +666,52 @@ class CutsceneController:
             self._finish_current_step()
 
         self._run_ready_steps()
+
+    def _update_player_cutscene_route(self, obstacles):
+        """Recalcula o trecho atual quando um obstáculo bloqueia o jogador."""
+        cutscene = self.player_cutscene
+        if not cutscene.is_active:
+            return True
+
+        bounds = self.bounds
+        if bounds is None:
+            surface = pygame.display.get_surface()
+            bounds = pygame.Rect(
+                0,
+                0,
+                surface.get_width(),
+                surface.get_height(),
+            )
+
+        target = cutscene.path[cutscene.path_index]
+        distance = self.player.position.distance_to(target)
+        steps = max(1, int(distance / 4) + 1)
+        if all(
+            can_occupy(
+                self.player,
+                self.player.position.lerp(target, step / steps),
+                bounds,
+                obstacles,
+            )
+            for step in range(1, steps + 1)
+        ):
+            return True
+
+        route = find_path(self.player, target, bounds, obstacles)
+        if not route:
+            if (
+                self.player.position.distance_to(target) > 16
+                or not can_occupy(self.player, target, bounds, obstacles)
+            ):
+                return False
+            route = [pygame.Vector2(target)]
+        if route[-1].distance_to(target) > 0.001:
+            route.append(pygame.Vector2(target))
+
+        remaining_path = cutscene.path[cutscene.path_index + 1:]
+        cutscene.path = route + remaining_path
+        cutscene.path_index = 0
+        return True
 
     def _run_ready_steps(self):
         # Executa etapas imediatas até encontrar uma ação que precise aguardar.
