@@ -47,13 +47,29 @@ class Saguao(Scene):
             rect=(450, 0, 100, 40),
             prompt="Primeira área",
         )
-        self.debug_item = Item(
-            item_id="lab_key",
-            name="Chave do laboratório",
-            description="O professor vai pedir isso na história.",
-            position=(620, 420),
-            interaction_radius=36,
-        )
+        self.items = [
+            Item(
+                item_id="lab_key",
+                name="Chave do laboratório",
+                description="O professor vai pedir isso na história.",
+                position=(620, 420),
+                interaction_radius=36,
+            ),
+            Item(
+                item_id="battery",
+                name="Bateria",
+                description="Um pequeno dispositivo de energia.",
+                position=(780, 260),
+                interaction_radius=30,
+            ),
+            Item(
+                item_id="note",
+                name="Bilhete",
+                description="Mensagem antiga do laboratório.",
+                position=(320, 560),
+                interaction_radius=32,
+            ),
+        ]
         surface = pygame.display.get_surface()
         self.bounds = pygame.Rect(
             (0, 0),
@@ -212,8 +228,10 @@ class Saguao(Scene):
             and not self.game.dialogue_manager.is_active
             and not self.cutscene_controller.is_active
         ):
-            if self.debug_item.can_interact(self.player):
-                picked = self.debug_item.pick_up(self.player)
+            for item in self.items:
+                if item.can_interact(self.player):
+                    item.pick_up(self.player)
+                    return
 
             if self.door.can_interact(self.player):
                 self.game.scene_manager.transition_to(
@@ -226,7 +244,8 @@ class Saguao(Scene):
 
     def update(self, delta_time):
         """Atualiza a cutscene, os NPCs e o jogador."""
-        self.debug_item.update()
+        for item in self.items:
+            item.update()
         self.cutscene_controller.update(delta_time)
         self.npc_controller.update(
             delta_time,
@@ -260,18 +279,20 @@ class Saguao(Scene):
 
         # Desenha os personagens sobre o cenário e a interface acima deles.
         self.door.draw(screen, self.player)
-        self.debug_item.draw(screen)
+        for item in self.items:
+            item.draw(screen)
         self.cutscene_controller.draw_trigger(screen)
         self.npc_controller.draw_npcs(screen)
         screen.blit(self.player.image, self.player.rect)
 
-        if self.debug_item.can_interact(self.player):
+        nearby_item = next((item for item in self.items if item.can_interact(self.player)), None)
+        if nearby_item is not None:
             prompt = self.hint_font.render(
-                f"Pressione E para coletar {self.debug_item.name}",
+                f"Pressione E para coletar {nearby_item.name}",
                 True,
                 (255, 255, 255),
             )
-            screen.blit(prompt, (self.player.rect.centerx - 90, self.player.rect.top - 30))
+            screen.blit(prompt, (self.player.rect.centerx - 120, self.player.rect.top - 30))
 
         self.npc_controller.draw_ui(screen)
         self.cutscene_controller.draw_overlay(screen)
