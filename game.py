@@ -17,7 +17,7 @@ class Game:
     def __init__(self):
         """Cria as entidades e os gerenciadores centrais antes da primeira cena."""
         # O jogador e o inventário pertencem ao jogo, não a uma cena específica.
-        self.player_spawn_point = pygame.Vector2(900, 810)
+        self.player_spawn_point = pygame.Vector2(900, 610)
         self.player = Player(self.player_spawn_point)
         self.inventory = None  # Inventory()
         self.inventory_open = False
@@ -48,8 +48,6 @@ class Game:
 
         if self.inventory_open:
             if event.key == pygame.K_i:
-                if self.dialogue_manager.is_active or self._is_cutscene_active():
-                    return False
                 self.inventory_open = False
                 return True
 
@@ -76,8 +74,6 @@ class Game:
             return True
 
         if event.key == pygame.K_i:
-            if self.dialogue_manager.is_active or self._is_cutscene_active():
-                return False
             self.inventory_open = not self.inventory_open
             if self.inventory_open:
                 self.inventory_selected_index = 0

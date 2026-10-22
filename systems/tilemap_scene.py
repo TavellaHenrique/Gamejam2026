@@ -5,6 +5,7 @@ import math
 import pygame
 
 from config import SCREEN_HEIGHT, SCREEN_WIDTH
+from entities.npc import NPC
 from scenes.scene import Scene
 from systems.camera_manager import CameraManager
 from systems.collision import get_entity_hitbox
@@ -40,9 +41,10 @@ LABORATORY_FURNITURE = (
 class TilemapScene(Scene):
     """Scene base that scales a background image and shows one map quadrant."""
 
-    TILESET_SCALE = 1.5
-    CAMERA_ZOOM_FACTOR = 0.5
+    TILESET_SCALE = 1.2 # Scale factor for the tileset image to world coordinates.
+    CAMERA_ZOOM_FACTOR = 0.38 # Scale factor for the camera zoom to fit one quadrant of the tileset.
     _object_image_cache = {}
+    _example_image_cache = {}
 
     def __init__(self, game, tileset_path, player_spawn=None):
         super().__init__(game)
@@ -55,6 +57,7 @@ class TilemapScene(Scene):
         self.player.rect.center = player_spawn
 
         source_image = pygame.image.load(tileset_path).convert()
+        self.source_map_image = source_image
         map_size = (
             round(source_image.get_width() * self.TILESET_SCALE),
             round(source_image.get_height() * self.TILESET_SCALE),
@@ -145,6 +148,79 @@ class TilemapScene(Scene):
             rect,
             scaled_collision,
             round(world_position.y + occlusion_y * self.TILESET_SCALE),
+        )
+
+    def create_map_object_from_example(
+        self,
+        example_path,
+        crop_rect,
+        position,
+        collision_rect=None,
+        occlusion_y=None,
+    ):
+        """Extracts an omitted prop from the example layer against the base map."""
+        example = self._example_image_cache.get(example_path)
+        if example is None:
+            example = pygame.image.load(example_path).convert()
+            self._example_image_cache[example_path] = example
+        crop_rect = pygame.Rect(crop_rect)
+        example_crop = example.subsurface(crop_rect).copy()
+        base_crop = self.source_map_image.subsurface(crop_rect)
+        for y in range(crop_rect.height):
+            for x in range(crop_rect.width):
+                source_pixel = example_crop.get_at((x, y))
+                base_pixel = base_crop.get_at((x, y))
+                difference = max(
+                    abs(source_pixel.r - base_pixel.r),
+                    abs(source_pixel.g - base_pixel.g),
+                    abs(source_pixel.b - base_pixel.b),
+                )
+                if difference <= 20:
+                    example_crop.set_at((x, y), (*source_pixel[:3], 0))
+
+        image = pygame.transform.scale(
+            example_crop,
+            (
+                round(crop_rect.width * self.TILESET_SCALE),
+                round(crop_rect.height * self.TILESET_SCALE),
+            ),
+        )
+        world_position = self.map_point(position)
+        rect = image.get_rect(
+            topleft=(round(world_position.x), round(world_position.y))
+        )
+        scaled_collision = None
+        if collision_rect is not None:
+            scaled_collision = pygame.Rect(
+                round(world_position.x + collision_rect[0] * self.TILESET_SCALE),
+                round(world_position.y + collision_rect[1] * self.TILESET_SCALE),
+                round(collision_rect[2] * self.TILESET_SCALE),
+                round(collision_rect[3] * self.TILESET_SCALE),
+            )
+        if occlusion_y is None:
+            occlusion_y = crop_rect.height / 2
+        return TilemapObject(
+            image,
+            rect,
+            scaled_collision,
+            round(world_position.y + occlusion_y * self.TILESET_SCALE),
+        )
+
+    def create_student_npc(self, npc_id, position, ambient_lines):
+        """Creates an interactable student with ambient dialogue."""
+        return NPC(
+            npc_id=npc_id,
+            display_name="Estudante",
+            position=self.map_point(position),
+            sprite_path=(
+                "assets/sprites/player/"
+                "TheFemaleAdventurer/Idle/Idle_Up.png"
+            ),
+            dialogue_id="student_smalltalk",
+            ambient_lines=ambient_lines,
+            use_player_animations=True,
+            animation_scale=3,
+            interactable=True,
         )
 
     def get_scene_obstacles(self):

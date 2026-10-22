@@ -203,6 +203,12 @@
             "Estou esperando a próxima turma no corredor. A aula começa em breve."
         ]
     },
+    "student_smalltalk": {
+        "speaker": "Estudante",
+        "lines": [
+            "Oi! Estou aproveitando um intervalo entre as aulas. Se precisar de ajuda, pode perguntar."
+        ]
+    },
     "falas_aleatorias": {
         "speaker": "",
         "lines": [

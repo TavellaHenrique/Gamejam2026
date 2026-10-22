@@ -15,6 +15,10 @@ class NPCController:
     NPC_WANDER_INTERVAL = 5.0
     NPC_REPATH_INTERVAL = 0.5
     NAVIGATION_CELL_SIZE = 16
+    WANDER_TARGET_RADIUS = 192
+    WANDER_TARGET_ATTEMPTS = 8
+    MAX_NPC_MOVEMENT_DELTA = 1 / 30
+    WANDER_PLANNING_BUDGET = 1
     SIDE_APPROACH_DISTANCE = 80
     SIDE_APPROACH_Y_OFFSET = 0
     BELOW_APPROACH_DISTANCE = 80
@@ -123,6 +127,9 @@ class NPCController:
                     "staging_attempts": 0,
                     "avoidance_side": 0,
                     "route_ready": False,
+                    "waiting_for_clearance": False,
+                    "is_clearance_job": False,
+                    "ignore_obstacles": False,
                 }
             )
 
@@ -308,21 +315,45 @@ class NPCController:
             # E suficientemente alinhado horizontalmente ao NPC.
             and abs(offset.x) <= self.BELOW_X_THRESHOLD
         ):
-            return npc.position + pygame.Vector2(
-                0,
+            preferred = pygame.Vector2(
+                self.player.position.x - npc.position.x,
                 self.BELOW_APPROACH_DISTANCE,
             )
+        else:
+            side = -1 if offset.x < 0 else 1
+            y_offset = (
+                -self.SIDE_APPROACH_Y_OFFSET
+                if offset.y < 0
+                else self.SIDE_APPROACH_Y_OFFSET
+            )
+            preferred = pygame.Vector2(
+                side * self.SIDE_APPROACH_DISTANCE,
+                y_offset,
+            )
 
-        side = -1 if offset.x < 0 else 1
-        y_offset = (
-            -self.SIDE_APPROACH_Y_OFFSET
-            if offset.y < 0
-            else self.SIDE_APPROACH_Y_OFFSET
-        )
-        return npc.position + pygame.Vector2(
-            side * self.SIDE_APPROACH_DISTANCE,
-            y_offset,
-        )
+        directions = [
+            preferred,
+            pygame.Vector2(
+                self.player.position.x - npc.position.x,
+                self.BELOW_APPROACH_DISTANCE,
+            ),
+            pygame.Vector2(0, self.BELOW_APPROACH_DISTANCE),
+            pygame.Vector2(0, -self.BELOW_APPROACH_DISTANCE),
+            pygame.Vector2(self.SIDE_APPROACH_DISTANCE, 0),
+            pygame.Vector2(-self.SIDE_APPROACH_DISTANCE, 0),
+        ]
+        bounds = self.wander_bounds
+        if bounds is None:
+            surface = pygame.display.get_surface()
+            bounds = pygame.Rect(0, 0, surface.get_width(), surface.get_height())
+
+        obstacles = self.get_player_obstacles()
+        for direction in directions:
+            candidate = npc.position + direction
+            if can_occupy(self.player, candidate, bounds, obstacles):
+                return candidate
+
+        return self.player.position.copy()
 
     def _restore_npc_facing(self):
         """Restaura a direção do NPC salva antes de iniciar a interação."""
@@ -399,6 +430,10 @@ class NPCController:
 
     def _update_npc_cutscenes(self, delta_time):
         """Move cada grupo em paralelo e desvia localmente de colisões."""
+        movement_delta = min(
+            max(delta_time, 0.0),
+            self.MAX_NPC_MOVEMENT_DELTA,
+        )
         for group in tuple(self.npc_cutscene_groups):
             for job in tuple(group["jobs"]):
                 target = self._get_npc_cutscene_target(job)
@@ -416,6 +451,9 @@ class NPCController:
             active_jobs = []
 
             for job in tuple(group["jobs"]):
+                if job["waiting_for_clearance"]:
+                    continue
+
                 npc = job["npc"]
                 target = self._get_npc_cutscene_target(job)
                 cutscene = job["cutscene"]
@@ -431,6 +469,12 @@ class NPCController:
                         ignored_npcs=group_npcs,
                     )
                     if route is None:
+                        if self._request_npc_clearance(group, job):
+                            continue
+
+                        self._enable_cutscene_fallback(group, (job,))
+                        obstacles_by_npc[npc] = []
+                        active_jobs.append(job)
                         continue
                     cutscene.path = route
                     cutscene.path_index = 0
@@ -440,16 +484,15 @@ class NPCController:
 
             if not active_jobs:
                 if group["jobs"]:
+                    if any(
+                        job["is_clearance_job"]
+                        for job in group["jobs"]
+                    ):
+                        continue
+
                     job = self._stage_npc_cutscene_job(group)
                     if job is None:
-                        npc_ids = tuple(
-                            pending["npc"].npc_id
-                            for pending in group["jobs"]
-                        )
-                        raise RuntimeError(
-                            "Não foi possível encontrar uma rota livre para "
-                            f"os NPCs da cutscene: {npc_ids}"
-                        )
+                        self._enable_cutscene_fallback(group)
                 continue
 
             proposals = {
@@ -459,7 +502,7 @@ class NPCController:
             proposals.update({
                 job["npc"]: self._get_npc_cutscene_step(
                     job,
-                    delta_time,
+                    movement_delta,
                 )
                 for job in active_jobs
             })
@@ -468,7 +511,7 @@ class NPCController:
                 proposals,
                 obstacles_by_npc,
                 group["bounds"],
-                delta_time,
+                movement_delta,
             )
 
             for job in active_jobs:
@@ -488,9 +531,13 @@ class NPCController:
                 )
                 npc.move_towards(
                     target,
-                    delta_time,
+                    movement_delta,
                     bounds=group["bounds"],
-                    obstacles=obstacles_by_npc[npc],
+                    obstacles=(
+                        ()
+                        if job["ignore_obstacles"]
+                        else obstacles_by_npc[npc]
+                    ),
                     keep_walking=not reaches_final_destination,
                 )
                 if npc.position.distance_to(route_target) <= 0.001:
@@ -504,6 +551,179 @@ class NPCController:
             group for group in self.npc_cutscene_groups
             if group["jobs"]
         ]
+
+    def _request_npc_clearance(self, group, job):
+        """Moves a bystander away when it blocks a scripted NPC's route."""
+        npc = job["npc"]
+        target = self._get_npc_cutscene_target(job)
+        all_npcs = set(self.npcs)
+        route = self._get_npc_cutscene_route(
+            npc,
+            target,
+            group["bounds"],
+            ignored_npcs=all_npcs,
+        )
+        if route is None:
+            return False
+
+        route_positions = self._sample_cutscene_route(npc, route)
+        moving_npcs = {
+            active_job["npc"]
+            for active_job in group["jobs"]
+        }
+        blockers = [
+            other
+            for other in self.npcs
+            if other is not npc
+            and other not in moving_npcs
+            and any(
+                get_entity_hitbox(npc, position).colliderect(
+                    get_entity_hitbox(other)
+                )
+                for position in route_positions
+            )
+        ]
+        for blocker in blockers:
+            evacuation = self._find_npc_evacuation_route(
+                group,
+                blocker,
+                npc,
+                route_positions,
+            )
+            if evacuation is None:
+                continue
+
+            destination, evacuation_route = evacuation
+            cutscene = Cutscene()
+            cutscene.start(blocker, (destination,))
+            clearance_job = {
+                "npc": blocker,
+                "cutscene": cutscene,
+                "destinations": (destination,),
+                "point_index": 0,
+                "temporary_target": None,
+                "staging_attempts": 0,
+                "avoidance_side": 0,
+                "route_ready": True,
+                "waiting_for_clearance": False,
+                "is_clearance_job": True,
+                "ignore_obstacles": False,
+                "resume_job": job,
+            }
+            cutscene.path = evacuation_route
+            cutscene.path_index = 0
+            cutscene.is_active = True
+            group["jobs"].append(clearance_job)
+            self.npc_cutscenes[blocker] = cutscene
+            job["waiting_for_clearance"] = True
+            job["route_ready"] = False
+            return True
+
+        return False
+
+    @staticmethod
+    def _sample_cutscene_route(npc, route):
+        positions = [npc.position.copy()]
+        current = pygame.Vector2(npc.position)
+        for waypoint in route:
+            distance = current.distance_to(waypoint)
+            steps = max(1, int(distance / 8) + 1)
+            positions.extend(
+                current.lerp(waypoint, step / steps)
+                for step in range(1, steps + 1)
+            )
+            current = pygame.Vector2(waypoint)
+        return positions
+
+    def _find_npc_evacuation_route(
+        self,
+        group,
+        npc,
+        route_npc,
+        blocked_route,
+    ):
+        """Finds a nearby safe place outside the cutscene NPC's corridor."""
+        group_npcs = {
+            job["npc"]
+            for job in group["jobs"]
+        }
+        obstacles = self._get_npc_obstacles(npc, group_npcs)
+        for radius in range(4, 17):
+            offsets = (
+                (radius, 0),
+                (-radius, 0),
+                (0, radius),
+                (0, -radius),
+                (radius, radius),
+                (-radius, radius),
+                (radius, -radius),
+                (-radius, -radius),
+            )
+            for offset_x, offset_y in offsets:
+                target = npc.position + pygame.Vector2(
+                    offset_x * self.NAVIGATION_CELL_SIZE,
+                    offset_y * self.NAVIGATION_CELL_SIZE,
+                )
+                if not can_occupy(npc, target, group["bounds"], obstacles):
+                    continue
+                target_hitbox = get_entity_hitbox(npc, target)
+                if any(
+                    target_hitbox.colliderect(
+                        get_entity_hitbox(
+                            route_npc,
+                            route_position,
+                        ).inflate(16, 16)
+                    )
+                    for route_position in blocked_route
+                ):
+                    continue
+
+                route = self._get_npc_cutscene_route(
+                    npc,
+                    target,
+                    group["bounds"],
+                    ignored_npcs=group_npcs,
+                )
+                if route:
+                    return target, route
+        return None
+
+    def _enable_cutscene_fallback(self, group, jobs=None):
+        """Keeps a scripted movement alive if static geometry has no route."""
+        if jobs is None:
+            jobs = group["jobs"]
+
+        for job in jobs:
+            if job["waiting_for_clearance"]:
+                continue
+
+            npc = job["npc"]
+            target = self._get_npc_cutscene_target(job)
+            target = pygame.Vector2(target)
+            target_hitbox = get_entity_hitbox(npc, target)
+            offset_left = target_hitbox.left - round(target.x)
+            offset_right = target_hitbox.right - round(target.x)
+            offset_top = target_hitbox.top - round(target.y)
+            offset_bottom = target_hitbox.bottom - round(target.y)
+            target.x = min(
+                max(target.x, group["bounds"].left - offset_left),
+                group["bounds"].right - offset_right,
+            )
+            target.y = min(
+                max(target.y, group["bounds"].top - offset_top),
+                group["bounds"].bottom - offset_bottom,
+            )
+            if job["temporary_target"] is not None:
+                job["temporary_target"] = target
+            else:
+                destinations = list(job["destinations"])
+                destinations[job["point_index"]] = target
+                job["destinations"] = tuple(destinations)
+            job["cutscene"].path = Cutscene._build_path(npc.position, (target,))
+            job["cutscene"].path_index = 0
+            job["cutscene"].is_active = bool(job["cutscene"].path)
+            job["route_ready"] = True
+            job["ignore_obstacles"] = True
 
     @staticmethod
     def _get_npc_cutscene_step(job, delta_time):
@@ -735,6 +955,22 @@ class NPCController:
 
     def _finish_npc_cutscene_target(self, group, job):
         """Avança ao próximo ponto ou remove um movimento concluído."""
+        if job["is_clearance_job"]:
+            group["jobs"].remove(job)
+            self.npc_cutscenes.pop(job["npc"], None)
+            wanderer = self.wanderers.get(job["npc"])
+            if wanderer is not None:
+                wanderer["path"] = []
+                wanderer["path_index"] = 0
+                wanderer["target"] = None
+                wanderer["timer"] = self.NPC_WANDER_INTERVAL
+
+            resume_job = job["resume_job"]
+            resume_job["waiting_for_clearance"] = False
+            resume_job["route_ready"] = False
+            resume_job["cutscene"].is_active = True
+            return
+
         if job["temporary_target"] is not None:
             job["temporary_target"] = None
             job["cutscene"].is_active = True
@@ -755,14 +991,19 @@ class NPCController:
         if self.wander_bounds is None:
             return
 
+        movement_delta = min(
+            max(delta_time, 0.0),
+            self.MAX_NPC_MOVEMENT_DELTA,
+        )
+        planning_budget = self.WANDER_PLANNING_BUDGET
         for npc, state in self.wanderers.items():
             if npc in self.npc_cutscenes:
                 continue
 
             state["timer"] -= delta_time
-            if state["timer"] <= 0:
+            if state["timer"] <= 0 and planning_budget:
                 self._choose_wander_target(npc, state)
-                state["timer"] = self.NPC_WANDER_INTERVAL
+                planning_budget -= 1
 
             state["repath_timer"] = max(
                 0.0,
@@ -776,7 +1017,7 @@ class NPCController:
                 previous_position = npc.position.copy()
                 arrived = npc.move_towards(
                     target,
-                    delta_time,
+                    movement_delta,
                     bounds=self.wander_bounds,
                     obstacles=obstacles,
                     keep_walking=(
@@ -787,43 +1028,51 @@ class NPCController:
                 # Se não houve avanço, o trajeto está bloqueado e precisa recalcular.
                 if npc.position == previous_position:
                     if state["repath_timer"] == 0:
-                        state["path"] = find_path(
-                            npc,
-                            state["target"],
-                            self.wander_bounds,
-                            obstacles,
-                            self.NAVIGATION_CELL_SIZE,
-                        )
-                        state["path_index"] = 0
+                        if planning_budget:
+                            self._choose_wander_target(npc, state)
+                            planning_budget -= 1
+                        else:
+                            state["timer"] = max(
+                                state["timer"],
+                                self.NPC_REPATH_INTERVAL,
+                            )
                         state["repath_timer"] = self.NPC_REPATH_INTERVAL
                     break
 
                 if not arrived:
                     break
                 state["path_index"] += 1
+                break
 
     def _choose_wander_target(self, npc, state):
-        """Sorteia um destino navegável dentro dos limites configurados."""
-        for _ in range(12):
+        """Sorteia um destino próximo com rota direta desobstruída."""
+        state["timer"] = self.NPC_WANDER_INTERVAL
+        obstacles = self._get_npc_obstacles(npc)
+        for _ in range(self.WANDER_TARGET_ATTEMPTS):
             target = pygame.Vector2(
-                random.randrange(
-                    160,
-                    self.wander_bounds.right - 32,
-                    self.NAVIGATION_CELL_SIZE,
+                npc.position.x + random.randint(
+                    -self.WANDER_TARGET_RADIUS,
+                    self.WANDER_TARGET_RADIUS,
                 ),
-                random.randrange(
-                    96,
-                    self.wander_bounds.bottom - 32,
-                    self.NAVIGATION_CELL_SIZE,
+                npc.position.y + random.randint(
+                    -self.WANDER_TARGET_RADIUS,
+                    self.WANDER_TARGET_RADIUS,
                 ),
             )
-            obstacles = self._get_npc_obstacles(npc)
-            path = find_path(
+            if not can_occupy(
                 npc,
                 target,
                 self.wander_bounds,
                 obstacles,
-                self.NAVIGATION_CELL_SIZE,
+            ):
+                continue
+            if npc.position.distance_to(target) < self.NAVIGATION_CELL_SIZE * 4:
+                continue
+
+            path = self._get_clear_wander_route(
+                npc,
+                target,
+                obstacles,
             )
             if path:
                 state["target"] = target
@@ -834,6 +1083,37 @@ class NPCController:
         state["target"] = None
         state["path"] = []
         state["path_index"] = 0
+
+    def _get_clear_wander_route(self, npc, target, obstacles):
+        """Returns a direct orthogonal route only when every segment is clear."""
+        start = pygame.Vector2(npc.position)
+        target = pygame.Vector2(target)
+        routes = (
+            (pygame.Vector2(target.x, start.y), target),
+            (pygame.Vector2(start.x, target.y), target),
+        )
+        for waypoints in routes:
+            route = []
+            current = start
+            for waypoint in waypoints:
+                distance = current.distance_to(waypoint)
+                steps = max(1, int(distance / 4) + 1)
+                if any(
+                    not can_occupy(
+                        npc,
+                        current.lerp(waypoint, step / steps),
+                        self.wander_bounds,
+                        obstacles,
+                    )
+                    for step in range(1, steps + 1)
+                ):
+                    break
+                if current.distance_to(waypoint) > 0.001:
+                    route.append(waypoint)
+                    current = waypoint
+            else:
+                return route
+        return []
 
     def _get_npc_obstacles(self, moving_npc, ignored_npcs=()):
         """Retorna obstáculos fixos, jogador e demais NPCs para a navegação."""

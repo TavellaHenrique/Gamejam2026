@@ -3,7 +3,6 @@
 import pygame
 
 from entities.door import Door
-from entities.npc import NPC
 from scenes.saguao import Saguao
 from systems.npc_controller import NPCController
 from systems.tilemap_scene import TilemapScene
@@ -33,8 +32,6 @@ class Cantina(TilemapScene):
                 (0, 0, 895, 88),
                 (943, 0, 17, 95),
                 (865, 208, 87, 320),
-                (17, 585, 20, 32),
-                (833, 585, 20, 32),
             )
         )
         self.map_objects = [
@@ -82,6 +79,15 @@ class Cantina(TilemapScene):
                 (761, 30),
                 collision_rect=(0, -2, 55, 93),
                 occlusion_y=65,
+            ),
+            *(
+                self.create_map_object(
+                    "assets/tileset/scene_objects/lixeira.png",
+                    position,
+                    collision_rect=(0, 0, 20, 32),
+                    occlusion_y=16,
+                )
+                for position in ((17, 585), (833, 585))
             ),
             self.create_map_object(
                 "assets/tileset/scene_objects/maquina_roxa.png",
@@ -131,33 +137,53 @@ class Cantina(TilemapScene):
         self.npc_controller = NPCController(
             game,
             npcs=(
-                NPC(
-                    npc_id=f"cantina_seated_{index}",
-                    display_name="",
-                    position=self.map_point(position),
-                    sprite_path=(
-                        "assets/sprites/player/"
-                        "TheFemaleAdventurer/Idle/Idle_Up.png"
-                    ),
-                    dialogue_id="",
-                    frame_count=1,
-                    scale=3,
-                    interactable=False,
-                )
-                for index, position in enumerate(
-                    (
-                        (100, 288),
-                        (273, 370),
-                        (465, 288),
-                        (658, 370),
-                        (100, 430),
-                        (658, 430),
-                    ),
-                    1,
-                )
+                self.create_student_npc(
+                    "cantina_student_1",
+                    (170, 340),
+                    ("Essa mesa está reservada para o nosso grupo.",),
+                ),
+                self.create_student_npc(
+                    "cantina_student_2",
+                    (350, 340),
+                    ("O intervalo parece passar cada vez mais rápido.",),
+                ),
+                self.create_student_npc(
+                    "cantina_student_3",
+                    (540, 340),
+                    ("Vou pegar alguma coisa na máquina.",),
+                ),
+                self.create_student_npc(
+                    "cantina_student_4",
+                    (750, 340),
+                    ("A cantina fica mais tranquila neste horário.",),
+                ),
+                self.create_student_npc(
+                    "cantina_walker_1",
+                    (350, 220),
+                    ("Será que ainda tem salgado?",),
+                ),
+                self.create_student_npc(
+                    "cantina_walker_2",
+                    (780, 220),
+                    ("Vou voltar para o saguão antes da aula.",),
+                ),
+                self.create_student_npc(
+                    "cantina_walker_3",
+                    (450, 560),
+                    ("Preciso aproveitar o intervalo para almoçar.",),
+                ),
             ),
             npc_scope=type(self),
             static_obstacles=self.get_scene_obstacles(),
+        )
+        self.npc_controller.configure_wandering(
+            (
+                self.npc_controller.get_npc("cantina_walker_1"),
+                self.npc_controller.get_npc("cantina_walker_2"),
+                self.npc_controller.get_npc("cantina_walker_3"),
+            ),
+            bounds=self.bounds,
+            obstacles=self.get_scene_obstacles(),
         )
 
     def handle_event(self, event):

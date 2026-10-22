@@ -77,16 +77,27 @@ class Saguao(TilemapScene):
                 (0, 0, 230, 96),
                 (346, 0, 529, 96),
                 (922, 0, 38, 96),
-                (55, 205, 24, 72),
-                (290, 205, 24, 72),
-                (738, 205, 24, 72),
-                (55, 300, 24, 72),
-                (290, 300, 24, 72),
-                (738, 284, 24, 72),
                 *stair_obstacles,
             )
         )
         self.map_objects = [
+            *(
+                self.create_map_object_from_example(
+                    "assets/tileset/saguao/saguao_exemplo.jpeg",
+                    (x, y, 24, 72),
+                    (x, y),
+                    collision_rect=(0, 0, 24, 72),
+                    occlusion_y=36,
+                )
+                for x, y in (
+                    (55, 205),
+                    (290, 205),
+                    (738, 205),
+                    (55, 300),
+                    (290, 300),
+                    (738, 284),
+                )
+            ),
             self.create_map_object(
                 "assets/tileset/scene_objects/Vaso.png",
                 (17, 103),
@@ -175,34 +186,53 @@ class Saguao(TilemapScene):
                     use_player_animations=True,
                     interactable=True
                 ),
-                *(
-                    NPC(
-                        npc_id=f"saguao_seated_{index}",
-                        display_name="",
-                        position=self.map_point(position),
-                        sprite_path=(
-                            "assets/sprites/player/"
-                            "TheFemaleAdventurer/Idle/Idle_Up.png"
-                        ),
-                        dialogue_id="",
-                        frame_count=1,
-                        scale=3,
-                        interactable=False,
-                    )
-                    for index, position in enumerate(
-                        ((125, 178), (220, 178), (545, 178), (650, 392)),
-                        1,
-                    )
+                self.create_student_npc(
+                    "saguao_student_1",
+                    (125, 215),
+                    ("O saguão fica bem cheio antes do começo das aulas.",),
+                ),
+                self.create_student_npc(
+                    "saguao_student_2",
+                    (220, 215),
+                    ("A sala do laboratório fica no fim do corredor.",),
+                ),
+                self.create_student_npc(
+                    "saguao_student_3",
+                    (545, 215),
+                    ("Você já passou na cantina? O café de lá é bom.",),
+                ),
+                self.create_student_npc(
+                    "saguao_student_4",
+                    (690, 380),
+                    ("Estou esperando meus colegas para a próxima aula.",),
+                ),
+                self.create_student_npc(
+                    "saguao_walker_1",
+                    (365, 410),
+                    ("Com licença, estou procurando minha sala.",),
+                ),
+                self.create_student_npc(
+                    "saguao_walker_2",
+                    (680, 500),
+                    ("Ainda tenho alguns minutos antes da aula.",),
                 ),
             ],
             npc_scope=type(self),
             static_obstacles=self.get_scene_obstacles(),
         )
+        self.npc_controller.configure_wandering(
+            (
+                self.npc_controller.get_npc("saguao_walker_1"),
+                self.npc_controller.get_npc("saguao_walker_2"),
+            ),
+            bounds=self.bounds,
+            obstacles=self.get_scene_obstacles(),
+        )
         self.cutscene_controller = CutsceneController.create_story_cutscene(
             game,
             self.npc_controller,
             trigger(
-                trigger_position=(1000,1000),
+                trigger_position=self.map_point((480, 400)),
                 trigger_radius=16,
                 visible=True,
                 action=(
@@ -342,7 +372,7 @@ class Saguao(TilemapScene):
             event.type == pygame.KEYDOWN
             and event.key == pygame.K_e
             and not self.game.dialogue_manager.is_active
-            and not self.cutscene_controller.is_active
+            and not self.cutscene_controller.locks_player_control
         ):
             for item in self.items:
                 if item.can_interact(self.player):
@@ -426,6 +456,27 @@ class Saguao(TilemapScene):
             screen.blit(
                 prompt,
                 prompt.get_rect(
+                    midbottom=(screen.get_width() // 2, screen.get_height() - 18)
+                ),
+            )
+
+        if (
+            self.cutscene_controller.waiting_for == "trigger"
+            and nearby_item is None
+            and not any(
+                door.can_interact(self.player)
+                for door in (self.cantina_door, self.lab_door, self.stairs_door)
+            )
+            and self.npc_controller.get_nearest_interactable_npc() is None
+        ):
+            hint = self.hint_font.render(
+                "Caminhe até o círculo amarelo para iniciar a história",
+                True,
+                (255, 255, 255),
+            )
+            screen.blit(
+                hint,
+                hint.get_rect(
                     midbottom=(screen.get_width() // 2, screen.get_height() - 18)
                 ),
             )

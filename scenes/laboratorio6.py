@@ -71,31 +71,47 @@ class Laboratorio6(TilemapScene):
                     use_player_animations=True,
                     interactable=True,
                 ),
-                *(
-                    NPC(
-                        npc_id=npc_id,
-                        display_name="",
-                        position=self.map_point(position),
-                        sprite_path=(
-                            "assets/sprites/player/"
-                            "TheFemaleAdventurer/Idle/Idle_Up.png"
-                        ),
-                        dialogue_id="",
-                        frame_count=1,
-                        scale=3,
-                        interactable=False,
-                    )
-                    for npc_id, position in (
-                        ("estudante6", (105, 285)),
-                        ("estudante7", (273, 370)),
-                        ("estudante8", (465, 285)),
-                        ("estudante4", (658, 370)),
-                        ("estudante5", (273, 515)),
-                    )
+                self.create_student_npc(
+                    "lab6_student_1",
+                    (700, 550),
+                    ("A aula de hoje foi bem interessante.",),
+                ),
+                self.create_student_npc(
+                    "lab6_student_2",
+                    (390, 430),
+                    ("Vou terminar o trabalho antes de ir embora.",),
+                ),
+                self.create_student_npc(
+                    "lab6_student_3",
+                    (700, 390),
+                    ("O professor Thiago explicou tudo direitinho.",),
+                ),
+                self.create_student_npc(
+                    "lab6_student_4",
+                    (280, 545),
+                    ("Preciso entregar esse exercício até amanhã.",),
+                ),
+                self.create_student_npc(
+                    "lab6_walker_1",
+                    (390, 545),
+                    ("Alguém sabe onde fica o próximo laboratório?",),
+                ),
+                self.create_student_npc(
+                    "lab6_walker_2",
+                    (760, 535),
+                    ("Vou dar uma volta antes de voltar para casa.",),
                 ),
             ],
             npc_scope=type(self),
             static_obstacles=self.get_scene_obstacles(),
+        )
+        self.npc_controller.configure_wandering(
+            (
+                self.npc_controller.get_npc("lab6_walker_1"),
+                self.npc_controller.get_npc("lab6_walker_2"),
+            ),
+            bounds=self.bounds,
+            obstacles=self.get_scene_obstacles(),
         )
         self.cutscene_controller = CutsceneController.create_story_cutscene(
             game,
@@ -213,7 +229,7 @@ class Laboratorio6(TilemapScene):
             event.type == pygame.KEYDOWN
             and event.key == pygame.K_e
             and not self.game.dialogue_manager.is_active
-            and not self.cutscene_controller.is_active
+            and not self.cutscene_controller.locks_player_control
             and self.door.can_interact(self.player)
         ):
             self.game.scene_manager.transition_to(

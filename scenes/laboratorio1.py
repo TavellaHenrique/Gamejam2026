@@ -83,29 +83,48 @@ class Laboratorio1(TilemapScene):
                         "Se quiser, posso explicar como os gatilhos funcionam.",
                     ), # frases aleatórias que o NPC fala quando o jogador se aproxima, sem interação
                 ),
-                *(
-                    NPC(
-                        npc_id=f"lab1_seated_{index}",
-                        display_name="",
-                        position=self.map_point(position),
-                        sprite_path=(
-                            "assets/sprites/player/"
-                            "TheFemaleAdventurer/Idle/Idle_Up.png"
-                        ),
-                        dialogue_id="",
-                        frame_count=1,
-                        scale=3,
-                        interactable=False,
-                    )
-                    for index, position in enumerate(
-                        ((105, 285), (273, 370), (465, 285), (658, 370)),
-                        1,
-                    )
+                self.create_student_npc(
+                    "lab1_student_1",
+                    (700, 550),
+                    ("Estou revisando o conteúdo antes da próxima aula.",),
+                ),
+                self.create_student_npc(
+                    "lab1_student_2",
+                    (390, 430),
+                    ("Os computadores do laboratório ajudam bastante.",),
+                ),
+                self.create_student_npc(
+                    "lab1_student_3",
+                    (550, 315),
+                    ("Você já terminou o exercício?",),
+                ),
+                self.create_student_npc(
+                    "lab1_student_4",
+                    (700, 390),
+                    ("Vou salvar meu trabalho antes de sair.",),
+                ),
+                self.create_student_npc(
+                    "lab1_walker_1",
+                    (390, 545),
+                    ("Acho que deixei meu caderno em outra mesa.",),
+                ),
+                self.create_student_npc(
+                    "lab1_walker_2",
+                    (760, 535),
+                    ("Ainda dá tempo de tirar uma dúvida com o professor.",),
                 ),
             ),
             # define o escopo da classe para que o NPCController possa instanciar NPCs dinamicamente
             npc_scope=type(self),
             static_obstacles=self.get_scene_obstacles(),
+        )
+        self.npc_controller.configure_wandering(
+            (
+                self.npc_controller.get_npc("lab1_walker_1"),
+                self.npc_controller.get_npc("lab1_walker_2"),
+            ),
+            bounds=self.bounds,
+            obstacles=self.get_scene_obstacles(),
         )
         self.cutscene_controller = CutsceneController.create_story_cutscene(
             game,
@@ -222,7 +241,7 @@ class Laboratorio1(TilemapScene):
         if (
             event.type == pygame.KEYDOWN
             and event.key == pygame.K_e
-            and not self.cutscene_controller.is_active
+            and not self.cutscene_controller.locks_player_control
             and not self.game.dialogue_manager.is_active
             and self.door.can_interact(self.player)
         ):
