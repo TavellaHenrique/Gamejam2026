@@ -119,6 +119,8 @@ class NPCController:
                     "point_index": 0,
                     "temporary_target": None,
                     "staging_attempts": 0,
+                    "avoidance_side": 0,
+                    "route_ready": False,
                 }
             )
 
@@ -393,78 +395,238 @@ class NPCController:
         self.dialogue_manager.try_start_ambient(currently_nearby)
 
     def _update_npc_cutscenes(self, delta_time):
-        """Avança um NPC por grupo e recalcula rotas quando outro bloqueia."""
+        """Move cada grupo em paralelo e desvia localmente de colisões."""
         for group in tuple(self.npc_cutscene_groups):
-            job = group["active_job"]
-            if job is None:
-                job = self._select_npc_cutscene_job(group)
-                if job is None:
-                    job = self._stage_npc_cutscene_job(group)
-                if job is None:
-                    npc_ids = tuple(
-                        pending["npc"].npc_id
-                        for pending in group["jobs"]
-                    )
-                    raise RuntimeError(
-                        "Não foi possível encontrar uma rota livre para os "
-                        f"NPCs da cutscene: {npc_ids}"
-                    )
-                group["active_job"] = job
+            for job in tuple(group["jobs"]):
+                target = self._get_npc_cutscene_target(job)
+                if job["npc"].position.distance_to(target) <= 0.001:
+                    self._finish_npc_cutscene_target(group, job)
 
-            npc = job["npc"]
-            cutscene = job["cutscene"]
-            previous_position = npc.position.copy()
-            cutscene.update(
-                delta_time,
-                bounds=group["bounds"],
-                obstacles=self._get_npc_obstacles(npc),
-            )
+            group_npcs = {
+                job["npc"]
+                for job in group["jobs"]
+            }
+            obstacles_by_npc = {
+                npc: self._get_npc_obstacles(npc, group_npcs)
+                for npc in group_npcs
+            }
+            active_jobs = []
 
-            if not cutscene.is_active:
-                self._finish_npc_cutscene_target(group, job)
-                group["active_job"] = None
-            elif npc.position == previous_position:
-                route = self._get_npc_cutscene_route(
-                    npc,
-                    self._get_npc_cutscene_target(job),
-                    group["bounds"],
-                )
-                if route is None:
-                    group["active_job"] = None
-                else:
+            for job in tuple(group["jobs"]):
+                npc = job["npc"]
+                target = self._get_npc_cutscene_target(job)
+                cutscene = job["cutscene"]
+                if (
+                    not job["route_ready"]
+                    or not cutscene.is_active
+                    or cutscene.path_index >= len(cutscene.path)
+                ):
+                    route = self._get_npc_cutscene_route(
+                        npc,
+                        target,
+                        group["bounds"],
+                        ignored_npcs=group_npcs,
+                    )
+                    if route is None:
+                        continue
                     cutscene.path = route
                     cutscene.path_index = 0
+                    cutscene.is_active = True
+                    job["route_ready"] = True
+                active_jobs.append(job)
+
+            if not active_jobs:
+                if group["jobs"]:
+                    job = self._stage_npc_cutscene_job(group)
+                    if job is None:
+                        npc_ids = tuple(
+                            pending["npc"].npc_id
+                            for pending in group["jobs"]
+                        )
+                        raise RuntimeError(
+                            "Não foi possível encontrar uma rota livre para "
+                            f"os NPCs da cutscene: {npc_ids}"
+                        )
+                continue
+
+            proposals = {
+                npc: npc.position.copy()
+                for npc in group_npcs
+            }
+            proposals.update({
+                job["npc"]: self._get_npc_cutscene_step(
+                    job,
+                    delta_time,
+                )
+                for job in active_jobs
+            })
+            self._resolve_npc_cutscene_collisions(
+                group["jobs"],
+                proposals,
+                obstacles_by_npc,
+                group["bounds"],
+                delta_time,
+            )
+
+            for job in active_jobs:
+                npc = job["npc"]
+                if job not in group["jobs"]:
+                    continue
+
+                target = proposals[npc]
+                cutscene = job["cutscene"]
+                route_target = cutscene.path[cutscene.path_index]
+                reaches_route_target = target.distance_to(route_target) <= 0.001
+                reaches_final_destination = (
+                    reaches_route_target
+                    and job["temporary_target"] is None
+                    and job["point_index"] == len(job["destinations"]) - 1
+                    and cutscene.path_index == len(cutscene.path) - 1
+                )
+                npc.move_towards(
+                    target,
+                    delta_time,
+                    bounds=group["bounds"],
+                    obstacles=obstacles_by_npc[npc],
+                    keep_walking=not reaches_final_destination,
+                )
+                if npc.position.distance_to(route_target) <= 0.001:
+                    job["cutscene"].path_index += 1
+                    if job["cutscene"].path_index >= len(
+                        job["cutscene"].path
+                    ):
+                        self._finish_npc_cutscene_target(group, job)
 
         self.npc_cutscene_groups = [
             group for group in self.npc_cutscene_groups
             if group["jobs"]
         ]
 
-    def _select_npc_cutscene_job(self, group):
-        """Escolhe um NPC cujo destino esteja acessível entre os que aguardam."""
-        for job in tuple(group["jobs"]):
-            while job["point_index"] < len(job["destinations"]):
-                target = self._get_npc_cutscene_target(job)
-                npc = job["npc"]
-                if npc.position.distance_to(target) <= 0.001:
-                    self._finish_npc_cutscene_target(group, job)
-                    if job not in group["jobs"]:
-                        break
+    @staticmethod
+    def _get_npc_cutscene_step(job, delta_time):
+        """Prevê o próximo passo do NPC sem alterar sua posição."""
+        npc = job["npc"]
+        target = job["cutscene"].path[job["cutscene"].path_index]
+        offset = target - npc.position
+        distance = offset.length()
+        if distance <= npc.speed * delta_time:
+            return pygame.Vector2(target)
+        return npc.position + offset * (npc.speed * delta_time / distance)
+
+    def _resolve_npc_cutscene_collisions(
+        self,
+        jobs,
+        proposals,
+        obstacles_by_npc,
+        bounds,
+        delta_time,
+    ):
+        """Desvia um NPC lateralmente quando os próximos passos se sobrepõem."""
+        for index, first_job in enumerate(jobs):
+            first_npc = first_job["npc"]
+            for second_job in jobs[index + 1:]:
+                second_npc = second_job["npc"]
+                if not self._npc_steps_overlap(
+                    first_npc,
+                    proposals[first_npc],
+                    second_npc,
+                    proposals[second_npc],
+                ):
                     continue
 
-                route = self._get_npc_cutscene_route(
-                    npc,
-                    target,
-                    group["bounds"],
-                )
-                if route is None:
-                    break
+                first_moves = proposals[first_npc] != first_npc.position
+                second_moves = proposals[second_npc] != second_npc.position
+                if not first_moves and not second_moves:
+                    continue
+                if first_moves and not second_moves:
+                    preferred_job = first_job
+                else:
+                    preferred_job = second_job
 
-                job["cutscene"].path = route
-                job["cutscene"].path_index = 0
-                job["cutscene"].is_active = True
-                return job
-        return None
+                other_job = (
+                    second_job if preferred_job is first_job else first_job
+                )
+                for yielding_job in (preferred_job, other_job):
+                    yielding_npc = yielding_job["npc"]
+                    if self._sidestep_npc_cutscene_job(
+                        yielding_job,
+                        proposals,
+                        obstacles_by_npc[yielding_npc],
+                        bounds,
+                        delta_time,
+                    ):
+                        break
+                else:
+                    for yielding_job, other_job in (
+                        (preferred_job, other_job),
+                        (other_job, preferred_job),
+                    ):
+                        yielding_npc = yielding_job["npc"]
+                        other_npc = other_job["npc"]
+                        if not self._npc_steps_overlap(
+                            yielding_npc,
+                            yielding_npc.position,
+                            other_npc,
+                            proposals[other_npc],
+                        ):
+                            proposals[yielding_npc] = (
+                                yielding_npc.position.copy()
+                            )
+                            break
+
+    @staticmethod
+    def _npc_steps_overlap(first_npc, first_position, second_npc, second_position):
+        return get_entity_hitbox(
+            first_npc,
+            first_position,
+        ).colliderect(
+            get_entity_hitbox(second_npc, second_position)
+        )
+
+    def _sidestep_npc_cutscene_job(
+        self,
+        job,
+        proposals,
+        obstacles,
+        bounds,
+        delta_time,
+    ):
+        """Move um passo para o lado para liberar a rota prevista."""
+        npc = job["npc"]
+        current_target = job["cutscene"].path[
+            job["cutscene"].path_index
+        ]
+        direction = current_target - npc.position
+        if direction.length_squared() == 0:
+            direction = npc.facing
+        if direction.length_squared() == 0:
+            return False
+
+        direction = direction.normalize()
+        step_distance = npc.speed * delta_time
+        side_direction = pygame.Vector2(-direction.y, direction.x)
+        preferred_side = job["avoidance_side"] or 1
+        for side in (preferred_side, -preferred_side):
+            candidate = npc.position + side_direction * side * step_distance
+            if not can_occupy(npc, candidate, bounds, obstacles):
+                continue
+
+            if any(
+                other_npc is not npc
+                and self._npc_steps_overlap(
+                    npc,
+                    candidate,
+                    other_npc,
+                    other_position,
+                )
+                for other_npc, other_position in proposals.items()
+            ):
+                continue
+
+            proposals[npc] = candidate
+            job["avoidance_side"] = side
+            return True
+        return False
 
     def _get_npc_cutscene_target(self, job):
         """Retorna o desvio temporário ou o próximo destino da cutscene."""
@@ -472,11 +634,46 @@ class NPCController:
             return job["temporary_target"]
         return job["destinations"][job["point_index"]]
 
-    def _get_npc_cutscene_route(self, npc, target, bounds):
+    def _get_npc_cutscene_route(
+        self,
+        npc,
+        target,
+        bounds,
+        ignored_npcs=(),
+    ):
         """Calcula um caminho que respeita NPCs parados, jogador e cenário."""
-        obstacles = self._get_npc_obstacles(npc)
+        obstacles = self._get_npc_obstacles(npc, ignored_npcs)
         if not can_occupy(npc, target, bounds, obstacles):
             return None
+
+        start = pygame.Vector2(npc.position)
+        target = pygame.Vector2(target)
+        direct_routes = (
+            (pygame.Vector2(target.x, start.y), target),
+            (pygame.Vector2(start.x, target.y), target),
+        )
+        for waypoints in direct_routes:
+            route = []
+            current = start
+            is_clear = True
+            for waypoint in waypoints:
+                distance = current.distance_to(waypoint)
+                steps = max(1, int(distance / 4) + 1)
+                for step_index in range(1, steps + 1):
+                    position = current.lerp(
+                        waypoint,
+                        step_index / steps,
+                    )
+                    if not can_occupy(npc, position, bounds, obstacles):
+                        is_clear = False
+                        break
+                if not is_clear:
+                    break
+                if current.distance_to(waypoint) > 0.001:
+                    route.append(waypoint)
+                    current = waypoint
+            if is_clear:
+                return route
 
         route = find_path(
             npc,
@@ -538,11 +735,13 @@ class NPCController:
         if job["temporary_target"] is not None:
             job["temporary_target"] = None
             job["cutscene"].is_active = True
+            job["route_ready"] = False
             return
 
         job["point_index"] += 1
         if job["point_index"] < len(job["destinations"]):
             job["cutscene"].is_active = True
+            job["route_ready"] = False
             return
 
         group["jobs"].remove(job)
@@ -633,14 +832,15 @@ class NPCController:
         state["path"] = []
         state["path_index"] = 0
 
-    def _get_npc_obstacles(self, moving_npc):
+    def _get_npc_obstacles(self, moving_npc, ignored_npcs=()):
         """Retorna obstáculos fixos, jogador e demais NPCs para a navegação."""
+        ignored_npcs = set(ignored_npcs)
         obstacles = list(self.wander_obstacles)
         obstacles.append(get_entity_hitbox(self.player))
         obstacles.extend(
             get_entity_hitbox(npc)
             for npc in self.npcs
-            if npc is not moving_npc
+            if npc is not moving_npc and npc not in ignored_npcs
         )
         return obstacles
 

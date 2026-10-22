@@ -7,8 +7,8 @@ def get_entity_hitbox(entity, position=None):
     """Retorna a metade inferior da área visível, mantendo a largura do sprite."""
     image = entity.image
     center = entity.position if position is None else pygame.Vector2(position)
-    if getattr(entity, "_collision_cached_image", None) is not image:
-        entity._collision_cached_image = image
+    if not hasattr(entity, "_collision_cached_visible_bounds"):
+        # Mantém a hitbox estável enquanto os quadros da animação mudam.
         entity._collision_cached_visible_bounds = image.get_bounding_rect()
 
     visible_bounds = entity._collision_cached_visible_bounds

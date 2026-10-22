@@ -50,6 +50,7 @@ class Cutscene:
             delta_time,
             bounds=bounds,
             obstacles=obstacles,
+            keep_walking=self.path_index < len(self.path) - 1,
         ):
             self.path_index += 1
             if self.path_index >= len(self.path):

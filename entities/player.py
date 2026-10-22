@@ -133,7 +133,14 @@ class Player(AnimatedCharacter):
             round(self.position.y)
         )
 
-    def move_towards(self, target, delta_time, bounds=None, obstacles=()):
+    def move_towards(
+        self,
+        target,
+        delta_time,
+        bounds=None,
+        obstacles=(),
+        keep_walking=False,
+    ):
         """Avança em direção ao ponto sem ultrapassá-lo e informa quando chegou."""
         target = pygame.Vector2(target)
         offset = target - self.position
@@ -163,7 +170,7 @@ class Player(AnimatedCharacter):
             if self.position.distance_to(target) > 0.001:
                 return False
             self.facing = direction
-            self.is_moving = False
+            self.is_moving = keep_walking
             self.rect.center = (
                 round(self.position.x),
                 round(self.position.y)
