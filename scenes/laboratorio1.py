@@ -44,6 +44,7 @@ class Laboratorio1(Scene):
             if display is not None
             else (SCREEN_WIDTH, SCREEN_HEIGHT)
         )
+        # configura a câmera
         self.camera = CameraManager(
             self.WORLD_WIDTH,
             self.WORLD_HEIGHT,
@@ -51,8 +52,10 @@ class Laboratorio1(Scene):
             screen_height,
             zoom=1.0,
         )
+        # câmera segue o jogador, atualizando a cada milissegundo
         self.camera.follow(self.player)
         self.camera.update(0)
+        # define o limite do mundo para que a câmera não ultrapasse os limites da cena
         self.bounds = pygame.Rect(
             0,
             0,
@@ -74,16 +77,17 @@ class Laboratorio1(Scene):
                 NPC(
                     npc_id="professor_lab1",
                     display_name="Professor",
-                    position=(1600, 700),
+                    position=(1600, 700), # cria um NPC fora da tela, mas dentro do mundo
                     sprite_path="assets/sprites/npcs/Idle_Down.png",
                     dialogue_id="diretor_demo_1",
                     use_player_animations=True,
                     interactable=True,
                     ambient_lines=(
                         "Se quiser, posso explicar como os gatilhos funcionam.",
-                    ),
+                    ), # frases aleatórias que o NPC fala quando o jogador se aproxima, sem interação
                 ),
             ),
+            # define o escopo da classe para que o NPCController possa instanciar NPCs dinamicamente
             npc_scope=type(self),
         )
         self.cutscene_controller = CutsceneController.create_story_cutscene(
@@ -96,6 +100,7 @@ class Laboratorio1(Scene):
                 fade_in_duration=0.45,
             ),
             dialogue_from_id("camera_demo_abertura"),
+            # define a posição inicial da câmera e o zoom para a demonstração
             camera_move((1450, 700), duration=1.5, zoom=1.2),
             wait(0.4),
             dialogue_from_id("camera_demo_camera"),
@@ -125,6 +130,7 @@ class Laboratorio1(Scene):
             ),
             dialogue_from_id("camera_demo_movimento"),
             player_destination((820, 740)),
+            # define o ponto de spawn do jogador para que, ao reiniciar a cena, ele comece no mesmo local
             set_player_spawn_point(spawn),
             camera_move((960, 700), duration=1.0, zoom=1.1),
             dialogue_from_id("camera_demo_gatilho"),
@@ -158,10 +164,11 @@ class Laboratorio1(Scene):
                 duration=0.6,
                 fade_in_duration=0.35,
             ),
-            cutscene_id="camera_demo_lab1",
-            bounds=self.bounds,
-            camera=self.camera,
+            cutscene_id="camera_demo_lab1", # define um ID para a cutscene, permitindo que o jogo saiba se ela já foi concluída e não precise ser repetida
+            bounds=self.bounds, # passa os limites do mundo para a cutscene para que ela possa controlar a câmera corretamente
+            camera=self.camera, # passa a câmera para a cutscene para que ela possa controlar o movimento da câmera durante a demonstração
         )
+        # inicia a cutscene automaticamente ao entrar na cena
         self.cutscene_controller.start()
 
     def handle_event(self, event):
@@ -172,15 +179,24 @@ class Laboratorio1(Scene):
 
     def update(self, delta_time):
         """Atualiza a câmera, a cutscene, entidades e controles do jogador."""
+        # atualiza a câmera apenas se não estiver aguardando um movimento de câmera na cutscene
         if self.cutscene_controller.waiting_for != "camera_movement":
             self.camera.update(delta_time)
+        
+        # atualiza a cutscene, NPCs e jogador
         self.cutscene_controller.update(delta_time)
+        
+        # atualiza o controlador de NPCs, passando os limites do jogador e obstáculos para que ele possa gerenciar interações e movimentos
         player_obstacles = self.npc_controller.get_player_obstacles()
+        
+        # atualiza o controlador de NPCs, passando os limites do jogador e obstáculos para que ele possa gerenciar interações e movimentos
         self.npc_controller.update(
             delta_time,
             player_bounds=self.bounds,
             player_obstacles=player_obstacles,
         )
+        
+        # atualiza o jogador, permitindo entrada apenas se não houver cutscene ativa, diálogo ativo ou interação com NPCs em andamento
         self.player.update(
             delta_time,
             accept_input=(
@@ -192,21 +208,22 @@ class Laboratorio1(Scene):
             ),
             bounds=self.bounds,
             obstacles=player_obstacles,
-        )
+        ) # atualiza a câmera para seguir o jogador apenas se não houver cutscene ativa, permitindo que a cutscene controle a câmera durante movimentos de câmera ou diálogos
         if not self.cutscene_controller.is_active:
             self.camera.follow(self.player)
 
     def draw(self, screen):
         """Desenha o mundo em coordenadas absolutas e a interface na viewport."""
-        world = self.camera.world_surface
-        world.fill((43, 58, 56))
-        self._draw_map(world)
-        self.cutscene_controller.draw_trigger(world)
-        self.npc_controller.draw_npcs(world)
-        world.blit(self.player.image, self.player.rect)
+        # desenha o mundo em coordenadas absolutas, permitindo que a câmera controle a posição e o zoom da cena
+        world = self.camera.world_surface # cria uma superfície do tamanho do mundo para desenhar os elementos da cena
+        world.fill((43, 58, 56)) # cor de fundo do laboratório
+        self._draw_map(world) # desenha o piso e os detalhes do laboratório no canvas do mundo
+        self.cutscene_controller.draw_trigger(world) # desenha o gatilho da cutscene no mundo, permitindo que o jogador veja onde ele deve ir para ativar a cutscene
+        self.npc_controller.draw_npcs(world) # desenha os NPCs no mundo, permitindo que eles sejam renderizados na posição correta em relação ao jogador e à câmera
+        world.blit(self.player.image, self.player.rect) # desenha o jogador no mundo, permitindo que ele seja renderizado na posição correta em relação aos NPCs e à câmera
 
-        self.camera.render(screen)
-        self.game.dialogue_manager.draw(screen)
+        self.camera.render(screen) # renderiza a superfície do mundo na tela, aplicando o zoom e a posição da câmera
+        self.game.dialogue_manager.draw(screen) # desenha o diálogo na tela, permitindo que ele seja renderizado acima do mundo e da interface
         if (
             not self.game.dialogue_manager.is_active
             and not self.game.dialogue_manager.is_ambient_active
@@ -224,13 +241,14 @@ class Laboratorio1(Scene):
                 ),
             )
 
+        # desenha o título da cena e o zoom atual da câmera no canto superior esquerdo da tela
         title = self.title_font.render(
             f"Laboratório 1  |  Zoom {self.camera.zoom:.2f}x",
             True,
             (255, 255, 255),
         )
         screen.blit(title, (18, 14))
-        if self.cutscene_controller.waiting_for == "trigger":
+        if self.cutscene_controller.waiting_for == "trigger": # desenha uma dica para o jogador ir até o gatilho da cutscene, caso a cutscene esteja aguardando o jogador ativar o gatilho
             hint = self.hint_font.render(
                 "Demonstração: caminhe até o círculo amarelo (WASD)",
                 True,
@@ -242,7 +260,7 @@ class Laboratorio1(Scene):
                     midbottom=(screen.get_width() // 2, screen.get_height() - 18)
                 ),
             )
-        self.cutscene_controller.draw_overlay(screen)
+        self.cutscene_controller.draw_overlay(screen) # desenha a sobreposição da cutscene na tela, permitindo que ela seja renderizada acima do mundo e da interface
 
     def _draw_map(self, surface):
         """Desenha o piso e os detalhes do laboratório no canvas do mundo."""
