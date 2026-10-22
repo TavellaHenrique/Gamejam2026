@@ -28,10 +28,14 @@ class Trigger:
 
     def contains(self, actor):
         """Indica se o centro lógico de uma entidade está dentro da área."""
-        if self.rect is not None:
-            return self.rect.collidepoint(actor.position)
+        return self.contains_position(actor.position)
 
-        return self.position.distance_to(actor.position) <= self.radius
+    def contains_position(self, position):
+        """Indica se uma posição está dentro da área do gatilho."""
+        if self.rect is not None:
+            return self.rect.collidepoint(position)
+
+        return self.position.distance_to(position) <= self.radius
 
     def update(self, actor):
         """Retorna True apenas quando a entidade entra pela primeira vez."""

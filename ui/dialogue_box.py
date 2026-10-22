@@ -31,6 +31,30 @@ class DialogueBox:
         self.border_color = (220, 200, 150)
         self.text_color = (245, 245, 245)
         self.speaker_color = (255, 220, 140)
+        self.occupied_bubble_rects = []
+
+    def begin_frame(self):
+        """Clears bubble layout state before drawing a new frame."""
+        self.occupied_bubble_rects.clear()
+
+    def stack_bubble_rect(self, rect):
+        """Moves overlapping UI bubbles upward and reserves the resulting area."""
+        rect = pygame.Rect(rect)
+        while True:
+            overlapping = [
+                occupied
+                for occupied in self.occupied_bubble_rects
+                if rect.colliderect(occupied)
+            ]
+            if not overlapping:
+                break
+            next_top = min(occupied.top for occupied in overlapping) - 4
+            if next_top < 8:
+                break
+            rect.bottom = next_top
+
+        self.occupied_bubble_rects.append(rect.copy())
+        return rect
 
     def wrap_text(self, text, max_width):
         """Divide o texto em linhas que cabem na largura disponível."""
@@ -252,6 +276,8 @@ class DialogueBox:
             bubble_width,
             bubble_height,
         )
+        background_rect = self.stack_bubble_rect(background_rect)
+        bubble_x, bubble_y = background_rect.topleft
         background = pygame.Surface(
             background_rect.size,
             pygame.SRCALPHA,

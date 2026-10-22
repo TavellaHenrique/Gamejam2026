@@ -303,3 +303,11 @@ class DialogueManager:
     def draw_bubble(self, screen, anchor, text):
         """Draws a compact speech bubble through the dialogue presentation."""
         self.dialogue_box.draw_bubble(screen, anchor, text)
+
+    def begin_frame(self):
+        """Resets the shared bubble layout before the active scene is drawn."""
+        self.dialogue_box.begin_frame()
+
+    def stack_bubble_rect(self, rect):
+        """Reserves an interaction hint rectangle in the shared bubble layout."""
+        return self.dialogue_box.stack_bubble_rect(rect)

@@ -84,6 +84,7 @@ class SceneManager:
 
     def draw(self, screen):
         """Solicita à cena ativa que desenhe seus elementos na tela."""
+        self.game.dialogue_manager.begin_frame()
         if self.current_scene:
             self.current_scene.draw(screen)
 

@@ -1,6 +1,8 @@
 """Shared camera and rendering setup for scenes backed by a tileset image."""
 
 import math
+import sys
+from pathlib import Path
 
 import pygame
 
@@ -20,21 +22,30 @@ LABORATORY_OBSTACLES = (
 )
 
 LABORATORY_FURNITURE = (
-    ((52, 205), (62, 208, 73, 96)),
-    ((164, 205), (174, 248, 73, 56)),
-    ((268, 205), (278, 248, 73, 56)),
-    ((452, 205), (462, 248, 73, 56)),
-    ((580, 205), (590, 208, 73, 96)),
-    ((52, 317), (62, 332, 73, 88)),
-    ((180, 317), (174, 332, 73, 88)),
-    ((292, 317), (278, 332, 73, 88)),
-    ((452, 317), (462, 332, 73, 88)),
-    ((580, 317), (590, 332, 73, 88)),
-    ((52, 429), (62, 432, 73, 98)),
-    ((180, 429), (174, 432, 73, 98)),
-    ((293, 437), (278, 432, 73, 98)),
-    ((452, 429), (462, 432, 73, 98)),
-    ((580, 429), (590, 432, 73, 98)),
+    (52, 205),
+    (164, 205),
+    (268, 205),
+    (452, 205),
+    (580, 205),
+    (52, 317),
+    (180, 317),
+    (292, 317),
+    (452, 317),
+    (580, 317),
+    (52, 429),
+    (180, 429),
+    (293, 437),
+    (452, 429),
+    (580, 429),
+)
+
+STUDENT_SPRITES = (
+    "assets/sprites/npcs/Blue_Head_Idle-Sheet.png",
+    "assets/sprites/npcs/Orange_Head_Idle-Sheet.png",
+    "assets/sprites/npcs/Pink_Head_Idle-Sheet.png",
+    "assets/sprites/npcs/character1.png",
+    "assets/sprites/npcs/character2.png",
+    "assets/sprites/npcs/character3.png",
 )
 
 
@@ -42,13 +53,14 @@ class TilemapScene(Scene):
     """Scene base that scales a background image and shows one map quadrant."""
 
     TILESET_SCALE = 1.2 # Scale factor for the tileset image to world coordinates.
-    CAMERA_ZOOM_FACTOR = 0.1 # Scale factor for the camera zoom to fit one quadrant of the tileset.
+    CAMERA_ZOOM_FACTOR = 0.38 # Scale factor for the camera zoom to fit one quadrant of the tileset.
     _object_image_cache = {}
     _example_image_cache = {}
 
     def __init__(self, game, tileset_path, player_spawn=None):
         super().__init__(game)
         self.player = game.player
+        self._student_sprite_index = 0
         if player_spawn is None:
             player_spawn = game.player_spawn_point
         else:
@@ -113,10 +125,10 @@ class TilemapScene(Scene):
         self,
         image_path,
         position,
-        collision_rect=None,
+        collidable=False,
         occlusion_y=None,
     ):
-        """Creates a placed, collidable foreground prop in map coordinates."""
+        """Creates a prop with optional collision matching its sprite bounds."""
         cache_key = (image_path, self.TILESET_SCALE)
         image = self._object_image_cache.get(cache_key)
         if image is None:
@@ -132,23 +144,21 @@ class TilemapScene(Scene):
         rect = image.get_rect(
             topleft=(round(world_position.x), round(world_position.y))
         )
-        scaled_collision = None
-        if collision_rect is not None:
-            scaled_collision = pygame.Rect(
-                round(world_position.x + collision_rect[0] * self.TILESET_SCALE),
-                round(world_position.y + collision_rect[1] * self.TILESET_SCALE),
-                round(collision_rect[2] * self.TILESET_SCALE),
-                round(collision_rect[3] * self.TILESET_SCALE),
-            )
+        scaled_collision = self._create_object_collision(
+            rect,
+            collidable,
+        )
 
         if occlusion_y is None:
             occlusion_y = image.get_height() / self.TILESET_SCALE / 2
+        source_location = self._format_source_location(sys._getframe(1))
         return TilemapObject(
             image,
             rect,
             scaled_collision,
             round(world_position.y + occlusion_y * self.TILESET_SCALE),
             name=image_path.replace("\\", "/").rsplit("/", 1)[-1],
+            source_location=source_location,
         )
 
     def create_map_object_from_example(
@@ -156,7 +166,7 @@ class TilemapScene(Scene):
         example_path,
         crop_rect,
         position,
-        collision_rect=None,
+        collidable=False,
         occlusion_y=None,
     ):
         """Extracts an omitted prop from the example layer against the base map."""
@@ -190,37 +200,59 @@ class TilemapScene(Scene):
         rect = image.get_rect(
             topleft=(round(world_position.x), round(world_position.y))
         )
-        scaled_collision = None
-        if collision_rect is not None:
-            scaled_collision = pygame.Rect(
-                round(world_position.x + collision_rect[0] * self.TILESET_SCALE),
-                round(world_position.y + collision_rect[1] * self.TILESET_SCALE),
-                round(collision_rect[2] * self.TILESET_SCALE),
-                round(collision_rect[3] * self.TILESET_SCALE),
-            )
+        scaled_collision = self._create_object_collision(
+            rect,
+            collidable,
+        )
         if occlusion_y is None:
             occlusion_y = crop_rect.height / 2
+        source_location = self._format_source_location(sys._getframe(1))
         return TilemapObject(
             image,
             rect,
             scaled_collision,
             round(world_position.y + occlusion_y * self.TILESET_SCALE),
             name=example_path.replace("\\", "/").rsplit("/", 1)[-1],
+            source_location=source_location,
         )
+
+    def _create_object_collision(self, object_rect, collidable):
+        """Places a full-width hitbox over the bottom third of the sprite."""
+        if not collidable:
+            return None
+
+        collision_height = max(1, round(object_rect.height / 3))
+        return pygame.Rect(
+            object_rect.left,
+            object_rect.bottom - collision_height,
+            object_rect.width,
+            collision_height,
+        )
+
+    @staticmethod
+    def _format_source_location(frame):
+        source_path = Path(frame.f_code.co_filename).resolve()
+        project_root = Path(__file__).resolve().parent.parent
+        try:
+            source_path = source_path.relative_to(project_root)
+        except ValueError:
+            pass
+        return f"{source_path.as_posix()}:{frame.f_lineno}"
 
     def create_student_npc(self, npc_id, position, ambient_lines):
         """Creates an interactable student with ambient dialogue."""
+        sprite_path = STUDENT_SPRITES[
+            self._student_sprite_index % len(STUDENT_SPRITES)
+        ]
+        self._student_sprite_index += 1
         return NPC(
             npc_id=npc_id,
             display_name="Estudante",
             position=self.map_point(position),
-            sprite_path=(
-                "assets/sprites/player/"
-                "TheFemaleAdventurer/Idle/Idle_Up.png"
-            ),
+            sprite_path=sprite_path,
             dialogue_id="student_smalltalk",
             ambient_lines=ambient_lines,
-            use_player_animations=True,
+            use_player_animations=False,
             animation_scale=3,
             interactable=True,
         )
@@ -244,7 +276,7 @@ class TilemapScene(Scene):
             self.create_map_object(
                 "assets/tileset/scene_objects/mesa_prof.png",
                 (44, 110),
-                collision_rect=(4, 53, 91, 25),
+                collidable=True,
                 occlusion_y=62,
             )
         ]
@@ -252,7 +284,7 @@ class TilemapScene(Scene):
             self.create_map_object(
                 "assets/tileset/scene_objects/Vaso.png",
                 position,
-                collision_rect=(13, 54, 34, 20),
+                collidable=True,
                 occlusion_y=60,
             )
             for position in (
@@ -264,43 +296,49 @@ class TilemapScene(Scene):
                 (913, 551),
             )
         )
-        for position, obstacle in LABORATORY_FURNITURE:
+        for position in LABORATORY_FURNITURE:
             objects.append(
                 self.create_map_object(
                     "assets/tileset/scene_objects/mesa_computador_cadeira.png",
                     position,
-                    collision_rect=(
-                        obstacle[0] - position[0],
-                        obstacle[1] - position[1],
-                        obstacle[2],
-                        obstacle[3],
-                    ),
+                    collidable=True,
                     occlusion_y=60,
                 )
             )
         return objects
 
     def draw_scene_entities(self, surface, npc_group):
-        """Draws characters and props in depth order using their foot hitboxes."""
+        """Draws sprites in world Y order using the bottom of their hitboxes."""
         drawables = [
             (
-                get_entity_hitbox(entity).top,
-                1,
+                get_entity_hitbox(entity).bottom,
                 entity.image,
                 entity.rect,
             )
             for entity in (*tuple(npc_group), self.player)
         ]
         drawables.extend(
-            (obj.occlusion_y, 0, obj.image, obj.rect)
+            (
+                (
+                    obj.collision_rect
+                    if obj.collision_rect is not None
+                    else obj.rect
+                ).bottom,
+                obj.image,
+                obj.rect,
+            )
             for obj in self.map_objects
         )
-        for _, _, image, rect in sorted(drawables, key=lambda item: item[:2]):
+
+        for _, image, rect in sorted(drawables, key=lambda drawable: drawable[0]):
             surface.blit(image, rect)
 
     def update_camera(self, delta_time, cutscene_controller):
         """Follows the player except while a cutscene is moving the camera."""
-        if cutscene_controller.waiting_for == "camera_movement":
+        if (
+            cutscene_controller is not None
+            and cutscene_controller.waiting_for == "camera_movement"
+        ):
             return
         self.camera.follow(self.player)
         self.camera.update(delta_time)
@@ -414,12 +452,20 @@ class TilemapScene(Scene):
                 extra.append(
                     f"Colisão: {self._rect_details(collision_rect)}"
                 )
+                extra.append(
+                    f"Colisão definida em: {obj.source_location}"
+                )
+            extra.append(f"Objeto criado em: {obj.source_location}")
             targets.append(
                 self._make_debug_target(
                     "Objeto",
                     name,
-                    obj.rect.center,
-                    obj.rect,
+                    obj.rect.topleft,
+                    (
+                        obj.rect.union(collision_rect)
+                        if collision_rect is not None
+                        else obj.rect
+                    ),
                     tuple(outlines),
                     (255, 210, 90),
                     *extra,
@@ -522,7 +568,14 @@ class TilemapScene(Scene):
         )
 
     @staticmethod
-    def draw_door_hint(screen, font, player, doors, prefix="E - "):
+    def draw_door_hint(
+        screen,
+        font,
+        player,
+        doors,
+        prefix="E - ",
+        dialogue_manager=None,
+    ):
         """Shows an interaction hint for the nearest active transparent door."""
         for door in doors:
             if not door.can_interact(player):
@@ -537,6 +590,11 @@ class TilemapScene(Scene):
                 midbottom=(screen.get_width() // 2, screen.get_height() - 18)
             )
             background_rect = label_rect.inflate(20, 10)
+            if dialogue_manager is not None:
+                background_rect = dialogue_manager.stack_bubble_rect(
+                    background_rect
+                )
+                label_rect.center = background_rect.center
             background = pygame.Surface(background_rect.size, pygame.SRCALPHA)
             background.fill((20, 24, 32, 210))
             screen.blit(background, background_rect.topleft)
@@ -547,13 +605,18 @@ class TilemapScene(Scene):
 class TilemapObject:
     """A sprite positioned in the map with collision and depth metadata."""
 
-    def __init__(self, image, rect, collision_rect, occlusion_y, name=None):
+    def __init__(
+        self,
+        image,
+        rect,
+        collision_rect,
+        occlusion_y,
+        name=None,
+        source_location=None,
+    ):
         self.image = image
         self.rect = rect
         self.collision_rect = collision_rect
         self.occlusion_y = occlusion_y
         self.name = name or "Objeto do mapa"
-
-    def should_draw_in_front_of(self, entity):
-        """Uses the top of the entity's leg hitbox as its depth reference."""
-        return get_entity_hitbox(entity).top < self.occlusion_y
+        self.source_location = source_location or "Origem desconhecida"

@@ -58,7 +58,7 @@ class MainMenu(Scene):
         )
         draw_text(
             screen,
-            "1 - Demonstração da câmera",
+            "1 - Laboratório 1",
             self.body_font,
             (200, 200, 200),
             (center_x, 490),

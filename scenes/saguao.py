@@ -7,17 +7,10 @@ from scenes.laboratorio6 import Laboratorio6
 from systems.cutscene_controller import (
     CutsceneController,
     change_scene,
-    dialogue,
-    face_direction,
     fade_out,
     npc,
-    npc_dialogue,
     npcs,
     player_destination,
-    spawn_npc,
-    time_passes,
-    trigger,
-    wait,
     dialogue_from_id,
 )
 from systems.npc_controller import NPCController
@@ -25,10 +18,15 @@ from systems.tilemap_scene import TilemapScene
 
 
 class Saguao(TilemapScene):
-    """Cena de jogo com a história demonstrativa e seus NPCs."""
+    """Saguão da história inicial e área livre para exploração."""
 
     def __init__(self, game, player_spawn=None):
         """Configura o jogador compartilhado e os NPCs da cena."""
+        if (
+            player_spawn is None
+            and not game.is_cutscene_completed("first_day_saguao")
+        ):
+            player_spawn = self.map_point((480, 400))
         super().__init__(
             game,
             "assets/tileset/saguao/saguao_base.jpg",
@@ -86,7 +84,7 @@ class Saguao(TilemapScene):
                     "assets/tileset/saguao/saguao_exemplo.jpeg",
                     (x, y, 24, 72),
                     (x, y),
-                    collision_rect=(0, 0, 24, 72),
+                    collidable=True,
                     occlusion_y=36,
                 )
                 for x, y in (
@@ -101,26 +99,26 @@ class Saguao(TilemapScene):
             self.create_map_object(
                 "assets/tileset/scene_objects/Vaso.png",
                 (17, 103),
-                collision_rect=(1, 5, 31, 67),
+                collidable=True,
                 occlusion_y=60,
             ),
             self.create_map_object(
                 "assets/tileset/scene_objects/Vaso.png",
                 (433, 103),
-                collision_rect=(2, 5, 31, 67),
+                collidable=True,
                 occlusion_y=60,
             ),
             self.create_map_object(
                 "assets/tileset/scene_objects/vaso_2.png",
                 (18, 566),
-                collision_rect=(3, 22, 31, 32),
+                collidable=True,
                 occlusion_y=45,
             ),
             *(
                 self.create_map_object(
                     "assets/tileset/scene_objects/banco.png",
                     (x, y),
-                    collision_rect=(3, 2, 73, 25),
+                    collidable=True,
                     occlusion_y=16,
                 )
                 for x, y in (
@@ -138,7 +136,7 @@ class Saguao(TilemapScene):
             self.create_map_object(
                 "assets/tileset/scene_objects/lixeira.png",
                 position,
-                collision_rect=(0, 0, 20, 32),
+                collidable=True,
                 occlusion_y=16,
             )
             for position in ((12, 376), (412, 344))
@@ -178,13 +176,13 @@ class Saguao(TilemapScene):
             game,
             npcs=[
                 NPC(
-                    npc_id="diretor",
-                    display_name="Diretor",
+                    npc_id="professor_thiago_saguao",
+                    display_name="Professor Thiago",
                     position=self.map_point((500, 200)),
                     sprite_path="assets/sprites/npcs/Idle_Down.png",
-                    dialogue_id="diretor_saguao_2",
+                    dialogue_id="thiago_saguao_welcome",
                     use_player_animations=True,
-                    interactable=True
+                    interactable=False,
                 ),
                 self.create_student_npc(
                     "saguao_student_1",
@@ -196,10 +194,17 @@ class Saguao(TilemapScene):
                     (220, 215),
                     ("A sala do laboratório fica no fim do corredor.",),
                 ),
-                self.create_student_npc(
-                    "saguao_student_3",
-                    (545, 215),
-                    ("Você já passou na cantina? O café de lá é bom.",),
+                NPC(
+                    npc_id="saguao_aluna_dracula",
+                    display_name="Aluna",
+                    position=self.map_point((545, 215)),
+                    sprite_path=(
+                        "assets/sprites/player/"
+                        "TheFemaleAdventurer/Idle/Idle_Up.png"
+                    ),
+                    dialogue_id="aluna_dracula_saguao",
+                    use_player_animations=True,
+                    animation_scale=3,
                 ),
                 self.create_student_npc(
                     "saguao_student_4",
@@ -228,144 +233,59 @@ class Saguao(TilemapScene):
             bounds=self.bounds,
             obstacles=self.get_scene_obstacles(),
         )
+        self.aluna_thought_pending = False
         self.cutscene_controller = CutsceneController.create_story_cutscene(
             game,
             self.npc_controller,
-            trigger(
-                trigger_position=self.map_point((480, 400)),
-                trigger_radius=16,
-                visible=True,
-                action=(
-                    spawn_npc(
-                        npc_id="estudante1",
-                        display_name="estudante1",
-                        position=self.map_point((440, 544)),
-                        sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                        dialogue_id="estudante1",
-                        use_player_animations=True,
-                        animation_scale=3,
-                        interactable=False,
-                    ),
-                    spawn_npc(
-                        npc_id="estudante2",
-                        display_name="estudante2",
-                        position=self.map_point((500, 544)),
-                        sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                        dialogue_id="estudante2",
-                        use_player_animations=True,
-                        animation_scale=3,
-                        interactable=False,
-                    ),
-                    spawn_npc(
-                        npc_id="estudante3",
-                        display_name="estudante3",
-                        position=self.map_point((550, 544)),
-                        sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                        dialogue_id="estudante3",
-                        use_player_animations=True,
-                        animation_scale=3,
-                        interactable=False,
-                    ),
-                    dialogue_from_id("jogador_intro"),
-                    dialogue_from_id("diretor_saguao_1"),
-                    npc(
-                        "diretor",
-                        npc_arrival=self.map_point((885, 105)),
-                    ),
-                    fade_out("diretor", duration=0.50),
-                    npcs(
-                        {
-                            "estudante1": self.map_point((785, 122)),
-                            "estudante2": self.map_point((830, 122)),
-                            "estudante3": self.map_point((895, 122)),
-                        }
-                    ),
-                    fade_out("estudante1", duration=0.25),
-                    fade_out("estudante2", duration=0.25),
-                    fade_out("estudante3", duration=0.25),
-                    # player_destination(self.map_point((500, 300))),
-                    # player_destination(self.map_point((500, 200))),
-                    player_destination(self.map_point((900, 122))),
-                    change_scene(
-                        lambda: Laboratorio6(game),
-                        player_spawn=self.map_point((900, 150)),
-                        text="Passa um tempo",
-                        fade_out_duration=0.5,
-                        duration=1.5,
-                        fade_in_duration=0.5,
-                        font_size=44,
-                    )
-                    # Os três personagens se deslocam em paralelo após o trigger.
-                    # npcs(
-                    #     {
-                    #         "estudante1": (520, 260),
-                    #         "estudante2": (550, 260),
-                    #         "estudante3": (590, 260),
-                    #     }
-                    # ),
-                    # face_direction("professor1", "left"),
-                    # face_direction("poeta", "right"),
-                    # face_direction("cutscene_guest", "left"),
-                    # face_direction("player", "right"),
-                    # npc_dialogue(
-                    #     "professor1",
-                    #     "Você também ouviu o sino tocar? A torre está trancada há anos.",
-                    # ),
-                    # dialogue(
-                    #     "Ouvi vindo da sala de arquivos.",
-                    # ),
-                    # dialogue(
-                    #     "Talvez alguém tenha encontrado outra entrada.",
-                    # ),
-                    # time_passes(
-                    #     text="Passa um tempo",
-                    #     fade_out_duration=0.8,
-                    #     duration=1.8,
-                    #     fade_in_duration=0.8,
-                    #     font_size=44,
-                    # ),
-                    # wait(0.75),
-                    # # O visitante segue até a porta e desaparece em fade-out.
-                    # npc("cutscene_guest", npc_arrival=(880, 300)),
-                    # fade_out("cutscene_guest", duration=1.25),
-                ),
+            dialogue_from_id("first_day_saguao_intro"),
+            dialogue_from_id("thiago_saguao_welcome"),
+            npc(
+                "professor_thiago_saguao",
+                self.map_point((840, 130)),
             ),
-            # wait(1),
-            # player_destination((360, 240)),
-            # trigger(
-            #     trigger_position=(360, 240),
-            #     trigger_radius=10,
-            #     visible=False,
-            #     action=(
-            #         face_direction("weird_girl", "left"),
-            #         face_direction("player", "right"),
-            #         npc_dialogue(
-            #             "weird_girl",
-            #             "Olha! A porta lateral está aberta. Acho que o barulho veio de lá.",
-            #         ),
-            #         dialogue(
-            #             "Vamos investigar juntos. Mas se ouvirmos outro sino, é melhor correr.",
-            #         ),
-            #     ),
-            # ),
-            # # A transição substitui o spawn global e inicia a cena seguinte nesse ponto.
-            # change_scene(
-            #     lambda: SecondArea(game),
-            #     duration=0.8,
-            #     player_spawn=(145, 300),
-            # ),
-            cutscene_id="game_scene_1",
+            fade_out("professor_thiago_saguao", duration=0.25),
+            npcs(
+                {
+                    "saguao_student_1": self.map_point((785, 122)),
+                    "saguao_student_2": self.map_point((830, 122)),
+                    "saguao_student_4": self.map_point((895, 122)),
+                }
+            ),
+            fade_out("saguao_student_1", duration=0.25),
+            fade_out("saguao_student_2", duration=0.25),
+            fade_out("saguao_student_4", duration=0.25),
+            player_destination(self.map_point((840, 150))),
+            change_scene(
+                lambda: Laboratorio6(game),
+                player_spawn=Laboratorio6.map_point((820, 120)),
+            ),
+            cutscene_id="first_day_saguao",
             bounds=self.bounds,
             camera=self.camera,
         )
         self.cutscene_controller.start()
 
     def handle_event(self, event):
-        """Delega falas da cutscene e encaminha outras interações."""
+        """Delega falas da história e encaminha interações da cena."""
         if self.is_inventory_open():
             return
 
         if self.cutscene_controller.handle_event(event):
+            return
+
+        aluna = self.npc_controller.get_npc("saguao_aluna_dracula")
+        if (
+            event.type == pygame.KEYDOWN
+            and event.key == pygame.K_e
+            and self.game.dialogue_manager.is_active
+            and self.npc_controller.pending_interaction_npc is aluna
+        ):
+            self.npc_controller.handle_event(event)
+            if (
+                not self.game.dialogue_manager.is_active
+                and self.npc_controller.pending_interaction_npc is None
+            ):
+                self.aluna_thought_pending = True
             return
 
         if (
@@ -400,14 +320,14 @@ class Saguao(TilemapScene):
 
                 self.game.scene_manager.transition_to(
                     lambda: Laboratorio1(self.game),
-                    player_spawn=Laboratorio1._fit_demo_point((1000, 875)),
+                    player_spawn=Laboratorio1._fit_tileset_point((1000, 875)),
                 )
                 return
 
         self.npc_controller.handle_event(event)
 
     def update(self, delta_time):
-        """Atualiza a cutscene, os NPCs e o jogador."""
+        """Atualiza a história, os NPCs, os itens e o jogador."""
         for item in self.items:
             item.update()
         self.update_camera(delta_time, self.cutscene_controller)
@@ -417,6 +337,15 @@ class Saguao(TilemapScene):
             player_bounds=self.bounds,
             player_obstacles=(),
         )
+        aluna = self.npc_controller.get_npc("saguao_aluna_dracula")
+        if (
+            self.aluna_thought_pending
+            and not self.game.dialogue_manager.is_active
+            and self.player.position.distance_to(aluna.position)
+            > aluna.interaction_radius + 40
+        ):
+            self.game.dialogue_manager.start("aluna_vampire_thought")
+            self.aluna_thought_pending = False
 
         self.player.update(
             delta_time,
@@ -442,7 +371,6 @@ class Saguao(TilemapScene):
         world = self.begin_world_draw()
         for item in self.items:
             item.draw(world)
-        self.cutscene_controller.draw_trigger(world)
         self.draw_scene_entities(world, self.npc_controller.npcs)
         self.render_world(screen)
 
@@ -455,29 +383,13 @@ class Saguao(TilemapScene):
             )
             screen.blit(
                 prompt,
-                prompt.get_rect(
-                    midbottom=(screen.get_width() // 2, screen.get_height() - 18)
-                ),
-            )
-
-        if (
-            self.cutscene_controller.waiting_for == "trigger"
-            and nearby_item is None
-            and not any(
-                door.can_interact(self.player)
-                for door in (self.cantina_door, self.lab_door, self.stairs_door)
-            )
-            and self.npc_controller.get_nearest_interactable_npc() is None
-        ):
-            hint = self.hint_font.render(
-                "Caminhe até o círculo amarelo para iniciar a história",
-                True,
-                (255, 255, 255),
-            )
-            screen.blit(
-                hint,
-                hint.get_rect(
-                    midbottom=(screen.get_width() // 2, screen.get_height() - 18)
+                self.game.dialogue_manager.stack_bubble_rect(
+                    prompt.get_rect(
+                        midbottom=(
+                            screen.get_width() // 2,
+                            screen.get_height() - 18,
+                        )
+                    )
                 ),
             )
 
@@ -490,6 +402,6 @@ class Saguao(TilemapScene):
                 self.lab_door,
                 self.stairs_door,
             ),
+            dialogue_manager=self.game.dialogue_manager,
         )
         self.npc_controller.draw_ui(screen, camera=self.camera)
-        self.cutscene_controller.draw_overlay(screen)

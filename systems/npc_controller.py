@@ -49,6 +49,7 @@ class NPCController:
         self.npc_cutscenes = {}
         self.npc_cutscene_groups = []
         self.pending_interaction_npc = None
+        self.active_dialogue_npc = None
         self.previous_npc_facing = None
         self.is_approaching_npc = False
         self.wander_bounds = None
@@ -188,6 +189,8 @@ class NPCController:
             self.previous_npc_facing = None
             self.is_approaching_npc = False
             self.interaction_cutscene.is_active = False
+        if self.active_dialogue_npc is npc:
+            self.active_dialogue_npc = None
         if self.dialogue_manager.ambient_anchor is npc:
             self.dialogue_manager.clear_ambient_speech()
         return npc
@@ -363,6 +366,7 @@ class NPCController:
             )
 
         self.pending_interaction_npc = None
+        self.active_dialogue_npc = None
         self.previous_npc_facing = None
         self.is_approaching_npc = False
 
@@ -375,6 +379,7 @@ class NPCController:
         npc.look_at(self.player.position)
         self.player.look_at(npc.position)
         self.dialogue_manager.start(npc.dialogue_id)
+        self.active_dialogue_npc = npc
         self.is_approaching_npc = False
 
     def _clear_ambient_speech(self):
@@ -499,6 +504,15 @@ class NPCController:
                     if self._request_npc_clearance(group, job):
                         continue
                 active_jobs.append(job)
+
+            group_npcs = {
+                job["npc"]
+                for job in group["jobs"]
+            }
+            obstacles_by_npc = {
+                npc: self._get_npc_obstacles(npc, group_npcs)
+                for npc in group_npcs
+            }
 
             if not active_jobs:
                 if group["jobs"]:
@@ -1153,6 +1167,12 @@ class NPCController:
         """Desenha os diálogos e os avisos de interação."""
         if self.dialogue_manager.is_active:
             self.dialogue_manager.draw(screen)
+            speaker = self._get_dialogue_speaker()
+            if speaker is not None:
+                anchor = speaker
+                if camera is not None:
+                    anchor = self._get_screen_anchor(anchor, camera)
+                self.dialogue_manager.draw_bubble(screen, anchor, "...")
         elif (
             self.dialogue_manager.is_ambient_active
             and self.dialogue_manager.ambient_anchor is not None
@@ -1193,6 +1213,26 @@ class NPCController:
             npc,
             "E - Interagir",
         )
+
+    def _get_dialogue_speaker(self):
+        """Returns the visible character currently associated with the dialogue."""
+        speaker_name = self.dialogue_manager.active_speaker
+        if (
+            self.active_dialogue_npc in self.npcs
+            and self.active_dialogue_npc.display_name == speaker_name
+        ):
+            return self.active_dialogue_npc
+
+        matching_npcs = [
+            npc
+            for npc in self.npcs
+            if npc.display_name == speaker_name
+        ]
+        if len(matching_npcs) == 1:
+            return matching_npcs[0]
+        if speaker_name in {"Você", "Calouro", "Protagonista", "Jogador"}:
+            return self.player
+        return None
 
     @staticmethod
     def _get_screen_anchor(npc, camera):

@@ -1,131 +1,78 @@
 {
-    "jogador_intro": {
+    "first_day_saguao_intro": {
         "speaker": "Você",
         "lines": [
             "Hoje é meu primeiro dia na FATEC! Estou muito feliz!",
-            "Eu não consegui dormir muito bem ontem, meu pescoço está doendo um pouco, mas estou muito empolgado para o começo das aulas",
-            "Mas como meu sonho é ser o maior programador do mundo", 
-            "Precisarei estudar muito e conseguir abstrair o máximo de conteúdo que eu conseguir dos professores!"
+            "Eu não consegui dormir muito bem ontem, meu pescoço está doendo um pouco, mas estou muito empolgado para o começo das aulas.",
+            "Meu sonho é ser o maior programador do mundo, então meu objetivo é estudar muito e conseguir abstrair o máximo de conteúdo que eu conseguir dos professores enquanto estudar na FATEC!"
         ]
     },
-    "diretor_saguao_1": {
-        "speaker": "Diretor",
+    "thiago_saguao_welcome": {
+        "speaker": "Professor Thiago",
         "lines": [
-            "Sejam bem-vindos à FATEC! Eu sou o diretor e estou aqui para ajudar vocês durante o período letivo. Peço que os novatos me sigam para a primeira aula!"
+            "Sejam bem-vindos à FATEC! Eu sou o Professor Thiago e dou aula de Lógica de Programação. Vamos começar a aula?"
         ]
     },
-    "diretor_saguao_2": {
-        "speaker": "Diretor",
+    "adriano_lab1_1": {
+        "speaker": "Professor Adriano",
         "lines": [
-            "Bem vindo à FATEC! Estou pensando em fazer um café comunitário amanhã…"
-        ]
-    },
-    "diretor_demo_1": {
-        "speaker": "Diretor",
-        "lines": [
-            "Bem vindo à FATEC! Estou pensando em fazer um café comunitário amanhã…"
-        ],"speaker2": "Aluno",
-        "lines2": [
-            "Testando ver se funfa"
-        ],"speaker3": "Diretor",
-        "lines3": [
-            "comunitário amanhã… Funfou?"
-        ]
-    },
-    "camera_demo_abertura": {
-        "speaker": "Professor",
-        "lines": [
-            "Bem-vindo à demonstração completa do sistema de cutscenes.",
-            "Use E para avançar os diálogos. Depois, você poderá controlar o jogador quando aparecer um gatilho."
+            "Você é calouro? Acho que vai gostar da minha aula, tenho uns cursos muito legais pra você fazer da Oracle, da AWS…"
         ],
-        "speaker2": "Calouro",
+        "speaker2": "Você",
         "lines2": [
-            "Quero ver a câmera, os movimentos, os gatilhos e as falas dos NPCs."
+            "Não vejo a hora! Meu sonho é ser o maior programador do mundo!"
         ]
     },
-    "camera_demo_camera": {
-        "speaker": "Professor",
-        "lines": [
-            "A câmera está fazendo pan e zoom enquanto a sequência está pausada.",
-            "Também posso mudar a direção de um personagem e movê-lo por vários pontos."
-        ]
-    },
-    "camera_demo_movimento": {
-        "speaker": "Assistente",
-        "lines": [
-            "Cada NPC recebeu um trajeto direto pela ação npc(...).",
-            "Agora a cutscene vai mover o jogador e atualizar o ponto de surgimento."
-        ],
-        "speaker2": "Calouro",
-        "lines2": [
-            "Uma fala pode ter vários interlocutores, e cada trecho avança com E."
-        ]
-    },
-    "camera_demo_gatilho": {
-        "speaker": "Professor",
-        "lines": [
-            "A sequência vai aguardar você entrar no círculo amarelo.",
-            "Use WASD para caminhar até ele. A cutscene só continua quando o gatilho detectar sua entrada."
-        ]
-    },
-    "camera_demo_gatilho_ativado": {
-        "speaker": "Professor",
-        "lines": [
-            "Gatilho ativado! Essa fala só começou depois que você entrou na área."
-        ],
-        "speaker2": "Calouro",
-        "lines2": [
-            "A câmera, os diálogos, o movimento e o gatilho estão funcionando juntos."
-        ]
-    },
-    "camera_demo_fade": {
-        "speaker": "Assistente",
-        "lines": [
-            "Agora vou demonstrar o desaparecimento gradual de um NPC temporário."
-        ]
-    },
-    "camera_demo_final": {
-        "speaker": "Professor",
-        "lines": [
-            "Demonstração concluída! Você ainda pode caminhar pelo laboratório e interagir comigo com E."
-        ]
-    },
-    "thiago_lab6_1": {
-        "speaker": "Thiago",
+    "thiago_lab6_roll_call": {
+        "speaker": "Professor Thiago",
         "lines": [
             "Chamada feita, pessoal! Até amanhã!"
         ]
     },
-    "jogador_intro_2": {
+    "first_day_lab6_thought": {
         "speaker": "Você",
         "lines": [
-            "Esse professor é muito legal. Gostei da tatuagem de Espadas dele.", 
-            "Agora vou dar uma explorada por aqui, já que a aula acabou."
+            "Esse professor é muito interessante, gostei da tatuagem de Espadas de Anime dele. Agora vou dar uma explorada por aqui, já que a aula acabou."
         ]
     },
-    "thiago_lab6_2": {
-        "speaker": "Thiago",
+    "thiago_lab6_exploration": {
+        "speaker": "Professor Thiago",
         "lines": [
-            "Eae, gostou da aula?"
+            "Você gostou da aula, filhão?"
         ],
         "speaker2": "Você",
         "lines2": [
-            "Gostei demais, professor! A aula foi muito boa e o conteúdo foi bem explicado."
+            "Gostei, Professor Thiago! Nunca pensei que aprender lógica de programação pudesse ser tão interessante!"
         ],
-        "speaker3": "Thiago",
+        "speaker3": "Professor Thiago",
         "lines3": [
-            "Fico feliz em saber!",
-            "Caso precise, estarei sempre por aqui.",
-            "Olha o Birdow avisando que acabou a aula!"
+            "É isso aí! Se você continuar assim, daqui a pouco vai estar criando seu próprio jogo. Só não vai querer programar tudo de uma vez, hein?"
         ]
     },
-    "adriano_lab1_1": {
-        "speaker": "Adriano",
+    "aluna_dracula_saguao": {
+        "speaker": "Aluna",
         "lines": [
-            "Você é calouro? Acho que vai gostar da minha aula, tenho uns cursos muito legais pra você fazer da Oracle, da AWS…"
+            "Estou lendo Drácula atualmente, e você?"
+        ],
+        "speaker2": "Você",
+        "lines2": [
+            "Eu já li o gibi da Turma da Mônica…"
+        ],
+        "speaker3": "Aluna",
+        "lines3": [
+            "Você deveria ler esse livro, fala de vampiros! Eu amo vampiros, sabe… eles são muito interessantes! Se você encontrar um por aí, me conta, por favor?"
+        ],
+        "speaker4": "Você",
+        "lines4": [
+            "Claro, obrigado pela recomendação de leitura!"
         ]
-    }
-    ,
+    },
+    "aluna_vampire_thought": {
+        "speaker": "Você",
+        "lines": [
+            "Menina doida, vampiros nem existem."
+        ]
+    },
     "weird_girl_intro": {
         "speaker": "Garota estranha",
         "lines": [

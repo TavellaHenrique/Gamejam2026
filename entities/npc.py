@@ -2,7 +2,7 @@
 import pygame
 
 from systems.animated_character import AnimatedCharacter
-from systems.collision import move_with_collisions
+from systems.collision import get_entity_hitbox, move_with_collisions
 from systems.trigger import Trigger
 
 
@@ -50,10 +50,20 @@ class NPC(AnimatedCharacter):
         self.use_player_animations = use_player_animations
         self.animation_scale = animation_scale
         self.opacity = 255
+        self.directional_sprites = False
+        self.mirror_directional_left = False
 
         # A animação usa o sprite informado ou, no NPC de demonstração, os sprites do jogador.
         if use_player_animations:
             self._load_player_animations()
+        elif sprite_path.endswith("_Head_Idle-Sheet.png"):
+            self._load_head_spritesheet_animations(sprite_path)
+        elif sprite_path.rsplit("/", 1)[-1] in {
+            "character1.png",
+            "character2.png",
+            "character3.png",
+        }:
+            self._load_character_spritesheet_animations(sprite_path)
         else:
             self.animations = {
                 "idle": self.get_sprites_from_spritesheet(
@@ -75,7 +85,7 @@ class NPC(AnimatedCharacter):
                 round(self.position.y)
             )
         )
-        self.interaction_trigger.position.update(self.position)
+        self._sync_interaction_trigger()
 
     def update(self, delta_time):
         """Avança a animação e sincroniza o sprite com a posição atual."""
@@ -93,14 +103,21 @@ class NPC(AnimatedCharacter):
                 round(self.position.y)
             )
         )
-        self.interaction_trigger.position.update(self.position)
+        self._sync_interaction_trigger()
+
+    def _sync_interaction_trigger(self):
+        """Centers the interaction area on the NPC's collision hitbox."""
+        hitbox = get_entity_hitbox(self)
+        self.interaction_trigger.position.update(hitbox.center)
 
     def can_interact(self, player):
         """Indica se o jogador está dentro do raio de interação deste NPC."""
         if not self.interactable:
             return False
 
-        return self.interaction_trigger.contains(player)
+        return self.interaction_trigger.contains_position(
+            get_entity_hitbox(player).center
+        )
 
     def is_in_ambient_range(self, player):
         """Indica se o jogador entrou no raio maior usado para falas aleatórias."""
@@ -133,7 +150,13 @@ class NPC(AnimatedCharacter):
 
     def _apply_facing_image(self):
         """Aplica a orientação horizontal disponível no spritesheet do NPC."""
-        if self.use_player_animations:
+        if self.directional_sprites:
+            self.image = pygame.transform.flip(
+                self._base_image,
+                self.mirror_directional_left and round(self.facing.x) < 0,
+                False,
+            )
+        elif self.use_player_animations:
             self.image = self._base_image
         else:
             self.image = pygame.transform.flip(
@@ -235,22 +258,122 @@ class NPC(AnimatedCharacter):
             },
         }
 
+    def _load_head_spritesheet_animations(self, idle_path):
+        """Loads directional idle and walking sheets for colored-head NPCs."""
+        walking_path = idle_path.replace(
+            "_Idle-Sheet.png",
+            "_Walking-Sheet.png",
+        )
+        self._load_grid_animations(
+            idle_path,
+            walking_path,
+            frame_width=32,
+            frame_height=32,
+            idle_frame_count=5,
+            walking_frame_count=4,
+            direction_rows={
+                "down": (1, 1),
+                "left": (2, 2),
+                "right": (3, 3),
+                "up": (0, 0),
+            },
+        )
+
+    def _load_character_spritesheet_animations(self, sprite_path):
+        """Loads idle and walking directions from a 6-by-6 character sheet."""
+        self._load_grid_animations(
+            sprite_path,
+            sprite_path,
+            frame_width=32,
+            frame_height=32,
+            idle_frame_count=2,
+            walking_frame_count=6,
+            direction_rows={
+                "down": (0, 1),
+                "left": (2, 3),
+                "right": (2, 3),
+                "up": (4, 5),
+            },
+            mirror_left=True,
+        )
+
+    def _load_grid_animations(
+        self,
+        idle_path,
+        walking_path,
+        frame_width,
+        frame_height,
+        idle_frame_count,
+        walking_frame_count,
+        direction_rows,
+        mirror_left=False,
+    ):
+        """Loads four directional animations and normalizes their frame size."""
+        output_size = (
+            48 * self.animation_scale,
+            64 * self.animation_scale,
+        )
+        reference_sheet = pygame.image.load(
+            "assets/sprites/npcs/Idle_Down.png"
+        ).convert_alpha()
+        reference_frame = reference_sheet.subsurface(
+            pygame.Rect(0, 0, 48, 64)
+        )
+        reference_bounds = reference_frame.get_bounding_rect()
+        fit_content_size = (
+            reference_bounds.width * self.animation_scale,
+            reference_bounds.height * self.animation_scale,
+        )
+        self.animations = {}
+        for direction, (idle_row, walking_row) in direction_rows.items():
+            self.animations[f"idle_{direction}"] = (
+                self.get_sprites_from_spritesheet(
+                    idle_path,
+                    frame_width,
+                    frame_height,
+                    idle_frame_count,
+                    row=idle_row,
+                    output_size=output_size,
+                    fit_content_size=fit_content_size,
+                )
+            )
+            self.animations[f"walk_{direction}"] = (
+                self.get_sprites_from_spritesheet(
+                    walking_path,
+                    frame_width,
+                    frame_height,
+                    walking_frame_count,
+                    row=walking_row,
+                    output_size=output_size,
+                    fit_content_size=fit_content_size,
+                )
+            )
+        self.animations["idle"] = self.animations["idle_down"]
+        self.directional_sprites = True
+        self.mirror_directional_left = mirror_left
+
     def _select_animation(self, moving):
         """Seleciona o quadro parado ou de caminhada na direção atual."""
-        if not self.use_player_animations:
+        if not self.use_player_animations and not self.directional_sprites:
             return
 
         x = round(self.facing.x)
         y = round(self.facing.y)
-        direction = {
-            (0, -1): "up",
-            (0, 1): "down",
-            (-1, 0): "left",
-            (1, 0): "right",
-            (-1, -1): "up_left",
-            (1, -1): "up_right",
-            (-1, 1): "down_left",
-            (1, 1): "down_right",
-        }.get((x, y), "down")
+        if self.directional_sprites:
+            if x != 0:
+                direction = "left" if x < 0 else "right"
+            else:
+                direction = "up" if y < 0 else "down"
+        else:
+            direction = {
+                (0, -1): "up",
+                (0, 1): "down",
+                (-1, 0): "left",
+                (1, 0): "right",
+                (-1, -1): "up_left",
+                (1, -1): "up_right",
+                (-1, 1): "down_left",
+                (1, 1): "down_right",
+            }.get((x, y), "down")
         animation_name = f"{'walk' if moving else 'idle'}_{direction}"
         self.play(animation_name)

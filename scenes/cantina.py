@@ -38,32 +38,32 @@ class Cantina(TilemapScene):
             self.create_map_object(
                 "assets/tileset/scene_objects/mesa_refeitorio.png",
                 (0, 113),
-                collision_rect=(22, 2, 213, 85),
+                collidable=True,
                 occlusion_y=70,
             ),
             self.create_map_object(
                 "assets/tileset/scene_objects/mesa_refeitorio.png",
                 (205, 113),
-                collision_rect=(0, 2, 235, 85),
+                collidable=True,
                 occlusion_y=70,
             ),
             self.create_map_object(
                 "assets/tileset/scene_objects/pia.png",
                 (484, 82),
-                collision_rect=(1, 6, 51, 57),
+                collidable=True,
                 occlusion_y=45,
             ),
             self.create_map_object(
                 "assets/tileset/scene_objects/pia.png",
                 (580, 82),
-                collision_rect=(0, 6, 51, 57),
+                collidable=True,
                 occlusion_y=45,
             ),
             *(
                 self.create_map_object(
                     "assets/tileset/scene_objects/lixeira.png",
                     position,
-                    collision_rect=(0, 0, 20, 32),
+                    collidable=True,
                     occlusion_y=16,
                 )
                 for position in ((541, 88), (637, 88))
@@ -71,20 +71,20 @@ class Cantina(TilemapScene):
             self.create_map_object(
                 "assets/tileset/scene_objects/Maquina_verde.png",
                 (695, 26),
-                collision_rect=(1, 2, 54, 93),
+                collidable=True,
                 occlusion_y=65,
             ),
             self.create_map_object(
                 "assets/tileset/scene_objects/maquina_roxa.png",
                 (761, 30),
-                collision_rect=(0, -2, 55, 93),
+                collidable=True,
                 occlusion_y=65,
             ),
             *(
                 self.create_map_object(
                     "assets/tileset/scene_objects/lixeira.png",
                     position,
-                    collision_rect=(0, 0, 20, 32),
+                    collidable=True,
                     occlusion_y=16,
                 )
                 for position in ((17, 585), (833, 585))
@@ -92,14 +92,14 @@ class Cantina(TilemapScene):
             self.create_map_object(
                 "assets/tileset/scene_objects/maquina_roxa.png",
                 (831, 30),
-                collision_rect=(0, -2, 55, 93),
+                collidable=True,
                 occlusion_y=65,
             ),
             *(
                 self.create_map_object(
                     "assets/tileset/scene_objects/mesa_cadeira.png",
                     position,
-                    collision_rect=(0, 0, 95, 106),
+                    collidable=True,
                     occlusion_y=55,
                 )
                 for position in (
@@ -116,13 +116,13 @@ class Cantina(TilemapScene):
             self.create_map_object(
                 "assets/tileset/scene_objects/Vaso.png",
                 (74, 550),
-                collision_rect=(2, 35, 31, 40),
+                collidable=True,
                 occlusion_y=60,
             ),
             self.create_map_object(
                 "assets/tileset/scene_objects/Vaso.png",
                 (888, 550),
-                collision_rect=(0, 35, 31, 40),
+                collidable=True,
                 occlusion_y=60,
             ),
         ]
@@ -238,6 +238,7 @@ class Cantina(TilemapScene):
             self.hint_font,
             self.player,
             self.doors,
+            dialogue_manager=self.game.dialogue_manager,
         )
         instruction = self.hint_font.render(
             "ESC - Voltar ao saguão",
