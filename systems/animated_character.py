@@ -37,7 +37,10 @@ class AnimatedCharacter(pygame.sprite.Sprite):
             if scale != 1:
                 frame = pygame.transform.scale(
                     frame,
-                    (frame_width * scale, frame_height * scale),
+                    (
+                        max(1, round(frame_width * scale)),
+                        max(1, round(frame_height * scale)),
+                    ),
                 )
             frames.append(frame)
 

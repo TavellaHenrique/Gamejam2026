@@ -1,6 +1,6 @@
 # |-- Dimensões da tela --|
-SCREEN_WIDTH = 1000 # Largura (x)
-SCREEN_HEIGHT = 600 # Altura (y)
+SCREEN_WIDTH = 960 # Largura (x)
+SCREEN_HEIGHT = 640 # Altura (y)
 
 # |-- Propriedades do Framerate --|
 FPS = 60 # Frames per Second - Usada para limitar o número máximo de quadros exibidos por segundo

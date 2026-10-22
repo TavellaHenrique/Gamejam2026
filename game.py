@@ -17,7 +17,7 @@ class Game:
     def __init__(self):
         """Cria as entidades e os gerenciadores centrais antes da primeira cena."""
         # O jogador e o inventário pertencem ao jogo, não a uma cena específica.
-        self.player_spawn_point = pygame.Vector2(600, 544)
+        self.player_spawn_point = pygame.Vector2(900, 810)
         self.player = Player(self.player_spawn_point)
         self.inventory = None  # Inventory()
         self.inventory_open = False

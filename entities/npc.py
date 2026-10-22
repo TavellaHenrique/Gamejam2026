@@ -19,12 +19,13 @@ class NPC(AnimatedCharacter):
         frame_width=48,
         frame_height=64,
         frame_count=8,
-        scale=4,
+        scale=3,
         interaction_radius=60,
         ambient_radius=180,
         ambient_lines=(),
         speed=180,
         use_player_animations=False,
+        animation_scale=3,
         interactable=True,
     ):
         """Configura identidade, alcance de interação e animação do NPC."""
@@ -47,6 +48,7 @@ class NPC(AnimatedCharacter):
         self.facing = pygame.Vector2(0, 1)
         self.is_moving = False
         self.use_player_animations = use_player_animations
+        self.animation_scale = animation_scale
         self.opacity = 255
 
         # A animação usa o sprite informado ou, no NPC de demonstração, os sprites do jogador.
@@ -191,7 +193,7 @@ class NPC(AnimatedCharacter):
             "frame_width": 48,
             "frame_height": 64,
             "frame_count": 8,
-            "scale": 4,
+            "scale": self.animation_scale,
         }
 
         def load(path):

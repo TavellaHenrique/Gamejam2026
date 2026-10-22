@@ -17,7 +17,8 @@ class Player(AnimatedCharacter):
         self,
         position,
         speed=180,
-        animation_mode=ANIMATION_8_DIRECTIONS
+        animation_mode=ANIMATION_8_DIRECTIONS,
+        animation_scale=3,
     ):
         """Inicializa posição, velocidade, direção e conjunto de animações."""
         super().__init__("idle")
@@ -25,6 +26,7 @@ class Player(AnimatedCharacter):
         self.speed = speed
 
         self.animation_mode = animation_mode
+        self.animation_scale = animation_scale
 
         # A direção inicial aponta para baixo e é mantida quando o jogador para.
         self.facing = pygame.Vector2(0, 1)
@@ -280,7 +282,7 @@ class Player(AnimatedCharacter):
             "frame_width": 48,
             "frame_height": 64,
             "frame_count": 8,
-            "scale": 4
+            "scale": self.animation_scale
         }
 
         def load_animation(path):

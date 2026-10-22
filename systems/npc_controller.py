@@ -1,5 +1,6 @@
 
 import random
+from types import SimpleNamespace
 
 import pygame
 
@@ -20,7 +21,7 @@ class NPCController:
     BELOW_Y_THRESHOLD = 40
     BELOW_X_THRESHOLD = 42
 
-    def __init__(self, game, npcs=(), npc_scope=None):
+    def __init__(self, game, npcs=(), npc_scope=None, static_obstacles=()):
         """Guarda referências do jogo e prepara os NPCs e elementos da interface."""
         self.game = game
         self.npc_scope = npc_scope
@@ -48,6 +49,7 @@ class NPCController:
         self.is_approaching_npc = False
         self.wander_bounds = None
         self.wander_obstacles = ()
+        self.static_obstacles = tuple(pygame.Rect(rect) for rect in static_obstacles)
         self.wanderers = {}
 
     @property
@@ -224,6 +226,7 @@ class NPCController:
     def get_player_obstacles(self, static_obstacles=()):
         """Retorna obstáculos estáticos e hitboxes dos NPCs para o jogador."""
         return [
+            *self.static_obstacles,
             *static_obstacles,
             *(
                 get_entity_hitbox(npc)
@@ -835,7 +838,7 @@ class NPCController:
     def _get_npc_obstacles(self, moving_npc, ignored_npcs=()):
         """Retorna obstáculos fixos, jogador e demais NPCs para a navegação."""
         ignored_npcs = set(ignored_npcs)
-        obstacles = list(self.wander_obstacles)
+        obstacles = [*self.static_obstacles, *self.wander_obstacles]
         obstacles.append(get_entity_hitbox(self.player))
         obstacles.extend(
             get_entity_hitbox(npc)
@@ -848,9 +851,25 @@ class NPCController:
         """Desenha todos os sprites de NPC na superfície da tela."""
         self.npcs.draw(screen)
 
-    def draw_ui(self, screen):
+    def draw_ui(self, screen, camera=None):
         """Desenha os diálogos e os avisos de interação."""
-        self.dialogue_manager.draw(screen)
+        if self.dialogue_manager.is_active:
+            self.dialogue_manager.draw(screen)
+        elif (
+            self.dialogue_manager.is_ambient_active
+            and self.dialogue_manager.ambient_anchor is not None
+        ):
+            anchor = self.dialogue_manager.ambient_anchor
+            if camera is not None:
+                anchor = self._get_screen_anchor(anchor, camera)
+            self.dialogue_manager.draw_bubble(
+                screen,
+                anchor,
+                (
+                    f"{self.dialogue_manager.ambient_speaker}: "
+                    f"{self.dialogue_manager.ambient_text}"
+                ),
+            )
 
         if (
             # Uma conversa normal ou um balão ambiental já usa essa interface.
@@ -869,8 +888,27 @@ class NPCController:
         if npc is None:
             return
 
+        if camera is not None:
+            npc = self._get_screen_anchor(npc, camera)
         self.dialogue_manager.draw_bubble(
             screen,
             npc,
             "E - Interagir",
+        )
+
+    @staticmethod
+    def _get_screen_anchor(npc, camera):
+        viewport = camera.viewport_rect
+        scale_x = camera.screen_width / viewport.width
+        scale_y = camera.screen_height / viewport.height
+        image = pygame.transform.scale(
+            npc.image,
+            (
+                max(1, round(npc.image.get_width() * scale_x)),
+                max(1, round(npc.image.get_height() * scale_y)),
+            ),
+        )
+        return SimpleNamespace(
+            position=camera.world_to_screen(npc.position),
+            image=image,
         )

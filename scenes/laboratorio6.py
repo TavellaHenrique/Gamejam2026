@@ -2,7 +2,6 @@
 
 import pygame
 
-from config import SCREEN_HEIGHT, SCREEN_WIDTH
 from entities.door import Door
 from entities.npc import NPC
 from systems.cutscene_controller import (
@@ -21,8 +20,8 @@ from systems.cutscene_controller import (
     wait,
     dialogue_from_id,
 )
-from scenes.scene import Scene
 from systems.npc_controller import NPCController
+from systems.tilemap_scene import LABORATORY_OBSTACLES, TilemapScene
 
 
 def _create_saguao(game):
@@ -31,39 +30,29 @@ def _create_saguao(game):
     return Saguao(game)
 
 
-class Laboratorio6(Scene):
+class Laboratorio6(TilemapScene):
     """Área com porta, jogador e NPCs ambulantes."""
 
     def __init__(self, game, player_spawn=None):
         """Cria a área e inicializa dois NPCs ambulantes."""
-        super().__init__(game)
-        self.player = game.player
-        if player_spawn is None:
-            player_spawn = game.player_spawn_point
-        else:
-            game.set_player_spawn_point(player_spawn)
-        self.player.position.update(player_spawn)
-        self.player.rect.center = player_spawn
-        surface = pygame.display.get_surface()
-        self.bounds = pygame.Rect(
-            0,
-            0,
-            surface.get_width() if surface else SCREEN_WIDTH,
-            surface.get_height() if surface else SCREEN_HEIGHT,
+        super().__init__(
+            game,
+            "assets/tileset/laboratorio.jpeg",
+            player_spawn=player_spawn,
         )
-        self.background_color = (48, 66, 58)
         self.title_font = pygame.font.Font(
             "assets/fonts/typewcond_regular.otf",
             36,
         )
         self.door = Door(
-            rect=(0, 100, 56, 112),
-            prompt="Área anterior",
+            rect=self.map_rect((862, 10, 43, 87)),
+            prompt="Saguão",
+            interaction_margin=72,
+            visible=False,
         )
-        surface = pygame.display.get_surface()
-        self.bounds = pygame.Rect(
-            (0, 0),
-            surface.get_size(),
+        self.doors = (self.door,)
+        self.environment_obstacles = tuple(
+            self.map_rect(rect) for rect in LABORATORY_OBSTACLES
         )
         self.hint_font = pygame.font.Font(
             "assets/fonts/typewcond_regular.otf",
@@ -75,74 +64,55 @@ class Laboratorio6(Scene):
                 NPC(
                     npc_id="thiago",
                     display_name="Prof Thiago",
-                    position=(500, 200),
+                    position=self.map_point((700, 160)),
                     sprite_path="assets/sprites/npcs/Idle_Down.png",
                     dialogue_id="thiago_lab6_2",
                     use_player_animations=True,
-                    interactable = True
+                    interactable=True,
                 ),
-                NPC(
-                    npc_id="estudante6",
-                    display_name="",
-                    position=(100, 500),
-                    sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                    dialogue_id="",
-                    use_player_animations=True,
-                    interactable = False
-                ),
-                NPC(
-                    npc_id="estudante7",
-                    display_name="",
-                    position=(200, 500),
-                    sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                    dialogue_id="",
-                    use_player_animations=True,
-                    interactable = False
-                ),
-                NPC(
-                    npc_id="estudante8",
-                    display_name="",
-                    position=(300, 500),
-                    sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                    dialogue_id="",
-                    use_player_animations=True,
-                    interactable = False
-                ), #400, 500 - player
-                NPC(
-                    npc_id="estudante4",
-                    display_name="",
-                    position=(500, 500),
-                    sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                    dialogue_id="",
-                    use_player_animations=True,
-                    interactable = False
-                ),
-                NPC(
-                    npc_id="estudante5",
-                    display_name="",
-                    position=(600, 500),
-                    sprite_path="assets/sprites/player/TheFemaleAdventurer/Idle/Idle_Up.png",
-                    dialogue_id="",
-                    use_player_animations=True,
-                    interactable = False
+                *(
+                    NPC(
+                        npc_id=npc_id,
+                        display_name="",
+                        position=self.map_point(position),
+                        sprite_path=(
+                            "assets/sprites/player/"
+                            "TheFemaleAdventurer/Idle/Idle_Up.png"
+                        ),
+                        dialogue_id="",
+                        frame_count=1,
+                        scale=3,
+                        interactable=False,
+                    )
+                    for npc_id, position in (
+                        ("estudante6", (105, 285)),
+                        ("estudante7", (273, 370)),
+                        ("estudante8", (465, 285)),
+                        ("estudante4", (658, 370)),
+                        ("estudante5", (273, 515)),
+                    )
                 ),
             ],
             npc_scope=type(self),
+            static_obstacles=self.environment_obstacles,
         )
         self.cutscene_controller = CutsceneController.create_story_cutscene(
             game,
             self.npc_controller,
             trigger(
-                trigger_position=(400, 500),
+                trigger_position=self.player.position,
                 trigger_radius=16,
                 visible=False,
                 action=(
                     dialogue_from_id("thiago_lab6_1"),
                     dialogue_from_id("jogador_intro_2"),
-                    npc("thiago", npc_arrival=(700, 200)),
+                    npc(
+                        "thiago",
+                        npc_arrival=self.map_point((700, 200)),
+                    ),
                     face_direction("thiago", "down"),
-                    player_destination((400, 100)),
-                    player_destination((40, 100)),
+                    # player_destination(self.map_point((700, 150))),
+                    # player_destination(self.map_point((900, 150))),
                     # change_scene(
                     #     lambda: _create_saguao(game),
                     #     duration=0.5,
@@ -227,6 +197,7 @@ class Laboratorio6(Scene):
             # ),
             cutscene_id="game_scene_2",
             bounds=self.bounds,
+            camera=self.camera,
         )
         self.cutscene_controller.start()
 
@@ -238,11 +209,13 @@ class Laboratorio6(Scene):
         if (
             event.type == pygame.KEYDOWN
             and event.key == pygame.K_e
+            and not self.game.dialogue_manager.is_active
+            and not self.cutscene_controller.is_active
             and self.door.can_interact(self.player)
         ):
             self.game.scene_manager.transition_to(
                 lambda: _create_saguao(self.game),
-                player_spawn=(840, 300),
+                player_spawn=self.map_point((900, 150)),
             )
             return
 
@@ -250,6 +223,7 @@ class Laboratorio6(Scene):
 
     def update(self, delta_time):
         """Move entidades com colisão e escolhe destinos dos NPCs a cada cinco segundos."""
+        self.update_camera(delta_time, self.cutscene_controller)
         self.cutscene_controller.update(delta_time)
         self.player.update(
             delta_time,
@@ -266,28 +240,35 @@ class Laboratorio6(Scene):
             ),
             bounds=self.bounds,
             obstacles=self.npc_controller.get_player_obstacles(
-                (self.door.rect,)
+                self.get_door_obstacles()
             ),
         )
         self.npc_controller.update(
             delta_time,
             player_bounds=self.bounds,
-            player_obstacles=(self.door.rect,),
+            player_obstacles=self.get_door_obstacles(),
         )
 
     def draw(self, screen):
-        """Desenha o fundo, porta, NPCs, jogador e suas falas compactas."""
-        screen.fill(self.background_color)
+        """Desenha o tileset, os personagens e a interface."""
+        world = self.begin_world_draw()
+        self.cutscene_controller.draw_trigger(world)
+        self.npc_controller.draw_npcs(world)
+        world.blit(self.player.image, self.player.rect)
+        self.render_world(screen)
 
         title = self.title_font.render(
-            "Segunda área",
+            "Laboratório",
             True,
             (255, 255, 255),
         )
         screen.blit(title, (24, 20))
 
-        self.door.draw(screen, self.player)
-        self.npc_controller.draw_npcs(screen)
-        screen.blit(self.player.image, self.player.rect)
-        self.npc_controller.draw_ui(screen)
+        self.draw_door_hint(
+            screen,
+            self.hint_font,
+            self.player,
+            self.doors,
+        )
+        self.npc_controller.draw_ui(screen, camera=self.camera)
         self.cutscene_controller.draw_overlay(screen)
