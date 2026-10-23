@@ -219,7 +219,22 @@
         "lines4": [
             "Que estranho, a dor no pescoço está voltando. Talvez eu precise dormir melhor hoje..."
         ]
-    }
+    },
 
-    
+    "professora_aula_introducao": {
+        "speaker": "Professora",
+        "lines": [
+            "Parece que vieram poucos alunos hoje!",
+            "De qualquer forma, iremos abrir esse computador e observar seus componentes.",
+            "Algum de vocês gostaria de auxiliar-me?"
+        ],
+        "speaker2": "Você",
+        "lines2": [
+            "Eu posso, Professora?"
+        ],
+        "speaker3": "Professora",
+        "lines3": [
+            "Sim, venha cá."
+        ]
+    }
 }
