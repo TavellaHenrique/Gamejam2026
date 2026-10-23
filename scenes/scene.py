@@ -13,6 +13,11 @@ class Scene:
         """Indica se o inventário está aberto e deve pausar a interação do mundo."""
         return bool(getattr(self.game, "inventory_open", False))
 
+    @property
+    def is_paused(self):
+        """Indica se uma interface modal pausa a simulação desta cena."""
+        return False
+
     # Deve lidar com os eventos de teclados, mouse e afins
     def handle_event(self, event):
         """Ponto de extensão para processar eventos recebidos pela cena."""

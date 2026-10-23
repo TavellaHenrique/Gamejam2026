@@ -1,6 +1,7 @@
 import pygame
 
 from entities.door import Door
+from entities.elevator import Elevator
 from entities.npc import NPC
 from items.item import Item
 from scenes.laboratorio6 import Laboratorio6
@@ -45,12 +46,15 @@ class Saguao(TilemapScene):
             interaction_margin=72,
             visible=False,
         )
-        self.elevator_door = Door(
+        self.elevator = Elevator(
             rect=self.map_rect((0, 442, 64, 116)),
-            prompt="Elevador",
-            interaction_margin=72,
-            visible=False,
+            destinations=(
+                ("lab1", "Laboratório 1"),
+                ("lab6", "Laboratório 6"),
+                ("cancel", "Cancelar"),
+            ),
         )
+        self.elevator_door = self.elevator.door
         self.stairs_door = Door(
             rect=self.map_rect((750, 430, 200, 195)),
             prompt="Laboratório 1",
@@ -253,11 +257,28 @@ class Saguao(TilemapScene):
 
     def handle_event(self, event):
         """Delega falas da história e encaminha interações da cena."""
+        if self.elevator.is_open:
+            _, destination = self.elevator.handle_event(event, self.player)
+            if destination is not None:
+                self._travel_to_elevator_destination(destination)
+            return
+
         if self.is_inventory_open():
             return
 
         if self.cutscene_controller.handle_event(event):
             return
+
+        if (
+            not self.game.dialogue_manager.is_active
+            and not self.cutscene_controller.locks_player_control
+        ):
+            consumed, destination = self.elevator.handle_event(
+                event,
+                self.player,
+            )
+            if consumed:
+                return
 
         aluna = self.npc_controller.get_npc("weird_girl")
         if (
@@ -316,6 +337,21 @@ class Saguao(TilemapScene):
 
         self.npc_controller.handle_event(event)
 
+    def _travel_to_elevator_destination(self, destination):
+        """Transfere o jogador para o destino escolhido no elevador."""
+        if destination == "lab6":
+            self.game.scene_manager.transition_to(
+                lambda: Laboratorio6(self.game),
+                player_spawn=self.map_point((800, 150)),
+            )
+        elif destination == "lab1":
+            from scenes.laboratorio1 import Laboratorio1
+
+            self.game.scene_manager.transition_to(
+                lambda: Laboratorio1(self.game),
+                player_spawn=Laboratorio1._fit_tileset_point((800, 100)),
+            )
+
     def update(self, delta_time):
         """Atualiza a história, os NPCs, os itens e o jogador."""
         for item in self.items:
@@ -359,6 +395,7 @@ class Saguao(TilemapScene):
     def draw(self, screen):
         """Desenha o fundo, personagens e interface da cena."""
         world = self.begin_world_draw()
+        self.elevator.draw_world(world, self.player)
         for item in self.items:
             item.draw(world)
         self.draw_scene_entities(world, self.npc_controller.npcs)
@@ -395,3 +432,9 @@ class Saguao(TilemapScene):
             dialogue_manager=self.game.dialogue_manager,
         )
         self.npc_controller.draw_ui(screen, camera=self.camera)
+        self.elevator.draw_menu(screen)
+
+    @property
+    def is_paused(self):
+        """Pausa o mundo enquanto o jogador escolhe o destino do elevador."""
+        return self.elevator.is_open

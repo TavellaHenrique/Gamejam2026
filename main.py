@@ -42,7 +42,7 @@ def main():
                         game.scene_manager.handle_event(event)
 
         # Atualiza a lógica e desenha a cena usando o tempo desde o quadro anterior.
-        if not game.inventory_open:
+        if not game.inventory_open and not game.scene_manager.is_paused:
             game.scene_manager.update(delta_time)
         game.scene_manager.draw(screen)
         game.draw_inventory(screen)

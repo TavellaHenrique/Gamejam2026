@@ -59,6 +59,9 @@ class Game:
 
     def handle_global_event(self, event):
         """Trata atalhos globais como coordenadas e inventário."""
+        if self.scene_manager.is_paused:
+            return False
+
         if (
             not self.inventory_open
             and self.show_mouse_coordinates

@@ -27,6 +27,14 @@ class SceneManager:
         self.current_scene = new_scene
         self.current_scene.on_enter()
 
+    @property
+    def is_paused(self):
+        """Indica se a cena ativa está pausada por uma interface modal."""
+        return bool(
+            self.current_scene is not None
+            and self.current_scene.is_paused
+        )
+
     def transition_to(
         self,
         scene_factory,
