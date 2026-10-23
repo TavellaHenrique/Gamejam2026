@@ -32,7 +32,6 @@ class Game:
 
         # Gerenciador de Missões deve ser compartilhado entre  as cenas
         self.quest_manager = QuestManager(create_quests())
-        self.quest_manager.start_quest("test_quest")
 
         # Os diálogos são carregados de um arquivo e podem ser consultados pelas cenas.
         self.dialogue_manager = DialogueManager(
@@ -44,14 +43,14 @@ class Game:
         self.scene_manager.change_scene(MainMenu(self))
 
     def register_quest_event(self, event_type, target, amount=1):
-        """Registra um evento de missão e anuncia a conclusão da missão de teste."""
-        quest_was_completed = self.quest_manager.is_completed("test_quest")
+        """Registra um evento de missão e anuncia a conclusão de uma missão."""
+        quest_was_completed = self.quest_manager.is_completed("find_the_key")
         self.quest_manager.register_event(event_type, target, amount)
         if (
             not quest_was_completed
-            and self.quest_manager.is_completed("test_quest")
+            and self.quest_manager.is_completed("find_the_key")
         ):
-            print("Missão test_quest concluída!")
+            print("Missão find_the_key concluída!")
 
     def set_player_spawn_point(self, position):
         """Atualiza o ponto persistente onde o jogador deve surgir."""

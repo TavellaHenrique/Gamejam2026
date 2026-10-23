@@ -2,8 +2,10 @@ import pygame
 
 from entities.door import Door
 from entities.npc import NPC
+from items.item import Item
 from scenes.saguao import Saguao
 from systems.npc_controller import NPCController
+from systems.quests.quest_status import QuestStatus
 from systems.tilemap_scene import LABORATORY_OBSTACLES, TilemapScene
 
 
@@ -56,7 +58,7 @@ class Laboratorio1(TilemapScene):
                 NPC(
                     npc_id="professor_lab1",
                     display_name="Professor Adriano",
-                    position=self._fit_tileset_point((1800, 700)),
+                    position=self._fit_tileset_point((2000, 700)),
                     sprite_path="assets/sprites/npcs/Idle_Down.png",
                     dialogue_id="adriano_lab1_1",
                     use_player_animations=True,
@@ -122,7 +124,50 @@ class Laboratorio1(TilemapScene):
                 player_spawn=Saguao.map_point((700, 520)),
             )
             return
+
+        if (
+            event.type == pygame.KEYDOWN
+            and event.key == pygame.K_e
+            and not self.game.dialogue_manager.is_active
+        ):
+            nearby_npc = self.npc_controller.get_nearest_interactable_npc()
+            if nearby_npc is not None and nearby_npc.npc_id == "professor_lab1":
+                if (
+                    self.game.quest_manager.get_status("find_the_key")
+                    == QuestStatus.ACTIVE
+                    and not self.player.inventory.has_item("lab_key")
+                ):
+                    nearby_npc.dialogue_id = (
+                        "adriano_missao_encontrar_chave"
+                    )
+                else:
+                    nearby_npc.dialogue_id = "adriano_lab1_1"
+
+        was_adriano_giving_key = (
+            event.type == pygame.KEYDOWN
+            and event.key == pygame.K_e
+            and self.game.dialogue_manager.is_active
+            and self.npc_controller.active_dialogue_npc is not None
+            and self.npc_controller.active_dialogue_npc.npc_id
+            == "professor_lab1"
+            and self.npc_controller.active_dialogue_npc.dialogue_id
+            == "adriano_missao_encontrar_chave"
+        )
         self.npc_controller.handle_event(event)
+        if (
+            was_adriano_giving_key
+            and not self.game.dialogue_manager.is_active
+            and self.game.quest_manager.get_status("find_the_key")
+            == QuestStatus.ACTIVE
+            and not self.player.inventory.has_item("lab_key")
+        ):
+            key = Item(
+                item_id="lab_key",
+                name="Chave do Lab 7",
+                description="A chave do Laboratório 7.",
+            )
+            if self.player.inventory.add_item(key):
+                self.game.register_quest_event("collect_item", key.id)
 
     def update(self, delta_time):
         """Atualiza a câmera, os NPCs e o jogador."""

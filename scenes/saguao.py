@@ -3,7 +3,6 @@ import pygame
 from entities.door import Door
 from entities.elevator import Elevator
 from entities.npc import NPC
-from items.item import Item
 from scenes.laboratorio6 import Laboratorio6
 from systems.cutscene_controller import (
     CutsceneController,
@@ -15,8 +14,8 @@ from systems.cutscene_controller import (
     dialogue_from_id,
 )
 from systems.npc_controller import NPCController
+from systems.quests.quest_status import QuestStatus
 from systems.tilemap_scene import TilemapScene
-from ui.text import draw_prompt
 
 
 class Saguao(TilemapScene):
@@ -147,19 +146,6 @@ class Saguao(TilemapScene):
             )
             for position in ((12, 376), (412, 344))
         )
-        self.items = [
-            Item(
-                item_id="lab_key",
-                name="Chave do laboratório",
-                description="O professor vai pedir isso na história.",
-                position=self.map_point((620, 420)),
-                interaction_radius=54,
-            ),
-        ]
-        for item in self.items:
-            if self.player.inventory.has_item(item.id):
-                item.collected = True
-                item.visible = False
         self.hint_font = pygame.font.Font(
             "assets/fonts/typewcond_regular.otf",
             20,
@@ -188,7 +174,7 @@ class Saguao(TilemapScene):
                 ),
                 NPC(
                     npc_id="weird_girl",
-                    display_name="Aluna",
+                    display_name="Garota Estranha",
                     position=self.map_point((545, 215)),
                     sprite_path=(
                         "assets/sprites/player/"
@@ -289,9 +275,13 @@ class Saguao(TilemapScene):
             and self.game.dialogue_manager.is_active
             and self.npc_controller.pending_interaction_npc is aluna
         ):
+            is_introduction_dialogue = (
+                aluna.dialogue_id == "weird_girl_introduction"
+            )
             self.npc_controller.handle_event(event)
             if (
-                not self.game.dialogue_manager.is_active
+                is_introduction_dialogue
+                and not self.game.dialogue_manager.is_active
                 and self.npc_controller.pending_interaction_npc is None
             ):
                 self.aluna_thought_pending = True
@@ -303,14 +293,16 @@ class Saguao(TilemapScene):
             and not self.game.dialogue_manager.is_active
             and not self.cutscene_controller.locks_player_control
         ):
-            for item in self.items:
-                if item.can_interact(self.player):
-                    if item.pick_up(self.player):
-                        self.game.register_quest_event(
-                            "collect_item",
-                            item.id,
-                        )
-                    return
+            nearby_npc = self.npc_controller.get_nearest_interactable_npc()
+            if (
+                nearby_npc is not None
+                and nearby_npc.npc_id == "weird_girl"
+                and self.game.quest_manager.get_status("find_the_key")
+                == QuestStatus.ACTIVE
+            ):
+                nearby_npc.dialogue_id = (
+                    "garota_estranha_missao_encontrar_chave"
+                )
 
             if self.lab_door.can_interact(self.player):
                 self.game.scene_manager.transition_to(
@@ -363,8 +355,6 @@ class Saguao(TilemapScene):
 
     def update(self, delta_time):
         """Atualiza a história, os NPCs, os itens e o jogador."""
-        for item in self.items:
-            item.update()
         self.update_camera(delta_time, self.cutscene_controller)
         self.cutscene_controller.update(delta_time)
         self.npc_controller.update(
@@ -405,19 +395,8 @@ class Saguao(TilemapScene):
         """Desenha o fundo, personagens e interface da cena."""
         world = self.begin_world_draw()
         self.elevator.draw_world(world, self.player)
-        for item in self.items:
-            item.draw(world)
         self.draw_scene_entities(world, self.npc_controller.npcs)
         self.render_world(screen)
-
-        nearby_item = next((item for item in self.items if item.can_interact(self.player)), None)
-        if nearby_item is not None:
-            draw_prompt(
-                screen,
-                f"E - Coletar {nearby_item.name}",
-                self.hint_font,
-                dialogue_manager=self.game.dialogue_manager,
-            )
 
         self.draw_door_hint(
             screen,

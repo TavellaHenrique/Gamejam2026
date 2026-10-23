@@ -4,6 +4,7 @@ import pygame
 
 from entities.door import Door
 from entities.npc import NPC
+from items.item import Item
 from systems.cutscene_controller import (
     CutsceneController,
     fade_out,
@@ -11,7 +12,9 @@ from systems.cutscene_controller import (
     dialogue_from_id,
 )
 from systems.npc_controller import NPCController
+from systems.quests.quest_status import QuestStatus
 from systems.tilemap_scene import LABORATORY_OBSTACLES, TilemapScene
+from ui.text import draw_prompt
 
 
 def _create_saguao(game):
@@ -49,6 +52,19 @@ class Laboratorio6(TilemapScene):
             "assets/fonts/typewcond_regular.otf",
             20,
         )
+        self.items = [
+            Item(
+                item_id="lost_necklace",
+                name="Colar Perdido",
+                description="Um colar antigo encontrado sobre uma mesa.",
+                position=self.map_point((500, 225)),
+                interaction_radius=48,
+            ),
+        ]
+        for item in self.items:
+            if self.player.inventory.has_item(item.id):
+                item.collected = True
+                item.visible = False
         self.npc_controller = NPCController(
             game,
             npcs=[
@@ -126,12 +142,48 @@ class Laboratorio6(TilemapScene):
             )
             return
 
+        if (
+            event.type == pygame.KEYDOWN
+            and event.key == pygame.K_e
+            and not self.game.dialogue_manager.is_active
+        ):
+            for item in self.items:
+                if item.can_interact(self.player):
+                    if item.pick_up(self.player):
+                        self.game.register_quest_event(
+                            "collect_item",
+                            item.id,
+                        )
+                        self.npc_controller.start_monologue(
+                            "pensamento_colar_perdido"
+                        )
+                    return
+
+        if (
+            event.type == pygame.KEYDOWN
+            and event.key == pygame.K_e
+            and not self.game.dialogue_manager.is_active
+        ):
+            nearby_npc = self.npc_controller.get_nearest_interactable_npc()
+            if nearby_npc is not None and nearby_npc.npc_id == "thiago":
+                if (
+                    self.game.quest_manager.get_status("find_the_key")
+                    == QuestStatus.ACTIVE
+                ):
+                    nearby_npc.dialogue_id = (
+                        "thiago_missao_encontrar_chave"
+                    )
+                else:
+                    nearby_npc.dialogue_id = "thiago_lab6_exploration"
+
         self.npc_controller.handle_event(event)
 
     def update(self, delta_time):
         """Atualiza a aula, a câmera, os NPCs e o jogador."""
         self.update_camera(delta_time, self.cutscene_controller)
         self.cutscene_controller.update(delta_time)
+        for item in self.items:
+            item.update()
         self.player.update(
             delta_time,
             accept_input=(
@@ -161,6 +213,8 @@ class Laboratorio6(TilemapScene):
         """Desenha o tileset, os personagens e a interface."""
         world = self.begin_world_draw()
         self.draw_scene_entities(world, self.npc_controller.npcs)
+        for item in self.items:
+            item.draw(world)
         self.render_world(screen)
 
         title = self.title_font.render(
@@ -177,4 +231,15 @@ class Laboratorio6(TilemapScene):
             self.doors,
             dialogue_manager=self.game.dialogue_manager,
         )
+        nearby_item = next(
+            (item for item in self.items if item.can_interact(self.player)),
+            None,
+        )
+        if nearby_item is not None:
+            draw_prompt(
+                screen,
+                f"E - Coletar {nearby_item.name}",
+                self.hint_font,
+                dialogue_manager=self.game.dialogue_manager,
+            )
         self.npc_controller.draw_ui(screen, camera=self.camera)

@@ -308,6 +308,17 @@ class NPCController:
         if not self.is_approaching_npc:
             self._begin_pending_dialogue()
 
+    def start_monologue(self, dialogue_id, npc=None):
+        """Starts a dialogue without moving the player and anchors the camera."""
+        self._clear_ambient_speech()
+        if not self.dialogue_manager.start(dialogue_id):
+            return False
+
+        self.active_dialogue_npc = npc
+        if npc is not None:
+            self.game.register_quest_event("talk_to", npc.npc_id)
+        return True
+
     def _get_conversation_position(self, npc):
         """Calcula um ponto próximo ao NPC, de frente e sem sobrepor o sprite."""
         offset = self.player.position - npc.position

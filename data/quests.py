@@ -4,16 +4,16 @@ from systems.quests.objective import QuestObjective
 def create_quests():
     return [
         Quest(
-            quest_id="test_quest",
-            name="Missão de Teste",
+            quest_id="find_the_key",
+            name="Encontre a chave do Laboratório 7",
             objectives=[
                 QuestObjective(
                     "collect_item",
-                    "lab_key"
+                    "lab_key",
                 ),
                 QuestObjective(
-                    "talk_to",
-                    "thiago"
+                    "return_item",
+                    "lab_key",
                 ),
             ],
         ),
