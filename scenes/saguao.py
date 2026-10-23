@@ -26,7 +26,7 @@ class Saguao(TilemapScene):
             player_spawn is None
             and not game.is_cutscene_completed("first_day_saguao")
         ):
-            player_spawn = self.map_point((480, 400))
+            player_spawn = self.map_point((700, 100))
         super().__init__(
             game,
             "assets/tileset/saguao/saguao_base.jpg",
@@ -178,7 +178,7 @@ class Saguao(TilemapScene):
                 NPC(
                     npc_id="professor_thiago_saguao",
                     display_name="Professor Thiago",
-                    position=self.map_point((500, 200)),
+                    position=self.map_point((900, 400)),
                     sprite_path="assets/sprites/npcs/Idle_Down.png",
                     dialogue_id="thiago_saguao_welcome",
                     use_player_animations=True,
@@ -241,20 +241,20 @@ class Saguao(TilemapScene):
             dialogue_from_id("thiago_saguao_welcome"),
             npc(
                 "professor_thiago_saguao",
-                self.map_point((840, 130)),
+                self.map_point((900, 130)),
             ),
             fade_out("professor_thiago_saguao", duration=0.25),
             npcs(
                 {
-                    "saguao_student_1": self.map_point((785, 122)),
-                    "saguao_student_2": self.map_point((830, 122)),
-                    "saguao_student_4": self.map_point((895, 122)),
+                    "saguao_student_1": self.map_point((800, 100)),
+                    "saguao_student_2": self.map_point((850, 100)),
+                    "saguao_student_4": self.map_point((900, 100)),
                 }
             ),
             fade_out("saguao_student_1", duration=0.25),
             fade_out("saguao_student_2", duration=0.25),
             fade_out("saguao_student_4", duration=0.25),
-            player_destination(self.map_point((840, 150))),
+            player_destination(self.map_point((900, 100))),
             change_scene(
                 lambda: Laboratorio6(game),
                 player_spawn=Laboratorio6.map_point((820, 120)),

@@ -1167,7 +1167,7 @@ class NPCController:
         """Desenha os diálogos e os avisos de interação."""
         if self.dialogue_manager.is_active:
             self.dialogue_manager.draw(screen)
-            speaker = self._get_dialogue_speaker()
+            speaker = self.get_dialogue_speaker()
             if speaker is not None:
                 anchor = speaker
                 if camera is not None:
@@ -1214,7 +1214,7 @@ class NPCController:
             "E - Interagir",
         )
 
-    def _get_dialogue_speaker(self):
+    def get_dialogue_speaker(self):
         """Returns the visible character currently associated with the dialogue."""
         speaker_name = self.dialogue_manager.active_speaker
         if (

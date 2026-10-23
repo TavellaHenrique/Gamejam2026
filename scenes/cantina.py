@@ -208,8 +208,7 @@ class Cantina(TilemapScene):
         self.npc_controller.handle_event(event)
 
     def update(self, delta_time):
-        self.camera.follow(self.player)
-        self.camera.update(delta_time)
+        self.update_camera(delta_time, None)
         self.npc_controller.update(
             delta_time,
             player_bounds=self.bounds,

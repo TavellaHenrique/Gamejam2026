@@ -54,6 +54,7 @@ class TilemapScene(Scene):
 
     TILESET_SCALE = 1.2 # Scale factor for the tileset image to world coordinates.
     CAMERA_ZOOM_FACTOR = 0.38 # Scale factor for the camera zoom to fit one quadrant of the tileset.
+    DIALOGUE_CAMERA_TRANSITION_DURATION = 1.0
     _object_image_cache = {}
     _example_image_cache = {}
 
@@ -99,6 +100,7 @@ class TilemapScene(Scene):
         )
         self.camera.follow(self.player)
         self.camera.update(0)
+        self._camera_follow_target = self.player
         self.environment_obstacles = ()
         self.map_objects = []
 
@@ -334,13 +336,25 @@ class TilemapScene(Scene):
             surface.blit(image, rect)
 
     def update_camera(self, delta_time, cutscene_controller):
-        """Follows the player except while a cutscene is moving the camera."""
+        """Follows the dialogue speaker, or the player outside dialogue."""
         if (
             cutscene_controller is not None
             and cutscene_controller.waiting_for == "camera_movement"
         ):
             return
-        self.camera.follow(self.player)
+
+        target = self.player
+        if self.game.dialogue_manager.is_active:
+            target = self.npc_controller.get_dialogue_speaker() or self.player
+
+        if target is not self._camera_follow_target:
+            self.camera.move_to(
+                target.position,
+                duration=self.DIALOGUE_CAMERA_TRANSITION_DURATION,
+            )
+            self._camera_follow_target = target
+
+        self.camera.follow(target)
         self.camera.update(delta_time)
 
     def begin_world_draw(self):
