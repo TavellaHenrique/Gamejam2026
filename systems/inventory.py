@@ -14,6 +14,7 @@ class Inventory:
 
         # Adiciona o item
         self.items[item.id] = item
+
         return True
 
     def has_item(self, item_id):

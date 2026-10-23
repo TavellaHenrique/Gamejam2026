@@ -181,14 +181,14 @@ class Saguao(TilemapScene):
                     ("A sala do laboratório fica no fim do corredor.",),
                 ),
                 NPC(
-                    npc_id="weird_girl_introduction",
+                    npc_id="weird_girl",
                     display_name="Aluna",
                     position=self.map_point((545, 215)),
                     sprite_path=(
                         "assets/sprites/player/"
                         "TheFemaleAdventurer/Idle/Idle_Up.png"
                     ),
-                    dialogue_id="aluna_dracula_saguao",
+                    dialogue_id="weird_girl_introduction",
                     use_player_animations=True,
                     animation_scale=3,
                 ),
@@ -224,7 +224,7 @@ class Saguao(TilemapScene):
             game,
             self.npc_controller,
             dialogue_from_id("first_day_saguao_intro"),
-            dialogue_from_id("thiago_saguao_welcome"),
+            dialogue_from_id("thiago_welcome"),
             npc(
                 "professor_thiago_saguao",
                 self.map_point((900, 130)),
@@ -259,7 +259,7 @@ class Saguao(TilemapScene):
         if self.cutscene_controller.handle_event(event):
             return
 
-        aluna = self.npc_controller.get_npc("saguao_aluna_dracula")
+        aluna = self.npc_controller.get_npc("weird_girl")
         if (
             event.type == pygame.KEYDOWN
             and event.key == pygame.K_e
@@ -282,7 +282,11 @@ class Saguao(TilemapScene):
         ):
             for item in self.items:
                 if item.can_interact(self.player):
-                    item.pick_up(self.player)
+                    if item.pick_up(self.player):
+                        self.game.register_quest_event(
+                            "collect_item",
+                            item.id,
+                        )
                     return
 
             if self.lab_door.can_interact(self.player):
@@ -323,14 +327,14 @@ class Saguao(TilemapScene):
             player_bounds=self.bounds,
             player_obstacles=(),
         )
-        aluna = self.npc_controller.get_npc("saguao_aluna_dracula")
+        aluna = self.npc_controller.get_npc("weird_girl")
         if (
             self.aluna_thought_pending
             and not self.game.dialogue_manager.is_active
             and self.player.position.distance_to(aluna.position)
             > aluna.interaction_radius + 40
         ):
-            self.game.dialogue_manager.start("aluna_vampire_thought")
+            self.game.dialogue_manager.start("though_about_weird_girl")
             self.aluna_thought_pending = False
 
         self.player.update(

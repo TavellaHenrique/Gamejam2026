@@ -378,7 +378,8 @@ class NPCController:
 
         npc.look_at(self.player.position)
         self.player.look_at(npc.position)
-        self.dialogue_manager.start(npc.dialogue_id)
+        if self.dialogue_manager.start(npc.dialogue_id):
+            self.game.register_quest_event("talk_to", npc.npc_id)
         self.active_dialogue_npc = npc
         self.is_approaching_npc = False
 

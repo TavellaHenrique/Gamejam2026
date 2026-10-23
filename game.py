@@ -6,9 +6,11 @@ from scenes.scene_manager import SceneManager
 from systems.dialogue_manager import DialogueManager
 from scenes.main_menu import MainMenu
 
+from data.quests import create_quests
+from systems.quests.quest_manager import QuestManager
+
 # Entidades compartilhadas podem ser acessadas por diferentes cenas do jogo.
 from entities.player import Player
-from entities.npc import NPC
 
 
 class Game:
@@ -28,6 +30,10 @@ class Game:
         self.show_mouse_coordinates = False
         self.coordinates_font = pygame.font.Font(None, 24)
 
+        # Gerenciador de Missões deve ser compartilhado entre  as cenas
+        self.quest_manager = QuestManager(create_quests())
+        self.quest_manager.start_quest("test_quest")
+
         # Os diálogos são carregados de um arquivo e podem ser consultados pelas cenas.
         self.dialogue_manager = DialogueManager(
             "data/dialogues.json"
@@ -36,6 +42,16 @@ class Game:
         # Começa no menu e permite trocar de cena sem encerrar o estado compartilhado.
         self.scene_manager = SceneManager(self)
         self.scene_manager.change_scene(MainMenu(self))
+
+    def register_quest_event(self, event_type, target, amount=1):
+        """Registra um evento de missão e anuncia a conclusão da missão de teste."""
+        quest_was_completed = self.quest_manager.is_completed("test_quest")
+        self.quest_manager.register_event(event_type, target, amount)
+        if (
+            not quest_was_completed
+            and self.quest_manager.is_completed("test_quest")
+        ):
+            print("Missão test_quest concluída!")
 
     def set_player_spawn_point(self, position):
         """Atualiza o ponto persistente onde o jogador deve surgir."""
