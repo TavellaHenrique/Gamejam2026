@@ -7,7 +7,7 @@
             "Meu sonho é ser o maior programador do mundo, então meu objetivo é estudar muito e conseguir abstrair o máximo de conteúdo que eu conseguir dos professores enquanto estudar na FATEC!"
         ]
     },
-    "thiago_saguao_welcome": {
+    "thiago_welcome": {
         "speaker": "Professor Thiago",
         "lines": [
             "Sejam bem-vindos à FATEC! Eu sou o Professor Thiago e dou aula de Lógica de Programação. Vamos começar a aula?"
@@ -49,14 +49,14 @@
             "É isso aí! Se você continuar assim, daqui a pouco vai estar criando seu próprio jogo. Só não vai querer programar tudo de uma vez, hein?"
         ]
     },
-    "aluna_dracula_saguao": {
+    "weird_girl_introduction": {
         "speaker": "Aluna",
         "lines": [
             "Estou lendo Drácula atualmente, e você?"
         ],
         "speaker2": "Você",
         "lines2": [
-            "Eu já li o gibi da Turma da Mônica…"
+            "Eu já li alguns gibis da Turma da Mônica…"
         ],
         "speaker3": "Aluna",
         "lines3": [
@@ -67,51 +67,19 @@
             "Claro, obrigado pela recomendação de leitura!"
         ]
     },
-    "aluna_vampire_thought": {
+    "though_about_weird_girl": {
         "speaker": "Você",
         "lines": [
             "Menina doida, vampiros nem existem."
         ]
     },
-    "weird_girl_intro": {
-        "speaker": "Garota estranha",
-        "lines": [
-            "Já leu Drácula?",
-            "Vampiros são meus favoritos!",
-            "Me conta se achar um por aí."
-        ]
-    },
-    "poema": {
+    "nerd_poem": {
         "speaker": "Poeta",
         "lines": [
             "Roses are #FF0000",
             "Violets are #0000FF",
             "If you can read this",
             "You're a nerd (4^(0.5))"
-        ]
-    },
-    "cutscene_girl_intro": {
-        "speaker": "Garota estranha",
-        "lines": [
-            "Você também ouviu o sino tocar? A torre está trancada há anos."
-        ]
-    },
-    "cutscene_player_reply": {
-        "speaker": "Calouro",
-        "lines": [
-            "Ouvi vindo da sala de arquivos. Talvez alguém tenha encontrado outra entrada."
-        ]
-    },
-    "cutscene_girl_reveal": {
-        "speaker": "Garota estranha",
-        "lines": [
-            "Olha! A porta lateral está aberta. Acho que o barulho veio de lá."
-        ]
-    },
-    "cutscene_player_end": {
-        "speaker": "Calouro",
-        "lines": [
-            "Vamos investigar juntos. Mas se ouvirmos outro sino, é melhor correr."
         ]
     },
     "diretor": {

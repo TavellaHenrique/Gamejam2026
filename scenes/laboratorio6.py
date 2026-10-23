@@ -164,7 +164,7 @@ class Laboratorio6(TilemapScene):
         self.render_world(screen)
 
         title = self.title_font.render(
-            "Laboratório",
+            "Laboratório 6",
             True,
             (255, 255, 255),
         )

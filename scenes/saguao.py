@@ -41,7 +41,7 @@ class Saguao(TilemapScene):
         )
         self.lab_door = Door(
             rect=self.map_rect((875, 10, 47, 86)),
-            prompt="Laboratório",
+            prompt="Laboratório 6",
             interaction_margin=72,
             visible=False,
         )
@@ -149,20 +149,6 @@ class Saguao(TilemapScene):
                 position=self.map_point((620, 420)),
                 interaction_radius=54,
             ),
-            Item(
-                item_id="battery",
-                name="Bateria",
-                description="Um pequeno dispositivo de energia.",
-                position=self.map_point((780, 260)),
-                interaction_radius=45,
-            ),
-            Item(
-                item_id="note",
-                name="Bilhete",
-                description="Mensagem antiga do laboratório.",
-                position=self.map_point((320, 560)),
-                interaction_radius=48,
-            ),
         ]
         for item in self.items:
             if self.player.inventory.has_item(item.id):
@@ -180,7 +166,7 @@ class Saguao(TilemapScene):
                     display_name="Professor Thiago",
                     position=self.map_point((900, 400)),
                     sprite_path="assets/sprites/npcs/Idle_Down.png",
-                    dialogue_id="thiago_saguao_welcome",
+                    dialogue_id="thiago_welcome",
                     use_player_animations=True,
                     interactable=False,
                 ),
@@ -195,7 +181,7 @@ class Saguao(TilemapScene):
                     ("A sala do laboratório fica no fim do corredor.",),
                 ),
                 NPC(
-                    npc_id="saguao_aluna_dracula",
+                    npc_id="weird_girl_introduction",
                     display_name="Aluna",
                     position=self.map_point((545, 215)),
                     sprite_path=(
@@ -257,7 +243,7 @@ class Saguao(TilemapScene):
             player_destination(self.map_point((900, 100))),
             change_scene(
                 lambda: Laboratorio6(game),
-                player_spawn=Laboratorio6.map_point((820, 120)),
+                player_spawn=Laboratorio6.map_point((600, 320)),
             ),
             cutscene_id="first_day_saguao",
             bounds=self.bounds,
@@ -302,7 +288,7 @@ class Saguao(TilemapScene):
             if self.lab_door.can_interact(self.player):
                 self.game.scene_manager.transition_to(
                     lambda: Laboratorio6(self.game),
-                    player_spawn=self.map_point((900, 150)),
+                    player_spawn=self.map_point((800, 150)),
                 )
                 return
 
