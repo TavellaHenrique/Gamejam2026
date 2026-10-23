@@ -164,7 +164,8 @@ class Laboratorio1(TilemapScene):
             key = Item(
                 item_id="lab_key",
                 name="Chave do Lab 7",
-                description="A chave do Laboratório 7.",
+                description="Chave comum",
+                image_path="assets/sprites/items/vecteezy_key-pixel-icon.png"
             )
             if self.player.inventory.add_item(key):
                 self.game.register_quest_event("collect_item", key.id)

@@ -129,7 +129,7 @@ class Game:
         pygame.draw.rect(screen, (76, 88, 102), panel_rect, width=3, border_radius=8)
 
         title_font = pygame.font.Font(None, 32)
-        title = title_font.render("Inventário", True, (255, 255, 255))
+        title = title_font.render("Mochila", True, (255, 255, 255))
         screen.blit(title, (panel_rect.x + 24, panel_rect.y + 18))
 
         hint_font = pygame.font.Font(None, 18)
@@ -138,7 +138,7 @@ class Game:
 
         if not items:
             empty_font = pygame.font.Font(None, 26)
-            empty_text = empty_font.render("Nenhum item coletado", True, (200, 200, 200))
+            empty_text = empty_font.render("Um caderno, um estojo e um sonho", True, (200, 200, 200))
             empty_rect = empty_text.get_rect(center=panel_rect.center)
             screen.blit(empty_text, empty_rect)
             return
@@ -164,26 +164,27 @@ class Game:
             pygame.draw.rect(screen, fill_color, slot_rect, border_radius=8)
             pygame.draw.rect(screen, outline_color, slot_rect, width=2, border_radius=8)
 
-            icon = pygame.Surface((42, 42), pygame.SRCALPHA)
-            icon.fill((190, 170, 255, 200))
-            icon_rect = icon.get_rect(center=slot_rect.center)
-            icon_rect.y -= 8
-            screen.blit(icon, icon_rect)
-
-            item_name = item.name if len(item.name) <= 10 else item.name[:10] + "..."
-            name_label = hint_font.render(item_name, True, (255, 255, 255))
-            name_rect = name_label.get_rect(center=(slot_rect.centerx, slot_rect.bottom - 14))
-            screen.blit(name_label, name_rect)
+            if item.image is not None:
+                icon_area = slot_rect.inflate(-16, -32)
+                icon_rect = item.image.get_rect().fit(icon_area)
+                icon = pygame.transform.scale(item.image, icon_rect.size)
+                screen.blit(icon, icon_rect)
+            else:
+                icon = pygame.Surface((42, 42), pygame.SRCALPHA)
+                icon.fill((190, 170, 255, 200))
+                icon_rect = icon.get_rect(center=slot_rect.center)
+                icon_rect.y -= 8
+                screen.blit(icon, icon_rect)
 
         if self.inventory_selected_index < len(items):
             selected_item = items[self.inventory_selected_index]
             info_rect = pygame.Rect(panel_rect.x + 32, panel_rect.bottom - 70, panel_rect.width - 64, 42)
-            pygame.draw.rect(screen, (30, 35, 42), info_rect, border_radius=8)
-            description_font = pygame.font.Font(None, 22)
+            pygame.draw.rect(screen, (200, 200, 200), info_rect, border_radius=8)
+            description_font = pygame.font.Font(None, 24)
             description = description_font.render(
                 f"{selected_item.name}: {selected_item.description}",
                 True,
-                (245, 245, 245),
+                (30, 30, 30),
             )
             screen.blit(description, (info_rect.x + 12, info_rect.y + 12))
 
