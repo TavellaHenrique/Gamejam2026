@@ -130,7 +130,7 @@
         ],
         "speaker2": "Você",
         "lines2": [
-            "Claro, Professora! É pra já!!!"
+            "Claro, professora! É pra já!!!"
         ]
     },
     "professora_monologo": {
@@ -223,9 +223,9 @@
     "professora_aula_introducao": {
         "speaker": "Professora Amélia",
         "lines": [
-            "Parece que vieram poucos alunos hoje!",
-            "De qualquer forma, iremos abrir esse computador e observar seus componentes.",
-            "Algum de vocês gostaria de auxiliar-me?"
+            "Acabei me atrasando! Melhor encurtar as apresentações por enquanto.",
+            "Eu sou a professora Amélia, e hoje vamos ver na prática como são os componentes internos de um computador.",
+            "Algum de vocês gostaria de me auxiliar?"
         ],
         "speaker2": "Você",
         "lines2": [
