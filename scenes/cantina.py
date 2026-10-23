@@ -141,37 +141,30 @@ class Cantina(TilemapScene):
                 self.create_student_npc(
                     "cantina_student_1",
                     (170, 340),
-                    ("Essa mesa está reservada para o nosso grupo.",),
                 ),
                 self.create_student_npc(
                     "cantina_student_2",
                     (350, 340),
-                    ("O intervalo parece passar cada vez mais rápido.",),
                 ),
                 self.create_student_npc(
                     "cantina_student_3",
                     (540, 340),
-                    ("Vou pegar alguma coisa na máquina.",),
                 ),
                 self.create_student_npc(
                     "cantina_student_4",
                     (750, 340),
-                    ("A cantina fica mais tranquila neste horário.",),
                 ),
                 self.create_student_npc(
                     "cantina_walker_1",
                     (350, 220),
-                    ("Será que ainda tem salgado?",),
                 ),
                 self.create_student_npc(
                     "cantina_walker_2",
                     (780, 220),
-                    ("Vou voltar para o saguão antes da aula.",),
                 ),
                 self.create_student_npc(
                     "cantina_walker_3",
                     (450, 560),
-                    ("Preciso aproveitar o intervalo para almoçar.",),
                 ),
             ),
             npc_scope=type(self),

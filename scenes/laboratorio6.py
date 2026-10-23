@@ -80,22 +80,18 @@ class Laboratorio6(TilemapScene):
                 self.create_student_npc(
                     "lab6_student_1",
                     (700, 550),
-                    ("A aula de hoje foi bem interessante.",),
                 ),
                 self.create_student_npc(
                     "lab6_student_2",
                     (390, 430),
-                    ("Vou terminar o trabalho antes de ir embora.",),
                 ),
                 self.create_student_npc(
                     "lab6_student_3",
                     (700, 390),
-                    ("O professor Thiago explicou tudo direitinho.",),
                 ),
                 self.create_student_npc(
                     "lab6_student_4",
                     (280, 545),
-                    ("Preciso entregar esse exercício até amanhã.",),
                 ),
             ],
             npc_scope=type(self),

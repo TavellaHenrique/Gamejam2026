@@ -242,7 +242,7 @@ class TilemapScene(Scene):
             pass
         return f"{source_path.as_posix()}:{frame.f_lineno}"
 
-    def create_student_npc(self, npc_id, position, ambient_lines):
+    def create_student_npc(self, npc_id, position):
         """Creates an interactable student with ambient dialogue."""
         sprite_path = STUDENT_SPRITES[
             self._student_sprite_index % len(STUDENT_SPRITES)
@@ -254,7 +254,9 @@ class TilemapScene(Scene):
             position=self.map_point(position),
             sprite_path=sprite_path,
             dialogue_id="student_smalltalk",
-            ambient_lines=ambient_lines,
+            ambient_lines=self.game.dialogue_manager.get_lines(
+                "falas_aleatorias"
+            ),
             use_player_animations=False,
             animation_scale=3,
             interactable=True,

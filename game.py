@@ -138,7 +138,7 @@ class Game:
 
         if not items:
             empty_font = pygame.font.Font(None, 26)
-            empty_text = empty_font.render("Um caderno, um estojo e um sonho", True, (200, 200, 200))
+            empty_text = empty_font.render("Uma caneta e um sonho (o resto eu empresto de alguém)", True, (200, 200, 200))
             empty_rect = empty_text.get_rect(center=panel_rect.center)
             screen.blit(empty_text, empty_rect)
             return
@@ -180,7 +180,7 @@ class Game:
             selected_item = items[self.inventory_selected_index]
             info_rect = pygame.Rect(panel_rect.x + 32, panel_rect.bottom - 70, panel_rect.width - 64, 42)
             pygame.draw.rect(screen, (200, 200, 200), info_rect, border_radius=8)
-            description_font = pygame.font.Font(None, 24)
+            description_font = pygame.font.Font(None, 22)
             description = description_font.render(
                 f"{selected_item.name}: {selected_item.description}",
                 True,

@@ -68,32 +68,26 @@ class Laboratorio1(TilemapScene):
                 self.create_student_npc(
                     "lab1_student_1",
                     (700, 550),
-                    ("Estou revisando o conteúdo antes da próxima aula.",),
                 ),
                 self.create_student_npc(
                     "lab1_student_2",
                     (390, 430),
-                    ("Os computadores do laboratório ajudam bastante.",),
                 ),
                 self.create_student_npc(
                     "lab1_student_3",
                     (550, 315),
-                    ("Você já terminou o exercício?",),
                 ),
                 self.create_student_npc(
                     "lab1_student_4",
                     (700, 390),
-                    ("Vou salvar meu trabalho antes de sair.",),
                 ),
                 self.create_student_npc(
                     "lab1_walker_1",
                     (390, 545),
-                    ("Acho que deixei meu caderno em outra mesa.",),
                 ),
                 self.create_student_npc(
                     "lab1_walker_2",
                     (760, 535),
-                    ("Ainda dá tempo de tirar uma dúvida com o professor.",),
                 ),
             ),
             # define o escopo da classe para que o NPCController possa instanciar NPCs dinamicamente

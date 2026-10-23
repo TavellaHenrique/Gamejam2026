@@ -165,12 +165,10 @@ class Saguao(TilemapScene):
                 self.create_student_npc(
                     "saguao_student_1",
                     (125, 215),
-                    ("O saguão fica bem cheio antes do começo das aulas.",),
                 ),
                 self.create_student_npc(
                     "saguao_student_2",
                     (220, 215),
-                    ("A sala do laboratório fica no fim do corredor.",),
                 ),
                 NPC(
                     npc_id="weird_girl",
@@ -187,17 +185,14 @@ class Saguao(TilemapScene):
                 self.create_student_npc(
                     "saguao_student_4",
                     (690, 380),
-                    ("Estou esperando meus colegas para a próxima aula.",),
                 ),
                 self.create_student_npc(
                     "saguao_walker_1",
                     (365, 410),
-                    ("Com licença, estou procurando minha sala.",),
                 ),
                 self.create_student_npc(
                     "saguao_walker_2",
                     (680, 500),
-                    ("Ainda tenho alguns minutos antes da aula.",),
                 ),
             ],
             npc_scope=type(self),
