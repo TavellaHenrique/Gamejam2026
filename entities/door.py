@@ -3,6 +3,7 @@
 import pygame
 
 from systems.trigger import Trigger
+from ui.text import draw_prompt
 
 
 class Door:
@@ -52,19 +53,10 @@ class Door:
         if not self.can_interact(player):
             return
 
-        text = self.font.render(
+        draw_prompt(
+            screen,
             f"E - {self.prompt}",
-            True,
-            (255, 255, 255),
+            self.font,
+            position=(self.rect.centerx, self.rect.top - 8),
+            align="midbottom",
         )
-        text_rect = text.get_rect(
-            midbottom=(self.rect.centerx, self.rect.top - 8)
-        )
-        background_rect = text_rect.inflate(16, 10)
-        background = pygame.Surface(
-            background_rect.size,
-            pygame.SRCALPHA,
-        )
-        background.fill((20, 24, 32, 210))
-        screen.blit(background, background_rect.topleft)
-        screen.blit(text, text_rect)

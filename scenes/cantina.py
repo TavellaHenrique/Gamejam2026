@@ -6,6 +6,7 @@ from entities.door import Door
 from scenes.saguao import Saguao
 from systems.npc_controller import NPCController
 from systems.tilemap_scene import TilemapScene
+from ui.text import draw_prompt
 
 
 class Cantina(TilemapScene):
@@ -239,14 +240,9 @@ class Cantina(TilemapScene):
             self.doors,
             dialogue_manager=self.game.dialogue_manager,
         )
-        instruction = self.hint_font.render(
+        draw_prompt(
+            screen,
             "ESC - Voltar ao saguão",
-            True,
-            (255, 255, 255),
-        )
-        screen.blit(
-            instruction,
-            instruction.get_rect(
-                midbottom=(screen.get_width() // 2, screen.get_height() - 18)
-            ),
+            self.hint_font,
+            dialogue_manager=self.game.dialogue_manager,
         )

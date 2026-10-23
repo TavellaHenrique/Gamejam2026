@@ -11,6 +11,7 @@ from entities.npc import NPC
 from scenes.scene import Scene
 from systems.camera_manager import CameraManager
 from systems.collision import get_entity_hitbox
+from ui.text import draw_prompt
 
 
 LABORATORY_OBSTACLES = (
@@ -595,24 +596,12 @@ class TilemapScene(Scene):
             if not door.can_interact(player):
                 continue
 
-            label = font.render(
+            draw_prompt(
+                screen,
                 f"{prefix}{door.prompt}",
-                True,
-                (255, 255, 255),
+                font,
+                dialogue_manager=dialogue_manager,
             )
-            label_rect = label.get_rect(
-                midbottom=(screen.get_width() // 2, screen.get_height() - 18)
-            )
-            background_rect = label_rect.inflate(20, 10)
-            if dialogue_manager is not None:
-                background_rect = dialogue_manager.stack_bubble_rect(
-                    background_rect
-                )
-                label_rect.center = background_rect.center
-            background = pygame.Surface(background_rect.size, pygame.SRCALPHA)
-            background.fill((20, 24, 32, 210))
-            screen.blit(background, background_rect.topleft)
-            screen.blit(label, label_rect)
             return
 
 

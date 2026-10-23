@@ -16,6 +16,7 @@ from systems.cutscene_controller import (
 )
 from systems.npc_controller import NPCController
 from systems.tilemap_scene import TilemapScene
+from ui.text import draw_prompt
 
 
 class Saguao(TilemapScene):
@@ -51,6 +52,7 @@ class Saguao(TilemapScene):
             destinations=(
                 ("lab1", "Laboratório 1"),
                 ("lab6", "Laboratório 6"),
+                ("professora_lab", "Laboratório da Professora"),
                 ("cancel", "Cancelar"),
             ),
         )
@@ -351,6 +353,13 @@ class Saguao(TilemapScene):
                 lambda: Laboratorio1(self.game),
                 player_spawn=Laboratorio1._fit_tileset_point((800, 100)),
             )
+        elif destination == "professora_lab":
+            from scenes.laboratorio_professora import LaboratorioProfessora
+
+            self.game.scene_manager.transition_to(
+                lambda: LaboratorioProfessora(self.game),
+                player_spawn=LaboratorioProfessora.map_point((800, 150)),
+            )
 
     def update(self, delta_time):
         """Atualiza a história, os NPCs, os itens e o jogador."""
@@ -403,21 +412,11 @@ class Saguao(TilemapScene):
 
         nearby_item = next((item for item in self.items if item.can_interact(self.player)), None)
         if nearby_item is not None:
-            prompt = self.hint_font.render(
-                f"Pressione E para coletar {nearby_item.name}",
-                True,
-                (255, 255, 255),
-            )
-            screen.blit(
-                prompt,
-                self.game.dialogue_manager.stack_bubble_rect(
-                    prompt.get_rect(
-                        midbottom=(
-                            screen.get_width() // 2,
-                            screen.get_height() - 18,
-                        )
-                    )
-                ),
+            draw_prompt(
+                screen,
+                f"E - Coletar {nearby_item.name}",
+                self.hint_font,
+                dialogue_manager=self.game.dialogue_manager,
             )
 
         self.draw_door_hint(
