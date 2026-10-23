@@ -25,7 +25,13 @@ class Elevator:
             "assets/fonts/typewcond_regular.otf",
             30,
         )
-        self.panel = pygame.Rect(0, 0, 440, 280)
+        panel_height = (
+            72
+            + len(self.destinations) * 46
+            + max(0, len(self.destinations) - 1) * 12
+            + 46
+        )
+        self.panel = pygame.Rect(0, 0, 440, panel_height)
 
     @property
     def rect(self):
