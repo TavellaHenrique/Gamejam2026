@@ -130,7 +130,7 @@
         ],
         "speaker2": "Você",
         "lines2": [
-            "Claro, Professora! É pra já!!!"
+            "Claro, professora! É pra já!!!"
         ]
     },
     "professora_monologo": {
@@ -161,32 +161,26 @@
     "thiago_missao_encontrar_chave": {
         "speaker": "Você",
         "lines": [
-            "Professor, a Professora me pediu para procurar pela Chave do Lab 7. Por acaso, ela deixou com você?"
+            "Professor, me pediram para procurar a Chave do Lab 7 para a aula de Hardware. Por acaso, está com você?"
         ],
         "speaker2": "Professor Thiago",
         "lines2": [
-            "Eu não conheço essa Professora não... e ninguém deixou essa chave comigo.",
-            "Pergunte para o professor Adriano, ele costuma ficar com as chaves."
-        ]
-    },
-    "pensamento_missao_encontrar_chave": {
-        "speaker": "Você",
-        "lines": [
-            "Nossa, acho que a Professora deve ser nova aqui."
+            "Olha, eu procuro usar sempre o laboratório 6.",
+            "Veja com o professor Adriano no lab 1, ele pode ter usado para as aulas de Sistemas Operacionais."
         ]
     },
     "adriano_missao_encontrar_chave": {
         "speaker": "Você",
         "lines": [
-            "Professor, a Professora está procurando pela Chave do Lab 7. Está com você?"
+            "Professor, a professora de Hardware está procurando pela Chave do Lab 7. Está com você?"
         ],
         "speaker2": "Professor Adriano",
         "lines2": [
-            "A Chave da Sala 7? Está comigo sim! Mas... quem é essa Professora?"
+            "A Chave da Sala 7? Está comigo sim! Mas... quem é essa professora?"
         ],
         "speaker3": "Você",
         "lines3": [
-            "Ah, eu sou novo aqui. Só sei que o nome dela é Professora e ela dá aula de Hardware.",
+            "Ah, esqueci de perguntar o nome dela. Só sei que ela precisa usar o laboratório para a aula.",
             "Obrigado pela chave!"
         ],
         "speaker4": "Professor Adriano",
@@ -224,15 +218,15 @@
     "professora_aula_introducao": {
         "speaker": "Professora",
         "lines": [
-            "Parece que vieram poucos alunos hoje!",
-            "De qualquer forma, iremos abrir esse computador e observar seus componentes.",
-            "Algum de vocês gostaria de auxiliar-me?"
+            "Acabei me atrasando! Melhor encurtar as apresentações por enquanto.",
+            "Eu sou a professora Amélia, e hoje vamos ver na prática como são os componentes internos de um computador.",
+            "Algum de vocês gostaria de me auxiliar?"
         ],
         "speaker2": "Você",
         "lines2": [
             "Eu posso, Professora?"
         ],
-        "speaker3": "Professora",
+        "speaker3": "Professora Amélia",
         "lines3": [
             "Sim, venha cá."
         ]
