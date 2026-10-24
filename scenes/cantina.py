@@ -6,6 +6,8 @@ from entities.door import Door
 from scenes.saguao import Saguao
 from systems.npc_controller import NPCController
 from systems.tilemap_scene import TilemapScene
+from systems.quests.quest_status import QuestStatus
+from systems.trigger import Trigger
 from ui.text import draw_prompt
 
 
@@ -27,6 +29,10 @@ class Cantina(TilemapScene):
             visible=False,
         )
         self.doors = (self.door,)
+        self.vending_machine_trigger = Trigger(
+            position=self.map_point((730, 145)),
+            radius=80,
+        )
         self.environment_obstacles = tuple(
             self.map_rect(rect)
             for rect in (
@@ -185,6 +191,21 @@ class Cantina(TilemapScene):
             event.type == pygame.KEYDOWN
             and event.key == pygame.K_e
             and not self.game.dialogue_manager.is_active
+            and self.game.quest_manager.get_status("eat_snacks")
+            == QuestStatus.ACTIVE
+            and self.vending_machine_trigger.contains(self.player)
+        ):
+            self.game.register_quest_event(
+                "interact_with",
+                "cantina_vending_machine",
+            )
+            self.npc_controller.start_monologue("passando_mal_salgadinho")
+            return
+
+        if (
+            event.type == pygame.KEYDOWN
+            and event.key == pygame.K_e
+            and not self.game.dialogue_manager.is_active
             and self.door.can_interact(self.player)
         ):
             self.game.scene_manager.transition_to(
@@ -239,3 +260,14 @@ class Cantina(TilemapScene):
             self.hint_font,
             dialogue_manager=self.game.dialogue_manager,
         )
+        if (
+            self.game.quest_manager.get_status("eat_snacks")
+            == QuestStatus.ACTIVE
+            and self.vending_machine_trigger.contains(self.player)
+        ):
+            draw_prompt(
+                screen,
+                "E - Comprar salgadinho",
+                self.hint_font,
+                dialogue_manager=self.game.dialogue_manager,
+            )

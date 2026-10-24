@@ -10,6 +10,7 @@ from systems.cutscene_controller import (
     fade_out,
     npcs,
     dialogue_from_id,
+    time_passes_prompt,
 )
 from systems.npc_controller import NPCController
 from systems.quests.quest_status import QuestStatus
@@ -97,7 +98,10 @@ class Laboratorio6(TilemapScene):
             npc_scope=type(self),
             static_obstacles=self.get_scene_obstacles(),
         )
-        class_actions = [dialogue_from_id("thiago_lab6_roll_call")]
+        class_actions = [
+            time_passes_prompt(),
+            dialogue_from_id("thiago_lab6_roll_call"),
+        ]
         student_destinations = {
             "lab6_student_1": self.map_point((775, 125)),
             "lab6_student_2": self.map_point((820, 125)),
@@ -146,6 +150,13 @@ class Laboratorio6(TilemapScene):
             for item in self.items:
                 if item.can_interact(self.player):
                     if item.pick_up(self.player):
+                        if (
+                            self.game.quest_manager.get_status(
+                                "find_lost_necklace"
+                            )
+                            == QuestStatus.AVAIABLE
+                        ):
+                            self.game.start_quest("find_lost_necklace")
                         self.game.register_quest_event(
                             "collect_item",
                             item.id,
@@ -169,6 +180,8 @@ class Laboratorio6(TilemapScene):
                     nearby_npc.dialogue_id = (
                         "thiago_missao_encontrar_chave"
                     )
+                elif "investigation_unlocked" in self.game.story_flags:
+                    nearby_npc.dialogue_id = "thiago_missao_chaveiro"
                 else:
                     nearby_npc.dialogue_id = "thiago_lab6_exploration"
 
@@ -239,3 +252,4 @@ class Laboratorio6(TilemapScene):
                 dialogue_manager=self.game.dialogue_manager,
             )
         self.npc_controller.draw_ui(screen, camera=self.camera)
+        self.cutscene_controller.draw_overlay(screen)

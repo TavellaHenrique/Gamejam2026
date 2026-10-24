@@ -16,7 +16,7 @@
     "adriano_lab1_1": {
         "speaker": "Professor Adriano",
         "lines": [
-            "Você é calouro? Acho que vai gostar da minha aula, tenho uns cursos muito legais pra você fazer da Oracle, da AWS…"
+            "Você é calouro? Acho que vai gostar da minha aula, tenho uns cursos muito legais pra você fazer da Oracle, da AWS..."
         ],
         "speaker2": "Você",
         "lines2": [
@@ -56,11 +56,11 @@
         ],
         "speaker2": "Você",
         "lines2": [
-            "Eu já li alguns gibis da Turma da Mônica…"
+            "Eu já li alguns gibis da Turma da Mônica..."
         ],
         "speaker3": "Garota Estranha",
         "lines3": [
-            "Você deveria ler esse livro, fala de vampiros! Eu amo vampiros, sabe… eles são muito interessantes! Se você encontrar um por aí, me conta, por favor?"
+            "Você deveria ler esse livro, fala de vampiros! Eu amo vampiros, sabe... eles são muito interessantes! Se você encontrar um por aí, me conta, por favor?"
         ],
         "speaker4": "Você",
         "lines4": [
@@ -223,9 +223,7 @@
     "professora_aula_introducao": {
         "speaker": "Professora Amélia",
         "lines": [
-            "Acabei me atrasando! Melhor encurtar as apresentações por enquanto.",
-            "Eu sou a professora Amélia, e hoje vamos ver na prática como são os componentes internos de um computador.",
-            "Algum de vocês gostaria de me auxiliar?"
+            "Bom, vieram poucos alunos hoje! De qualquer forma, vamos abrir esse PC e ver os componentes dele! Algum candidato para me auxiliar?"
         ],
         "speaker2": "Você",
         "lines2": [
@@ -233,54 +231,65 @@
         ],
         "speaker3": "Professora Amélia",
         "lines3": [
-            "Sim, venha cá."
-        ],
-        "speaker4": "Você",
-        "lines4": [
+            "Pode sim, Protagonista!"
+        ]
+    },
+
+    "professora_encontrar_rubi": {
+        "speaker": "Você",
+        "lines": [
             "Nossa, o que é isso?",
             "Parece um rubi..."
         ],
-        "speaker5": "Professora Amélia",
-        "lines5": [
+        "speaker2": "Professora Amélia",
+        "lines2": [
             "Ah, então é aqui que estava!",
             "Há anos que tento encontrar esta pedrinha do meu anel de formatura!",
             "Quero dizer...",
             "Devo tê-la deixado cair em alguma aula do semestre passado..."
         ],
-        "speraker6": "Você",
-        "lines6": [
+        "speaker3": "Você",
+        "lines3": [
             "Ainda bem que encontramos, professora Amélia!"
+        ],
+        "speaker4": "Professora Amélia",
+        "lines4": [
+            "Você nem imagina! Façamos um intervalo enquanto guardo esta preciosidade."
         ]
     },
 
+    "passando_mal_luz": {
+        "speaker": "Pensamento",
+        "lines": [
+            "Ué, porque estou tão cansado? A luz que entra pela janela está me incomodando, deve ser o calor.",
+            "Vou aproveitar o intervalo para andar um pouco e comprar um salgadinho pra recuperar as energias..."
+        ]
+    },
     "passando_mal_salgadinho": {
         "speaker": "Pensamento",
         "lines": [
-            "Ué, porque estou tão cansado?",
-            "Vou comer um salgadinho pra regenerar as energias...",
-            "Meu favorito, hehehe! Cebola e alho!"
-        ],
-        "speaker2": "Pensamento",
-        "lines": [
+            "Meu favorito, hehehe... cebola e alho!",
             "Credo! Que gosto horrível!",
             "Desde quando não gosto mais deste salgadinho?",
-            "Não é possível...primeiro a dor no pesçoco e agora isso!",
-            "Acho que estou ficando doente!"
+            "Não é possível... primeiro a dor no pescoço e agora isso!",
+            "Acho que estou ficando doente!",
+            "De qualquer forma, melhor voltar para a aula."
         ]
     },
 
     "thiago_missao_chaveiro": {
         "speaker": "Professor Thiago",
         "lines": [
-            "E aí, filhão, tudo certo? Você viu que vai ter o remake de The Legends of Zelda? Top, hein!"
+            "E aí, filhão, tudo certo? Nossa, você viu que vai sair o remake de The Legend of Zelda? Top, hein! Conhece?"
         ],
-        "spekaer2": "Você",
+        "speaker2": "Você",
         "lines2": [
-            "Claro, professor, Zelda é o guerreiro lá, conheço sim!"
+            "Claro, professor, Zelda é o guerreiro lá, conheço sim!",
+            "Mas professor, você tem certeza que não conhece nenhuma Professora Amélia mesmo?"
         ],
-        "speaker3": "Professor Thiago",
+        "speaker3": "Pensamento",
         "lines3": [
-            "..."
+            "Como assim ninguém conhece essa Professora Amélia? Ela dá aula aqui normalmente!"
         ]
     },
 
@@ -291,15 +300,19 @@
         ],
         "speaker2": "Você",
         "lines2": [
-            "Bão! Professor, você sabe a quantos anos a professora Amélia trabalha aqui?"
+            "Bão, professor! Posso fazer uma pergunta? Você sabe há quanto tempo a Professora Amélia trabalha aqui?"
         ],
         "speaker3": "Professor Adriano",
         "lines3": [
-            "Olha...acho que faz um tempinho já. Mas não vou me lembrar com certeza..."
+            "Quem é a Professora Amélia? Nos últimos dois anos não entrou mais nenhum professor..."
         ],
         "speaker4": "Você",
         "lines4": [
-            "Ah, obrigado!"
+            "Ah... entendi. Obrigado, professor!"
+        ],
+        "speaker5": "Pensamento",
+        "lines5": [
+            "Isso está ficando cada vez mais estranho. Como uma Professora Amélia pode trabalhar aqui sem ninguém conhecê-la?"
         ]
     },
 
@@ -319,28 +332,27 @@
         ],
         "speaker4": "Você",
         "lines4": [
-            "Recentemente, eu tenho passado mal por comer aquele salgadinho de alho que sempre foi meu favorito…",
+            "Recentemente, eu tenho passado mal por comer aquele salgadinho de alho que sempre foi meu favorito...",
             "também tenho ficado exausto só de passar ali no sol para ir ao refeitório."
         ],
         "speaker5": "Garota estranha",
         "lines5": [
-            "Isso é muito estranho… Você percebeu mais alguma coisa?"
+            "Isso é muito estranho... Você percebeu mais alguma coisa?"
         ],
         "speaker6": "Você",
         "lines6": [
-            "Na verdade… a dor no meu pescoço está piorando, e eu encontrei uma Professora Amélia que ninguém parece conhecer.", 
-            "Toda vez que chego perto dela fico meio mal também…!"
+            "Na verdade... a dor no meu pescoço está piorando, e eu encontrei uma Professora Amélia que ninguém parece conhecer.", 
+            "Toda vez que chego perto dela fico meio mal também...!"
         ],
         "speaker7": "Garota estranha",
         "lines7": [
-            "Escuta, eu sei que isso pode parecer loucura, mas tome cuidado com essa Professora Amélia",
-            "...",
+            "Não tinha reflexo?!",
+            "Escuta, eu sei que isso pode parecer loucura, mas tome cuidado com essa Professora Amélia.",
             "Tem coisas neste mundo que você ainda não conhece."
         ],
         "speaker8": "Você",
         "lines8": [
-            "Pare de brincadeira!",
-            "Se você está querendo falar sobre vampiros, saiba que eles NÃO existem!"
+            "Você está falando sério? Não acredito que vampiros existam!"
         ],
         "speaker9": "Garota estranha",
         "lines9": [
@@ -356,16 +368,16 @@
         ],
         "speaker2": "Você",
         "lines2": [
-            "Pode deixar, professora! Vou procurar o pendrive no laboratório"
+            "Pode deixar, professora! Vou procurar o pendrive no laboratório."
         ],
         "speaker3": "Professora Amélia",
         "lines3": [
-            "Excelente! Assim que encontrar volte para falar comigo, tenho algo interessante para te mostrar"
+            "Excelente! Me avise quando encontrar, tenho algo interessante para te mostrar..."
         ]
     },
 
     "pensamento_encontra_chaveiro": {
-        "speaker": "Você",
+        "speaker": "Pensamento",
         "lines": [
             "Meu Deus, essa tontura de novo!"
         ]
@@ -382,8 +394,8 @@
         ],
         "speaker3": "Você",
         "lines3": [
-            "Professora Amélia…preciso te perguntar algo…",
-            "Ultimamente tenho notado algo estranho…"
+            "Professora Amélia... preciso te perguntar algo.",
+            "Ultimamente tenho notado algo estranho..."
         ],
         "speaker4": "Professora Amélia",
         "lines4": [
@@ -391,15 +403,15 @@
         ],
         "speaker5": "Você",
         "lines5": [
-            "você!",
+            "Você!",
             "Eu bem que estava achando tudo estranho nesta história mesmo!",
             "Uma professora boazinha, que nunca sai no sol, os professores nem te conhecem direito..."
         ],
         "speaker6": "Professora Amélia",
         "lines6": [
             "Ahahahahah bobinho!",
-            "Não imaginei que você teria a ousadia de me confessar tais devaneios mentais…",
-            "imaginei que fosse mais...astuto!",
+            "Não imaginei que você teria a ousadia de me confessar tais devaneios mentais...",
+            "Imaginei que fosse mais... astuto!",
             "Não se faça de tímido! Se aproxime mais e deixe-me contar um segredo:",
             "...",
             "Você está prestes a se tornar um de nós!"
@@ -414,16 +426,50 @@
             "Tens tu reflexo? passa mal ao comer comidas com alho? Seu pescoço não está doendo?",
             "Pois bem, você gabaritou!",
             "Agora, aproxime-se e venha para este lado da vida!"
+        ]
+    },
+
+    "oferta_transformacao": {
+        "speaker": "Professora Amélia",
+        "lines": [
+            "Vejamos as qualidades da minha oferta: você não vai sentir mais fome, não precisará mais se matar de estudar, vai ter a eternidade para se tornar o maior programador do mundo e ainda ficará com essa carinha de gente jovem...",
+            "O que me diz?"
+        ]
+    },
+
+    "final_aceitar_transformacao": {
+        "speaker": "Você",
+        "lines": [
+            "O que é preciso?"
         ],
-        
+        "speaker2": "Professora Amélia",
+        "lines2": [
+            "Ah, você escolheu a opção correta! Já temos tudo de que precisamos!",
+            "O Cristal do Vínculo, o Rubi da Sucessão e a Pedra da Essência. Tudo está pronto. Venha, aproxime-se mais e você será a pessoa mais feliz do mundo... é como uma picadinha de agulha!",
+            "Bem-vindo à eternidade, meu querido aprendiz!"
+        ],
+        "speaker3": "Jornal",
+        "lines3": [
+            "Vampiros são encontrados em faculdade de tecnologia, mas são mortos por caçadora de vampiros disfarçada de estudante!"
+        ]
+    },
+
+    "final_recusar_transformacao": {
+        "speaker": "Você",
+        "lines": [
+            "Nem morto!"
+        ],
+        "speaker2": "Professora Amélia",
+        "lines2": [
+            "Ah, meu querido aluninho... você achou que era uma opção? Ahahahaha! Você já está ligado a mim! Encontrou o meu colar com o Cristal do Vínculo e reuniu os outros objetos. O processo já começou!"
+        ],
+        "speaker3": "Você",
+        "lines3": [
+            "Não! Eu não vou me tornar alguém como você! SOCORRO! SOCORRO!"
+        ],
+        "speaker4": "Professora Amélia",
+        "lines4": [
+            "Ninguém te ouvirá! Grite o quanto quiser. Agora que somos só nós dois... vamos ver se você daria um bom vampiro."
+        ]
     }
-
-
-
-
-
-
-
-
-    
 }

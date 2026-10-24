@@ -492,8 +492,8 @@ class TilemapScene(Scene):
         for item in getattr(self, "items", ()):
             if not item.visible:
                 continue
-            if item.image is not None:
-                rect = item.image.get_rect(
+            if item.world_image is not None:
+                rect = item.world_image.get_rect(
                     center=(round(item.position.x), round(item.position.y))
                 )
             else:

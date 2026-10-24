@@ -165,6 +165,17 @@ def time_passes(
     )
 
 
+def time_passes_prompt():
+    """Cria uma tela de passagem do tempo que aguarda confirmação por ENTER."""
+    return CutsceneAction(
+        "time_passes_prompt",
+        {
+            "text": "Algum tempo depois...",
+            "continue_text": "Pressione ENTER para continuar",
+        },
+    )
+
+
 def dialogue(text, speaker="Calouro"):
     """Cria uma fala inline, sem exigir uma entrada no JSON."""
     return CutsceneAction(
@@ -294,6 +305,8 @@ class CutsceneController:
         self.screen_transition_elapsed = 0.0
         self.screen_transition_font = None
         self.screen_transition_font_size = None
+        self.time_passes_message = None
+        self.time_passes_hint = None
 
     @classmethod
     def create_story_cutscene(
@@ -401,6 +414,13 @@ class CutsceneController:
                         options["fade_in_duration"],
                         options["font_size"],
                     ),
+                )
+            )
+        elif action.kind == "time_passes_prompt":
+            self.steps.append(
+                (
+                    "time_passes_prompt",
+                    (options["text"], options["continue_text"]),
                 )
             )
         elif action.kind == "dialogue":
@@ -518,6 +538,40 @@ class CutsceneController:
 
     def draw_overlay(self, screen):
         """Desenha a transição de tela e a legenda centralizada, se ativa."""
+        if self.waiting_for == "time_passes_prompt":
+            screen.fill((0, 0, 0))
+            title_font = pygame.font.Font(None, 48)
+            hint_font = pygame.font.Font(None, 28)
+            title = title_font.render(
+                self.time_passes_message,
+                True,
+                (255, 255, 255),
+            )
+            hint = hint_font.render(
+                self.time_passes_hint,
+                True,
+                (190, 190, 190),
+            )
+            screen.blit(
+                title,
+                title.get_rect(
+                    center=(
+                        screen.get_width() // 2,
+                        screen.get_height() // 2 - 20,
+                    )
+                ),
+            )
+            screen.blit(
+                hint,
+                hint.get_rect(
+                    center=(
+                        screen.get_width() // 2,
+                        screen.get_height() // 2 + 30,
+                    )
+                ),
+            )
+            return
+
         if self.screen_transition is None:
             return
 
@@ -577,6 +631,14 @@ class CutsceneController:
 
     def handle_event(self, event):
         """Encaminha eventos ao diálogo somente enquanto a cutscene fala."""
+        if self.waiting_for == "time_passes_prompt":
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                self.time_passes_message = None
+                self.time_passes_hint = None
+                self._finish_current_step()
+                self._run_ready_steps()
+            return True
+
         # Fora de uma fala, evita teclas como E vazarem para interações da cena.
         if self.waiting_for != "dialogue":
             return self.locks_player_control
@@ -742,6 +804,11 @@ class CutsceneController:
                     self.waiting_for = "screen_transition"
                     return
                 self.screen_transition = None
+
+            elif action == "time_passes_prompt":
+                self.time_passes_message, self.time_passes_hint = arguments
+                self.waiting_for = "time_passes_prompt"
+                return
 
             elif action == "change_scene":
                 scene_factory, duration, player_spawn, transition = arguments

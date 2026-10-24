@@ -15,6 +15,7 @@ class Item:
         image_path=None,
         position=(0, 0),
         interaction_radius=40,
+        world_image_size=None,
     ):
         self.id = item_id
         self.item_id = item_id
@@ -36,6 +37,13 @@ class Item:
                 self.image = pygame.image.load(self.image_path).convert_alpha()
             except (FileNotFoundError, pygame.error):
                 self.image = None
+
+        self.world_image = self.image
+        if self.image is not None and world_image_size is not None:
+            self.world_image = pygame.transform.scale(
+                self.image,
+                world_image_size,
+            )
 
     def update(self):
         """Sincroniza a área de interação com a posição do item."""
@@ -65,9 +73,11 @@ class Item:
         if not self.visible:
             return
 
-        if self.image is not None:
-            rect = self.image.get_rect(center=(round(self.position.x), round(self.position.y)))
-            screen.blit(self.image, rect)
+        if self.world_image is not None:
+            rect = self.world_image.get_rect(
+                center=(round(self.position.x), round(self.position.y))
+            )
+            screen.blit(self.world_image, rect)
             return
 
         pygame.draw.circle(

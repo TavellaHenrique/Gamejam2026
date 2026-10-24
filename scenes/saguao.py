@@ -298,6 +298,14 @@ class Saguao(TilemapScene):
                 nearby_npc.dialogue_id = (
                     "garota_estranha_missao_encontrar_chave"
                 )
+            elif (
+                nearby_npc is not None
+                and nearby_npc.npc_id == "weird_girl"
+                and "investigation_unlocked" in self.game.story_flags
+            ):
+                nearby_npc.dialogue_id = (
+                    "garota_estranha_missao_chaveiro"
+                )
 
             if self.lab_door.can_interact(self.player):
                 self.game.scene_manager.transition_to(

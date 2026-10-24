@@ -134,6 +134,8 @@ class Laboratorio1(TilemapScene):
                     nearby_npc.dialogue_id = (
                         "adriano_missao_encontrar_chave"
                     )
+                elif "investigation_unlocked" in self.game.story_flags:
+                    nearby_npc.dialogue_id = "adriano_missao_chaveiro"
                 else:
                     nearby_npc.dialogue_id = "adriano_lab1_1"
 

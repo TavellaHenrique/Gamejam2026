@@ -1227,22 +1227,29 @@ class NPCController:
         )
 
     def get_dialogue_speaker(self):
-        """Returns the visible character currently associated with the dialogue."""
-        speaker_name = self.dialogue_manager.active_speaker
+        """Retorna o personagem associado ao falante do diálogo atual."""
+        speaker_name = self.dialogue_manager.active_speaker.strip().casefold()
         if (
             self.active_dialogue_npc in self.npcs
-            and self.active_dialogue_npc.display_name == speaker_name
+            and self.active_dialogue_npc.display_name.strip().casefold()
+            == speaker_name
         ):
             return self.active_dialogue_npc
 
         matching_npcs = [
             npc
             for npc in self.npcs
-            if npc.display_name == speaker_name
+            if npc.display_name.strip().casefold() == speaker_name
         ]
         if len(matching_npcs) == 1:
             return matching_npcs[0]
-        if speaker_name in {"Você", "Calouro", "Protagonista", "Jogador"}:
+        if speaker_name in {
+            "você",
+            "calouro",
+            "protagonista",
+            "jogador",
+            "pensamento",
+        }:
             return self.player
         return None
 

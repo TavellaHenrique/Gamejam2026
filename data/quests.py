@@ -17,4 +17,38 @@ def create_quests():
                 ),
             ],
         ),
+        Quest(
+            quest_id="find_the_pendrive",
+            name="Encontre o pen-drive da Professora Amélia",
+            objectives=[
+                QuestObjective(
+                    "collect_item",
+                    "professora_pendrive",
+                ),
+                QuestObjective(
+                    "return_item",
+                    "professora_pendrive",
+                ),
+            ],
+        ),
+        Quest(
+            quest_id="eat_snacks",
+            name="Comer salgadinho",
+            objectives=[
+                QuestObjective(
+                    "interact_with",
+                    "cantina_vending_machine",
+                ),
+            ],
+        ),
+        Quest(
+            quest_id="find_lost_necklace",
+            name="Encontrar Colar Perdido",
+            objectives=[
+                QuestObjective(
+                    "collect_item",
+                    "lost_necklace",
+                ),
+            ],
+        ),
     ]
