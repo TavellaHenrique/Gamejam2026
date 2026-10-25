@@ -175,6 +175,17 @@
             "Professora Amélia? Eu não conheço essa Professora não...", 
             "Bom, de todo modo, ninguém deixou essa chave comigo.",
             "Pergunte para o professor Adriano, ele costuma ficar com as chaves."
+        ],
+        "speaker3": "Pensamento",
+        "lines3": [
+            "Nossa, acho que a Professora Amélia deve ser nova na faculdade."
+        ]
+    },
+    "thiago_missao_encontrar_chave_jogador_tem_chave": {
+        "speaker": "Pensamento",
+        "lines": [
+            "Já estou com a chave do Lab 7.", 
+            "deveria ir entrega-la para a Professora Amélia."
         ]
     },
     "pensamento_missao_encontrar_chave": {
@@ -191,7 +202,7 @@
         ],
         "speaker2": "Professor Adriano",
         "lines2": [
-            "A Chave da Sala 7? Está comigo sim"
+            "A Chave da Sala 7? Está comigo sim."
         ],
         "speaker3": "Você",
         "lines3": [

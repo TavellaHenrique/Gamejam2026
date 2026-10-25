@@ -214,14 +214,14 @@ class Saguao(TilemapScene):
             dialogue_from_id("thiago_welcome"),
             npc(
                 "professor_thiago_saguao",
-                self.map_point((900, 130)),
+                self.map_point((900, 100)),
             ),
             fade_out("professor_thiago_saguao", duration=0.25),
             npcs(
                 {
-                    "saguao_student_1": self.map_point((800, 100)),
-                    "saguao_student_2": self.map_point((850, 100)),
-                    "saguao_student_4": self.map_point((900, 100)),
+                    "saguao_student_1": self.map_point((800, 45)),
+                    "saguao_student_2": self.map_point((850, 45)),
+                    "saguao_student_4": self.map_point((900, 45)),
                 }
             ),
             fade_out("saguao_student_1", duration=0.25),

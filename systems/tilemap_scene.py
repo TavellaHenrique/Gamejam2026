@@ -11,6 +11,7 @@ from entities.npc import NPC
 from scenes.scene import Scene
 from systems.camera_manager import CameraManager
 from systems.collision import get_entity_hitbox
+from systems.objects_collision import create_object_collision
 from ui.text import draw_prompt
 
 
@@ -150,6 +151,7 @@ class TilemapScene(Scene):
         scaled_collision = self._create_object_collision(
             rect,
             collidable,
+            image_path,
         )
 
         if occlusion_y is None:
@@ -206,6 +208,7 @@ class TilemapScene(Scene):
         scaled_collision = self._create_object_collision(
             rect,
             collidable,
+            example_path,
         )
         if occlusion_y is None:
             occlusion_y = crop_rect.height / 2
@@ -219,18 +222,12 @@ class TilemapScene(Scene):
             source_location=source_location,
         )
 
-    def _create_object_collision(self, object_rect, collidable):
-        """Places a full-width hitbox over the bottom third of the sprite."""
+    def _create_object_collision(self, object_rect, collidable, image_path):
+        """Uses the configured collision area without automatic centering."""
         if not collidable:
             return None
 
-        collision_height = max(1, round(object_rect.height / 3))
-        return pygame.Rect(
-            object_rect.left,
-            object_rect.bottom - collision_height,
-            object_rect.width,
-            collision_height,
-        )
+        return create_object_collision(object_rect, image_path)
 
     @staticmethod
     def _format_source_location(frame):
