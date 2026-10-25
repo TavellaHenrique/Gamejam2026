@@ -156,10 +156,9 @@ class Saguao(TilemapScene):
                 NPC(
                     npc_id="professor_thiago_saguao",
                     display_name="Professor Thiago",
-                    position=self.map_point((900, 400)),
-                    sprite_path="assets/sprites/npcs/Idle_Down.png",
+                    position=self.map_point((720, 400)),
+                    sprite_path="assets/sprites/npcs/character1.png",
                     dialogue_id="thiago_welcome",
-                    use_player_animations=True,
                     interactable=False,
                 ),
                 self.create_student_npc(
@@ -175,11 +174,9 @@ class Saguao(TilemapScene):
                     display_name="Garota Estranha",
                     position=self.map_point((545, 215)),
                     sprite_path=(
-                        "assets/sprites/player/"
-                        "TheFemaleAdventurer/Idle/Idle_Up.png"
+                        "assets/sprites/npcs/Orange_Head_Idle-Sheet.png"
                     ),
                     dialogue_id="weird_girl_introduction",
-                    use_player_animations=True,
                     animation_scale=3,
                 ),
                 self.create_student_npc(

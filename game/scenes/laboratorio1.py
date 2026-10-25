@@ -59,15 +59,14 @@ class Laboratorio1(TilemapScene):
                     npc_id="professor_lab1",
                     display_name="Professor Adriano",
                     position=self._fit_tileset_point((2000, 700)),
-                    sprite_path="assets/sprites/npcs/Idle_Down.png",
+                    sprite_path="assets/sprites/npcs/character3.png",
                     dialogue_id="adriano_lab1_1",
-                    use_player_animations=True,
                     animation_scale=3,
                     interactable=True,
                 ),
                 self.create_student_npc(
                     "lab1_student_1",
-                    (700, 550),
+                    (700, 540),
                 ),
                 self.create_student_npc(
                     "lab1_student_2",

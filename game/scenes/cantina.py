@@ -214,12 +214,6 @@ class Cantina(TilemapScene):
             )
             return
 
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            self.game.scene_manager.transition_to(
-                lambda: Saguao(self.game),
-                player_spawn=self.map_point((288, 120)),
-            )
-            return
         self.npc_controller.handle_event(event)
 
     def update(self, delta_time):
@@ -254,12 +248,6 @@ class Cantina(TilemapScene):
             self.doors,
             dialogue_manager=self.game.dialogue_manager,
         )
-        draw_prompt(
-            screen,
-            "ESC - Voltar ao saguão",
-            self.hint_font,
-            dialogue_manager=self.game.dialogue_manager,
-        )
         if (
             self.game.quest_manager.get_status("eat_snacks")
             == QuestStatus.ACTIVE
@@ -268,6 +256,6 @@ class Cantina(TilemapScene):
             draw_prompt(
                 screen,
                 "E - Comprar salgadinho",
-                self.hint_font,
+                self.hint_font, # type: ignore
                 dialogue_manager=self.game.dialogue_manager,
             )

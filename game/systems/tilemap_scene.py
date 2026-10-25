@@ -43,11 +43,7 @@ LABORATORY_FURNITURE = (
 
 STUDENT_SPRITES = (
     "assets/sprites/npcs/Blue_Head_Idle-Sheet.png",
-    "assets/sprites/npcs/Orange_Head_Idle-Sheet.png",
     "assets/sprites/npcs/Pink_Head_Idle-Sheet.png",
-    "assets/sprites/npcs/character1.png",
-    "assets/sprites/npcs/character2.png",
-    "assets/sprites/npcs/character3.png",
 )
 
 

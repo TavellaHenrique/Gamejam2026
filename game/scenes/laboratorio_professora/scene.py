@@ -89,9 +89,8 @@ class LaboratorioProfessora(TilemapScene):
             npc_id="professora",
             display_name="Professora Amélia",
             position=self.map_point((700, 160)),
-            sprite_path="assets/sprites/npcs/Idle_Down.png",
+            sprite_path="assets/sprites/npcs/character2.png",
             dialogue_id="professora_introducao",
-            use_player_animations=True,
             interactable=True,
         )
         self.npc_controller = NPCController(
@@ -230,6 +229,7 @@ class LaboratorioProfessora(TilemapScene):
                     )
                 elif (
                     snack_status == QuestStatus.COMPLETED
+                    and necklace_status != QuestStatus.COMPLETED
                     and not self.player.inventory.has_item("lost_necklace")
                 ):
                     self.professora.dialogue_id = (
@@ -263,10 +263,20 @@ class LaboratorioProfessora(TilemapScene):
                         "professora_missao_chaveiro"
                     )
                 elif quest_status == QuestStatus.ACTIVE:
-                    self.npc_controller.start_monologue(
-                        "professora_monologo",
-                        npc=self.professora,
-                    )
+                    if necklace_status == QuestStatus.COMPLETED:
+                        self.npc_controller.start_monologue_lines(
+                            (
+                                "Ah, você está aí? Estava apenas pensando "
+                                "alto... de qualquer maneira, preciso "
+                                "daquela chave!",
+                            ),
+                            npc=self.professora,
+                        )
+                    else:
+                        self.npc_controller.start_monologue(
+                            "professora_monologo",
+                            npc=self.professora,
+                        )
                     return
                 else:
                     self.professora.dialogue_id = (
@@ -322,6 +332,7 @@ class LaboratorioProfessora(TilemapScene):
             )
             self.lesson_followup_cutscene.start()
         elif flow == "necklace_report":
+            self.player.inventory.remove_item("lost_necklace")
             self.game.register_quest_event(
                 "report_item",
                 "lost_necklace",

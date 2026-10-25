@@ -317,6 +317,20 @@ class NPCController:
         if not self.dialogue_manager.start(dialogue_id):
             return False
 
+        return self._activate_monologue(npc)
+
+    def start_monologue_lines(self, lines, npc=None):
+        """Starts an inline dialogue without requiring a dialogue data entry."""
+        self._clear_ambient_speech()
+        if not self.dialogue_manager.start_lines(
+            lines,
+            speaker=npc.display_name if npc is not None else "",
+        ):
+            return False
+
+        return self._activate_monologue(npc)
+
+    def _activate_monologue(self, npc):
         self.active_dialogue_npc = npc
         if npc is not None:
             self.game.register_quest_event("talk_to", npc.npc_id)

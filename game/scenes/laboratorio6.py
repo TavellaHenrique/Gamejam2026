@@ -73,14 +73,13 @@ class Laboratorio6(TilemapScene):
                     npc_id="thiago",
                     display_name="Professor Thiago",
                     position=self.map_point((700, 160)),
-                    sprite_path="assets/sprites/npcs/Idle_Down.png",
+                    sprite_path="assets/sprites/npcs/character1.png",
                     dialogue_id="thiago_lab6_exploration",
-                    use_player_animations=True,
                     interactable=True,
                 ),
                 self.create_student_npc(
                     "lab6_student_1",
-                    (700, 550),
+                    (700, 540),
                 ),
                 self.create_student_npc(
                     "lab6_student_2",
@@ -102,11 +101,12 @@ class Laboratorio6(TilemapScene):
             time_passes_prompt(),
             dialogue_from_id("thiago_lab6_roll_call"),
         ]
+        # Keep destinations in the students' left-to-right order to prevent route crossings.
         student_destinations = {
-            "lab6_student_1": self.map_point((775, 125)),
-            "lab6_student_2": self.map_point((820, 125)),
-            "lab6_student_3": self.map_point((865, 125)),
-            "lab6_student_4": self.map_point((910, 125)),
+            "lab6_student_1": self.map_point((850, 125)),
+            "lab6_student_2": self.map_point((805, 125)),
+            "lab6_student_3": self.map_point((895, 125)),
+            "lab6_student_4": self.map_point((760, 125)),
         }
         class_actions.append(npcs(student_destinations))
         for student_id in student_destinations:
