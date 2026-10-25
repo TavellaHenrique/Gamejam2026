@@ -342,14 +342,7 @@ class LaboratorioProfessora(TilemapScene):
 
     def _update_story_quest_unlocks(self):
         """Libera a missão do pen-drive após os marcos obrigatórios."""
-        if (
-            self.game.quest_manager.get_status("find_lost_necklace")
-            == QuestStatus.COMPLETED
-            and "ruby_delivered" in self.game.story_flags
-            and self.game.quest_manager.get_status("eat_snacks")
-            == QuestStatus.COMPLETED
-        ):
-            self.game.quest_manager.unlock_quest("find_the_pendrive")
+        self.game.refresh_story_quest_unlocks()
 
     def _choose_ending(self, outcome):
         """Inicia o diálogo correspondente à escolha do jogador."""
@@ -399,6 +392,7 @@ class LaboratorioProfessora(TilemapScene):
                 self.dialogue_flow = None
                 self.game.story_flags.add("ruby_delivered")
                 self.game.story_flags.add("investigation_unlocked")
+                self.game.refresh_story_quest_unlocks()
                 self.game.quest_manager.unlock_quest("eat_snacks")
                 self.game.start_quest("eat_snacks")
         if (

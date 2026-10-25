@@ -6,7 +6,7 @@ import pygame
 
 from game.systems.collision import can_occupy, get_entity_hitbox
 from game.systems.cutscene import Cutscene
-from game.systems.navigation import find_path_near_target
+from game.systems.navigation import find_path, find_path_near_target
 
 
 class NPCController:

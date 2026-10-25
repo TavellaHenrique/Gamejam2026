@@ -96,6 +96,19 @@ class Game:
                     f"{quest.status.name}"
                 )
 
+        self.refresh_story_quest_unlocks()
+
+    def refresh_story_quest_unlocks(self):
+        """Libera o pen-drive quando todos os marcos anteriores foram concluídos."""
+        if (
+            self.quest_manager.get_status("find_lost_necklace")
+            == QuestStatus.COMPLETED
+            and "ruby_delivered" in self.story_flags
+            and self.quest_manager.get_status("eat_snacks")
+            == QuestStatus.COMPLETED
+        ):
+            self.quest_manager.unlock_quest("find_the_pendrive")
+
     def set_player_spawn_point(self, position):
         """Atualiza o ponto persistente onde o jogador deve surgir."""
         self.player_spawn_point.update(position)
