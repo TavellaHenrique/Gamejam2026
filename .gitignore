@@ -5,3 +5,9 @@
 __pycache__/
 
 .vscode/
+
+# Artefatos gerados pelo PyInstaller.
+/build/
+/dist/
+/*.spec
+!game.spec
