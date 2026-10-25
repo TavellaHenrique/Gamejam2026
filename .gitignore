@@ -8,6 +8,5 @@ __pycache__/
 
 # Artefatos gerados pelo PyInstaller.
 /build/
-/dist/
 /*.spec
 !game.spec
