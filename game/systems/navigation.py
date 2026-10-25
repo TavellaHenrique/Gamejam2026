@@ -77,3 +77,77 @@ def find_path(entity, target, bounds, obstacles=(), cell_size=16):
         initial_waypoints.append(pygame.Vector2(start_cell))
 
     return initial_waypoints + path
+
+
+def find_path_near_target(
+    entity,
+    target,
+    bounds,
+    obstacles=(),
+    cell_size=16,
+    max_distance=48,
+):
+    """Busca uma rota ao destino ou ao ponto acessível mais próximo."""
+    target = pygame.Vector2(target)
+    start = pygame.Vector2(entity.position)
+    candidates = [target]
+    directions = (
+        (1, 0),
+        (-1, 0),
+        (0, 1),
+        (0, -1),
+        (1, 1),
+        (-1, 1),
+        (1, -1),
+        (-1, -1),
+    )
+    max_radius = max(1, int(max_distance / cell_size))
+    for radius in range(1, max_radius + 1):
+        candidates.extend(
+            target + pygame.Vector2(dx, dy) * (radius * cell_size)
+            for dx, dy in directions
+        )
+    candidates.sort(key=lambda position: position.distance_to(target))
+
+    for candidate in candidates:
+        if not can_occupy(entity, candidate, bounds, obstacles):
+            continue
+        if start.distance_to(candidate) <= 0.001:
+            return [], candidate
+
+        segment_distance = start.distance_to(candidate)
+        segment_steps = max(1, int(segment_distance / 4) + 1)
+        if all(
+            can_occupy(
+                entity,
+                start.lerp(candidate, step / segment_steps),
+                bounds,
+                obstacles,
+            )
+            for step in range(1, segment_steps + 1)
+        ):
+            return [candidate], candidate
+
+        route = find_path(entity, candidate, bounds, obstacles, cell_size)
+        if not route:
+            continue
+
+        route_end = route[-1]
+        segment_distance = route_end.distance_to(candidate)
+        segment_steps = max(1, int(segment_distance / 4) + 1)
+        segment_is_clear = all(
+            can_occupy(
+                entity,
+                route_end.lerp(candidate, step / segment_steps),
+                bounds,
+                obstacles,
+            )
+            for step in range(1, segment_steps + 1)
+        )
+        if segment_is_clear:
+            route.append(candidate)
+            return route, candidate
+        if route_end.distance_to(target) <= max_distance:
+            return route, route_end
+
+    return None, None

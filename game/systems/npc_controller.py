@@ -6,7 +6,7 @@ import pygame
 
 from game.systems.collision import can_occupy, get_entity_hitbox
 from game.systems.cutscene import Cutscene
-from game.systems.navigation import find_path
+from game.systems.navigation import find_path_near_target
 
 
 class NPCController:
@@ -298,10 +298,13 @@ class NPCController:
         self._clear_ambient_speech()
 
         # Prepara uma posição lateral ou abaixo do NPC antes de começar a conversa.
-        target = self._get_conversation_position(npc)
+        target, route = self._get_conversation_position(npc)
+        if target is None or not route:
+            self._begin_pending_dialogue()
+            return
         self.interaction_cutscene.start(
             self.player,
-            [self.player.position, target],
+            route,
         )
         npc.look_at(self.player.position)
         self.is_approaching_npc = self.interaction_cutscene.is_active
@@ -364,10 +367,17 @@ class NPCController:
         obstacles = self.get_player_obstacles()
         for direction in directions:
             candidate = npc.position + direction
-            if can_occupy(self.player, candidate, bounds, obstacles):
-                return candidate
+            route, reachable_position = find_path_near_target(
+                self.player,
+                candidate,
+                bounds,
+                obstacles,
+                cell_size=self.NAVIGATION_CELL_SIZE,
+            )
+            if route is not None:
+                return reachable_position, route
 
-        return self.player.position.copy()
+        return None, None
 
     def _restore_npc_facing(self):
         """Restaura a direção do NPC salva antes de iniciar a interação."""
@@ -401,10 +411,13 @@ class NPCController:
     def update(self, delta_time, player_bounds=None, player_obstacles=()):
         """Atualiza NPCs e encaminha oportunidades de fala ao DialogueManager."""
         self.dialogue_manager.update(delta_time)
-        self.interaction_cutscene.update(
+        interaction_obstacles = self.get_player_obstacles(
+            player_obstacles
+        )
+        self._update_interaction_cutscene(
             delta_time,
-            bounds=player_bounds,
-            obstacles=self.get_player_obstacles(player_obstacles),
+            player_bounds,
+            interaction_obstacles,
         )
         self._update_npc_cutscenes(delta_time)
         self._update_wanderers(delta_time)
@@ -444,6 +457,63 @@ class NPCController:
             return
 
         self.dialogue_manager.try_start_ambient(currently_nearby)
+
+    def _update_interaction_cutscene(
+        self,
+        delta_time,
+        bounds,
+        obstacles,
+    ):
+        """Recalcula a aproximação se o movimento de NPC bloquear o caminho."""
+        cutscene = self.interaction_cutscene
+        if not cutscene.is_active:
+            return
+
+        if bounds is None:
+            surface = pygame.display.get_surface()
+            bounds = pygame.Rect(
+                0,
+                0,
+                surface.get_width(),
+                surface.get_height(),
+            )
+
+        target = cutscene.path[cutscene.path_index]
+        distance = self.player.position.distance_to(target)
+        steps = max(1, int(distance / 4) + 1)
+        segment_is_clear = all(
+            can_occupy(
+                self.player,
+                self.player.position.lerp(target, step / steps),
+                bounds,
+                obstacles,
+            )
+            for step in range(1, steps + 1)
+        )
+        if not segment_is_clear:
+            route, _ = find_path_near_target(
+                self.player,
+                target,
+                bounds,
+                obstacles,
+                cell_size=self.NAVIGATION_CELL_SIZE,
+            )
+            if route is None:
+                cutscene.is_active = False
+                return
+
+            remaining_path = cutscene.path[cutscene.path_index + 1:]
+            cutscene.path = route + remaining_path
+            cutscene.path_index = 0
+            cutscene.is_active = bool(cutscene.path)
+            if not cutscene.is_active:
+                return
+
+        cutscene.update(
+            delta_time,
+            bounds=bounds,
+            obstacles=obstacles,
+        )
 
     def _update_npc_cutscenes(self, delta_time):
         """Move cada grupo em paralelo e desvia localmente de colisões."""

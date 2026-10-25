@@ -51,7 +51,7 @@ class Saguao(TilemapScene):
             destinations=(
                 ("lab1", "Laboratório 1"),
                 ("lab6", "Laboratório 6"),
-                ("professora_lab", "Laboratório da Professora"),
+                ("professora_lab", "Laboratório 8"),
                 ("cancel", "Cancelar"),
             ),
         )
@@ -305,6 +305,9 @@ class Saguao(TilemapScene):
             ):
                 nearby_npc.dialogue_id = (
                     "garota_estranha_missao_chaveiro"
+                    if self.game.quest_manager.get_status("eat_snacks")
+                    == QuestStatus.COMPLETED
+                    else "garota_estranha_antes_salgadinho"
                 )
 
             if self.lab_door.can_interact(self.player):

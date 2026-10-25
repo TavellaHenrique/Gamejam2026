@@ -13,6 +13,14 @@ class QuestManager:
 
         return quest.start()
 
+    def unlock_quest(self, quest_id):
+        quest = self.quests.get(quest_id)
+
+        if quest is None:
+            return False
+
+        return quest.unlock()
+
     def register_event(self, event_type, target, amount=1):
         """Verifica se o evento corresponde a algum objetivo de qualquer missão"""
         for quest in self.quests.values():

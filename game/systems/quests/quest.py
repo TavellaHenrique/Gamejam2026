@@ -11,6 +11,13 @@ class Quest:
 
     status: QuestStatus = QuestStatus.AVAIABLE
 
+    def unlock(self):
+        if self.status != QuestStatus.LOCKED:
+            return False
+
+        self.status = QuestStatus.AVAIABLE
+        return True
+
     def start(self):
         if self.status != QuestStatus.AVAIABLE:
             return False

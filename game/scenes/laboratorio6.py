@@ -120,6 +120,7 @@ class Laboratorio6(TilemapScene):
             bounds=self.bounds,
             camera=self.camera,
         )
+        self.pending_lab6_exit = False
         self.cutscene_controller.start()
 
     def handle_event(self, event):
@@ -129,6 +130,17 @@ class Laboratorio6(TilemapScene):
         if self.cutscene_controller.handle_event(event):
             return
 
+        if self.pending_lab6_exit:
+            was_dialogue_active = self.game.dialogue_manager.is_active
+            self.npc_controller.handle_event(event)
+            if (
+                was_dialogue_active
+                and not self.game.dialogue_manager.is_active
+            ):
+                self.pending_lab6_exit = False
+                self._transition_to_saguao()
+            return
+
         if (
             event.type == pygame.KEYDOWN
             and event.key == pygame.K_e
@@ -136,10 +148,18 @@ class Laboratorio6(TilemapScene):
             and not self.cutscene_controller.locks_player_control
             and self.door.can_interact(self.player)
         ):
-            self.game.scene_manager.transition_to(
-                lambda: _create_saguao(self.game),
-                player_spawn=self.map_point((900, 150)),
-            )
+            thought_flag = "lab6_exit_thought_shown"
+            if thought_flag not in self.game.story_flags:
+                if not self.npc_controller.start_monologue(
+                    "lab6_exit_thought"
+                ):
+                    raise RuntimeError(
+                        "Não foi possível iniciar o pensamento ao sair do Lab 6."
+                    )
+                self.game.story_flags.add(thought_flag)
+                self.pending_lab6_exit = True
+            else:
+                self._transition_to_saguao()
             return
 
         if (
@@ -150,13 +170,6 @@ class Laboratorio6(TilemapScene):
             for item in self.items:
                 if item.can_interact(self.player):
                     if item.pick_up(self.player):
-                        if (
-                            self.game.quest_manager.get_status(
-                                "find_lost_necklace"
-                            )
-                            == QuestStatus.AVAIABLE
-                        ):
-                            self.game.start_quest("find_lost_necklace")
                         self.game.register_quest_event(
                             "collect_item",
                             item.id,
@@ -178,7 +191,9 @@ class Laboratorio6(TilemapScene):
                     == QuestStatus.ACTIVE
                 ):
                     nearby_npc.dialogue_id = (
-                        "thiago_missao_encontrar_chave"
+                        "thiago_missao_encontrar_chave_jogador_tem_chave"
+                        if self.player.inventory.has_item("lab_key")
+                        else "thiago_missao_encontrar_chave"
                     )
                 elif "investigation_unlocked" in self.game.story_flags:
                     nearby_npc.dialogue_id = "thiago_missao_chaveiro"
@@ -186,6 +201,12 @@ class Laboratorio6(TilemapScene):
                     nearby_npc.dialogue_id = "thiago_lab6_exploration"
 
         self.npc_controller.handle_event(event)
+
+    def _transition_to_saguao(self):
+        self.game.scene_manager.transition_to(
+            lambda: _create_saguao(self.game),
+            player_spawn=self.map_point((900, 150)),
+        )
 
     def update(self, delta_time):
         """Atualiza a aula, a câmera, os NPCs e o jogador."""

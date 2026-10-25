@@ -37,6 +37,12 @@
             "Agora vou dar uma explorada por aqui, já que a aula acabou."
         ]
     },
+    "lab6_exit_thought": {
+        "speaker": "Pensamento",
+        "lines": [
+            "Agora que a aula do Lab 6 terminou, devo ir para o Lab 8 pelo elevador no saguão."
+        ]
+    },
     "thiago_lab6_exploration": {
         "speaker": "Professor Thiago",
         "lines": [
@@ -147,8 +153,42 @@
             "Ah, você está aí? Estava apenas pensando alto... de qualquer maneira, preciso daquela chave!"
         ]
     },
+    "professora_colar_pendente": {
+        "speaker": "Professora Amélia",
+        "lines": [
+            "Ainda não encontrei meu colar com o Cristal do Vínculo.",
+            "Ele é muito importante para mim. Você poderia procurá-lo no Lab 6?"
+        ]
+    },
+    "professora_colar_encontrado": {
+        "speaker": "Professora Amélia",
+        "lines": [
+            "Você encontrou meu colar com o Cristal do Vínculo!",
+            "Obrigada por trazê-lo de volta. Esse colar é essencial para a nossa ligação."
+        ],
+        "speaker2": "Você",
+        "lines2": [
+            "Encontrei no Lab 6. Fico feliz que esteja de volta com você."
+        ]
+    },
 
     "garota_estranha_missao_encontrar_chave": {
+        "speaker": "Garota Estranha",
+        "lines": [
+            "Ei, você percebeu também? Parece que algo aqui anda minando a energia dos estudantes.",
+            "Já observou como estão todos sempre cansados?"
+        ],
+        "speaker2": "Você",
+        "lines2": [
+            "Talvez você tenha razão... vou ficar mais atento agora."
+        ],
+        "speaker3": "Pensamento",
+        "lines3": [
+            "Ela deve ter visto algum veterano ocupado com o Trabalho de Graduação...",
+            "Engraçado, mas parece mesmo que eu estou mais cansado do que deveria..."
+        ]
+    },
+    "garota_estranha_antes_salgadinho": {
         "speaker": "Garota Estranha",
         "lines": [
             "Ei, você percebeu também? Parece que algo aqui anda minando a energia dos estudantes.",

@@ -1,5 +1,6 @@
 from game.systems.quests.quest import Quest
 from game.systems.quests.objective import QuestObjective
+from game.systems.quests.quest_status import QuestStatus
 
 def create_quests():
     return [
@@ -16,6 +17,7 @@ def create_quests():
                     "lab_key",
                 ),
             ],
+            status=QuestStatus.LOCKED,
         ),
         Quest(
             quest_id="find_the_pendrive",
@@ -30,6 +32,7 @@ def create_quests():
                     "professora_pendrive",
                 ),
             ],
+            status=QuestStatus.LOCKED,
         ),
         Quest(
             quest_id="eat_snacks",
@@ -40,6 +43,7 @@ def create_quests():
                     "cantina_vending_machine",
                 ),
             ],
+            status=QuestStatus.LOCKED,
         ),
         Quest(
             quest_id="find_lost_necklace",
@@ -49,6 +53,11 @@ def create_quests():
                     "collect_item",
                     "lost_necklace",
                 ),
+                QuestObjective(
+                    "report_item",
+                    "lost_necklace",
+                ),
             ],
+            status=QuestStatus.LOCKED,
         ),
     ]

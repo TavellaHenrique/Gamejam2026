@@ -5,7 +5,7 @@ import pygame
 from game.entities.npc import NPC
 from game.systems.collision import can_occupy
 from game.systems.cutscene import Cutscene
-from game.systems.navigation import find_path
+from game.systems.navigation import find_path, find_path_near_target
 from game.systems.trigger import Trigger as AreaTrigger
 
 
@@ -765,14 +765,33 @@ class CutsceneController:
                 self.player.position.distance_to(target) > 16
                 or not can_occupy(self.player, target, bounds, obstacles)
             ):
-                return False
-            route = [pygame.Vector2(target)]
-        if route[-1].distance_to(target) > 0.001:
+                route, reachable_target = find_path_near_target(
+                    self.player,
+                    target,
+                    bounds,
+                    obstacles,
+                )
+                if route is None:
+                    print(
+                        "Cutscene: destino do jogador inacessível; "
+                        f"continuando '{self.cutscene_id}'."
+                    )
+                    cutscene.path = cutscene.path[
+                        cutscene.path_index + 1:
+                    ]
+                    cutscene.path_index = 0
+                    cutscene.is_active = bool(cutscene.path)
+                    return True
+                target = reachable_target
+            else:
+                route = [pygame.Vector2(target)]
+        if route and route[-1].distance_to(target) > 0.001:
             route.append(pygame.Vector2(target))
 
         remaining_path = cutscene.path[cutscene.path_index + 1:]
         cutscene.path = route + remaining_path
         cutscene.path_index = 0
+        cutscene.is_active = bool(cutscene.path)
         return True
 
     def _run_ready_steps(self):

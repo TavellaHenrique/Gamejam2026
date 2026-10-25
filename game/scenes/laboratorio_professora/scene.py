@@ -34,6 +34,7 @@ class LaboratorioProfessora(TilemapScene):
             "assets/tileset/laboratorio/laboratorio_base.jpg",
             player_spawn=player_spawn,
         )
+        self.game.quest_manager.unlock_quest("find_the_key")
         self.door = Door(
             rect=self.map_rect((862, 10, 43, 87)),
             prompt="Saguão",
@@ -167,9 +168,26 @@ class LaboratorioProfessora(TilemapScene):
         ):
             nearby_npc = self.npc_controller.get_nearest_interactable_npc()
             if nearby_npc is self.professora:
+                self._update_story_quest_unlocks()
                 quest_status = self.game.quest_manager.get_status(
                     "find_the_key"
                 )
+                necklace_status = self.game.quest_manager.get_status(
+                    "find_lost_necklace"
+                )
+                if (
+                    necklace_status == QuestStatus.LOCKED
+                    and self.player.inventory.has_item("lost_necklace")
+                ):
+                    self.game.quest_manager.unlock_quest(
+                        "find_lost_necklace"
+                    )
+                    self.game.start_quest("find_lost_necklace")
+                    self.game.register_quest_event(
+                        "collect_item",
+                        "lost_necklace",
+                    )
+                    necklace_status = QuestStatus.ACTIVE
                 pendrive_status = self.game.quest_manager.get_status(
                     "find_the_pendrive"
                 )
@@ -180,14 +198,42 @@ class LaboratorioProfessora(TilemapScene):
                     self.game.start_quest("find_the_key")
                     self.professora.dialogue_id = "professora_introducao"
                 elif (
-                    "investigation_unlocked" in self.game.story_flags
+                    quest_status == QuestStatus.ACTIVE
+                    and self.player.inventory.has_item("lab_key")
+                ):
+                    self.professora.dialogue_id = (
+                        "professora_chave_devolvida"
+                    )
+                    self.player.inventory.remove_item("lab_key")
+                    self.game.register_quest_event(
+                        "return_item",
+                        "lab_key",
+                    )
+                    self.dialogue_flow = "key_return"
+                elif (
+                    necklace_status == QuestStatus.ACTIVE
+                    and self.player.inventory.has_item("lost_necklace")
+                ):
+                    self.professora.dialogue_id = (
+                        "professora_colar_encontrado"
+                    )
+                    self.dialogue_flow = "necklace_report"
+                elif (
+                    pendrive_status == QuestStatus.AVAIABLE
+                    and "investigation_unlocked" in self.game.story_flags
                     and snack_status == QuestStatus.COMPLETED
-                    and pendrive_status == QuestStatus.AVAIABLE
                 ):
                     self.game.start_quest("find_the_pendrive")
                     self.items[0].visible = True
                     self.professora.dialogue_id = (
                         "professora_missao_chaveiro"
+                    )
+                elif (
+                    snack_status == QuestStatus.COMPLETED
+                    and not self.player.inventory.has_item("lost_necklace")
+                ):
+                    self.professora.dialogue_id = (
+                        "professora_colar_pendente"
                     )
                 elif (
                     "investigation_unlocked" in self.game.story_flags
@@ -216,19 +262,6 @@ class LaboratorioProfessora(TilemapScene):
                     self.professora.dialogue_id = (
                         "professora_missao_chaveiro"
                     )
-                elif (
-                    quest_status == QuestStatus.ACTIVE
-                    and self.player.inventory.has_item("lab_key")
-                ):
-                    self.professora.dialogue_id = (
-                        "professora_chave_devolvida"
-                    )
-                    self.player.inventory.remove_item("lab_key")
-                    self.game.register_quest_event(
-                        "return_item",
-                        "lab_key",
-                    )
-                    self.dialogue_flow = "key_return"
                 elif quest_status == QuestStatus.ACTIVE:
                     self.npc_controller.start_monologue(
                         "professora_monologo",
@@ -288,6 +321,12 @@ class LaboratorioProfessora(TilemapScene):
                 )
             )
             self.lesson_followup_cutscene.start()
+        elif flow == "necklace_report":
+            self.game.register_quest_event(
+                "report_item",
+                "lost_necklace",
+            )
+            self._update_story_quest_unlocks()
         elif flow == "pendrive_revelation":
             self.dialogue_flow = "offer"
             self.npc_controller.start_monologue(
@@ -300,6 +339,17 @@ class LaboratorioProfessora(TilemapScene):
             self.game.ending = "accepted"
         elif flow == "refused":
             self.game.ending = "battle_pending"
+
+    def _update_story_quest_unlocks(self):
+        """Libera a missão do pen-drive após os marcos obrigatórios."""
+        if (
+            self.game.quest_manager.get_status("find_lost_necklace")
+            == QuestStatus.COMPLETED
+            and "ruby_delivered" in self.game.story_flags
+            and self.game.quest_manager.get_status("eat_snacks")
+            == QuestStatus.COMPLETED
+        ):
+            self.game.quest_manager.unlock_quest("find_the_pendrive")
 
     def _choose_ending(self, outcome):
         """Inicia o diálogo correspondente à escolha do jogador."""
@@ -347,8 +397,16 @@ class LaboratorioProfessora(TilemapScene):
                 and self.dialogue_flow == "lesson_followup"
             ):
                 self.dialogue_flow = None
+                self.game.story_flags.add("ruby_delivered")
                 self.game.story_flags.add("investigation_unlocked")
+                self.game.quest_manager.unlock_quest("eat_snacks")
                 self.game.start_quest("eat_snacks")
+        if (
+            self.npc_controller.active_dialogue_npc is self.professora
+            and self.game.quest_manager.get_status("find_lost_necklace")
+            == QuestStatus.COMPLETED
+        ):
+            self._update_story_quest_unlocks()
         self.player.update(
             delta_time,
             accept_input=(
