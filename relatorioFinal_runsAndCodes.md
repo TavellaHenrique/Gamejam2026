@@ -29,11 +29,12 @@
 - *Python*: Linguagem de programação interpretada de alto nível [mais informações em https://www.python.org/]
 - *Pygame-ce (Community Edition)*: Biblioteca open-source de Python para desenvolvimento de jogos [mais informações em https://www.pygame.org/docs/]
 - *Tiled*: Programa open-source para construção de cenários e mapas [disponível em https://thorbjorn.itch.io/tiled]
+- *Visual Studio Code*: Ambiente de desenvolvimento (IDE) [mais informações em https://code.visualstudio.com/]
 
 ### Instruções de Execução
 Por fazer...
 
-### Créditos, Licensas e Uso de IA
+### Créditos e Licenças
 **Fontes**
 - "BPSHS" por AnyKire [disponível em https://www.dafont.com/pt/bpshc.font]
 - "Stairs n Slabs" por Jason Suydam [disponível em https://www.dafont.com/pt/stairsnslabs.font]
@@ -47,3 +48,13 @@ Por fazer...
 - "Top Down House" por Penzilla Design [disponível em https://penzilla.itch.io/top-down-retro-interior]
 - "Key pixel icon Free Vector" por Diana Johanna Velasquez [disponível em https://www.vecteezy.com/vector-art/10967208-key-pixel-icon]
 - "Pixel art usb flashdisk drive Locomotive icon Illustration for game design Free Vector" por Collaborapix Studio [disponível em https://www.vecteezy.com/vector-art/67618880-pixel-art-usb-flashdisk-drive-locomotive-icon-illustration-for-game-design]
+
+### Uso de Inteligência Artificial
+Pelo menos um membro da equipe participou de cada etapa do projeto, analisando e validando cada uso de IA (quando houve).
+As atividades criativas (idealização, história, diálogos, elaboração dos cenários, composição das cenas) foram 100% feitas pela equipe, bem como a escolha dos recursos (fontes e imagens).
+Nas atividades técnicas, a equipe definiu os sistemas e funcionalidades a serem desenvolvidos e contou com auxílio da IA para codifição, em função do tempo.
+Os relatórios também foram feitos 100% sem uso de IA.
+
+**Modelos utilizados e atuação**
+- ChatGPT (GPT-6, gratuito): Sugestões arquitetura e organização de componentes.
+- Copilot Free integrado ao VSCode (GPT-6-Luna, escolhido automaticamente): Participou de codificação, revisão de código, refatoração e testes.
