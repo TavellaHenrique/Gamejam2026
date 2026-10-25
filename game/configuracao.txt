@@ -1,0 +1,57 @@
+CONFIGURAÇÕES:
+
+-->Python na versão mais recente: 3.14.8
+para conferir pelo terminal: python --version
+
+No terminal execute:
+python3 -m venv .venv
+
+Depois:
+source .venv/bin/activate -->Isso te fará entrar no venv
+
+Agora, já pode instalar o pygame:
+
+pip install pygame-ce
+
+Para clonar a branch:
+-->Vá até o fork do nosso repositório: gamejam2026
+  -->Copie a URL 
+  -->No terminal, abra onde deseja clonar o repositório
+  -->Digite: git clone [URL]
+
+Para acessar a branch:
+-->Digite: git status para verificar onde você está
+  -->Verifique se você está no main, se sim:
+    -->Digite: git checkout runsAndCodes_FatecPresasAbertas
+    -->Dê git status de novo e verifique se mudou.
+    Vai aparecer algo como: NO branch runsAndCodes_FatecPresasAbertas
+
+
+
+=========================ATENÇÃO==========================
+
+Sempre que for trabalhar no código, lembre-se:
+
+Abra o terminal e 'puxe' as atualizações com:
+--> git pull 
+
+Vamos dividir as tarefas entre:
+ 1. Tasks (requisitos; ex: criação de função pegarObjeto)
+ 2. Correções (ex: correção na função pegarObjeto) 
+
+Para padronizar:
+Os commits devem utilizar o nome da task ou uma breve descrição da correção feita
+
+COMMITE SEMPRE QUE TIVER EFETUADO UMA MUDANÇA NO CÓDIGO
+Preferencialmente, trabalhar uma task de cada vez e commitar em seguida.
+
+Para commitar:
+-->No terminal, abra no diretório em que está o código e verifique se está na branch runsAndCOdes_FatecPresasAbertas
+  -->Digite: dig add .
+  -->Depois: git commit -m "[título do commit]"
+     ex: git commit -m "Criação de função pegarObjeto"
+     ex2: git commit -m "Correção do problema X em pegarObjeto"
+  
+  -->Envie para o repositório remoto com: git push
+
+lembre-se de atualizar o trello.

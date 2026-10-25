@@ -1,0 +1,12 @@
+# Ambiente virtual local; suas dependências não são versionadas junto ao projeto.
+.venv/
+
+# Arquivos de bytecode Python gerados automaticamente durante a execução.
+__pycache__/
+
+.vscode/
+
+# Artefatos gerados pelo PyInstaller.
+/build/
+/*.spec
+!game.spec

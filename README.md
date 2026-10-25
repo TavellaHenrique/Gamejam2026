@@ -83,6 +83,23 @@ Após finalizar o desenvolvimento:
 
 > **Dica:** mantenha commits frequentes e documentados durante o desenvolvimento!  
 > Isso ajuda a organização e demonstra o progresso da equipe.
+
+### Executável para Windows
+
+O executável inclui o runtime Python, o Pygame e os assets. A máquina de destino
+não precisa ter Python nem Pygame instalados.
+
+Para gerar o arquivo a partir da raiz do repositório, com Python e Pygame
+instalados na máquina de desenvolvimento:
+
+```powershell
+python -m pip install pyinstaller
+python -m PyInstaller --clean --noconfirm game.spec
+```
+
+O resultado será `dist/Fatec Presas Abertas.exe`. Distribua esse arquivo; ele
+pode demorar alguns segundos a mais para iniciar por ser um executável de arquivo
+único.
 ---
 
 ## 🧠 Avaliação e Premiação
